@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Widget 3.1 — Gradient Descent</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap');
+
+  :root {
+    --bg:          #0d0d0d;
+    --bg2:         #121212;
+    --bg3:         #1a1a1a;
+    --bg4:         #222;
+    --border:      #2a2a2a;
+    --border-lt:   #333;
+    --text:        #e8eaed;
+    --muted:       #666;
+    --mid:         #999;
+    --accent:      #2dd4bf;
+    --accent-dim:  #0d2e2b;
+    --accent-glow: rgba(45,212,191,.15);
+    --math:        #fbbf24;
+    --green:       #34d399;
+    --red:         #f87171;
+    --code-bg:     #0a0a0a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 32px 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .widget-card {
+    width: 100%; max-width: 860px;
+    background: #111;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 0 0 1px var(--border), 0 8px 40px rgba(0,0,0,.6);
+  }
+
+  /* HEADER */
+  .widget-header {
+    padding: 13px 20px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .w-pill {
+    font-size: 9.5px; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--accent);
+    background: var(--accent-dim); padding: 2px 8px; border-radius: 3px;
+  }
+  .w-title { font-size: 13px; color: var(--mid); }
+  .w-num { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+
+  /* BODY LAYOUT */
+  .widget-body {
+    display: grid;
+    grid-template-columns: 1fr 220px;
+    grid-template-rows: auto auto;
+    gap: 0;
+  }
+
+  /* CANVAS */
+  .canvas-wrap {
+    grid-row: 1 / 2;
+    grid-column: 1 / 2;
+    background: var(--code-bg);
+    border-right: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+  canvas#landscape { display: block; width: 100%; cursor: crosshair; }
+
+  .canvas-overlay {
+    position: absolute; top: 10px; left: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    color: var(--muted); display: flex; flex-direction: column; gap: 3px;
+    pointer-events: none;
+  }
+  .canvas-overlay .val { color: var(--accent); }
+
+  /* LOSS CURVE */
+  .loss-wrap {
+    grid-row: 2 / 3;
+    grid-column: 1 / 2;
+    background: var(--code-bg);
+    border-top: 1px solid var(--border);
+    border-right: 1px solid var(--border);
+    padding: 10px 0 4px;
+    position: relative;
+  }
+  .loss-label {
+    position: absolute; top: 8px; left: 12px;
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--muted);
+    text-transform: uppercase; letter-spacing: .08em;
+  }
+  canvas#losscurve { display: block; width: 100%; }
+
+  /* RIGHT PANEL */
+  .right-panel {
+    grid-row: 1 / 3;
+    grid-column: 2 / 3;
+    display: flex; flex-direction: column;
+    padding: 18px 16px;
+    gap: 20px;
+  }
+
+  /* STATS */
+  .stats { display: flex; flex-direction: column; gap: 10px; }
+  .stat { display: flex; flex-direction: column; gap: 3px; }
+  .stat-lbl { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
+  .stat-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 22px; font-weight: 500; color: var(--accent); line-height: 1;
+  }
+  .stat-val.green { color: var(--green); }
+  .stat-val.red   { color: var(--red); }
+  .stat-val.sm    { font-size: 14px; }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--border); }
+
+  /* CONTROLS */
+  .controls { display: flex; flex-direction: column; gap: 14px; }
+  .ctrl { display: flex; flex-direction: column; gap: 6px; }
+  .ctrl-head {
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .ctrl-lbl {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em;
+  }
+  .ctrl-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; color: var(--accent);
+  }
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 2px;
+    background: var(--border-lt); border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 12px; height: 12px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+
+  /* SURFACE PRESETS */
+  .presets { display: flex; flex-direction: column; gap: 6px; }
+  .preset-btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 6px 10px; border-radius: 5px; cursor: pointer;
+    background: var(--bg3); color: var(--muted);
+    border: 1px solid var(--border); transition: all .12s;
+    text-align: left;
+  }
+  .preset-btn:hover { color: var(--text); border-color: var(--border-lt); }
+  .preset-btn.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+  /* OPTIMIZER TABS */
+  .opt-tabs { display: flex; gap: 4px; }
+  .opt-tab {
+    flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    padding: 5px 4px; border-radius: 4px; cursor: pointer; text-align: center;
+    background: var(--bg3); color: var(--muted);
+    border: 1px solid var(--border); transition: all .12s;
+  }
+  .opt-tab:hover { color: var(--text); }
+  .opt-tab.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+
+  /* PLAY CONTROLS */
+  .play-row { display: flex; gap: 6px; align-items: center; }
+  .btn {
+    font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 7px 14px; border-radius: 5px; cursor: pointer; border: 1px solid var(--border);
+    background: var(--bg3); color: var(--mid); transition: all .12s;
+    white-space: nowrap;
+  }
+  .btn:hover { color: var(--text); border-color: var(--border-lt); }
+  .btn.primary {
+    background: var(--accent-dim); color: var(--accent);
+    border-color: var(--accent); flex: 1;
+  }
+  .btn.primary:hover { background: #1a4a45; }
+
+  .hint {
+    font-size: 10.5px; color: var(--muted); font-style: italic; line-height: 1.5;
+    margin-top: -4px;
+  }
+</style>
+</head>
+<body>
+
+<div class="widget-card">
+  <div class="widget-header">
+    <div class="w-pill">Interactive</div>
+    <div class="w-title">Gradient Descent — navigate a loss landscape</div>
+    <div class="w-num">3.1</div>
+  </div>
+
+  <div class="widget-body">
+
+    <!-- CANVAS: loss landscape -->
+    <div class="canvas-wrap">
+      <canvas id="landscape" width="620" height="340"></canvas>
+      <div class="canvas-overlay">
+        <div>step &nbsp;<span class="val" id="ov-step">0</span></div>
+        <div>loss &nbsp;<span class="val" id="ov-loss">—</span></div>
+        <div>∇L &nbsp;&nbsp;<span class="val" id="ov-grad">—</span></div>
+      </div>
+    </div>
+
+    <!-- CANVAS: loss curve -->
+    <div class="loss-wrap">
+      <div class="loss-label">Loss over steps</div>
+      <canvas id="losscurve" width="620" height="90"></canvas>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right-panel">
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-lbl">Current Loss</div>
+          <div class="stat-val" id="s-loss">—</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Step</div>
+          <div class="stat-val sm" id="s-step">0 / 200</div>
+        </div>
+        <div class="stat">
+          <div class="stat-lbl">Status</div>
+          <div class="stat-val sm green" id="s-status">ready</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Optimizer -->
+      <div class="ctrl">
+        <div class="ctrl-head"><span class="ctrl-lbl">Optimizer</span></div>
+        <div class="opt-tabs">
+          <div class="opt-tab active" data-opt="sgd">SGD</div>
+          <div class="opt-tab" data-opt="momentum">Mom.</div>
+          <div class="opt-tab" data-opt="adam">Adam</div>
+        </div>
+      </div>
+
+      <!-- Learning rate -->
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="ctrl-lbl">Learning Rate</span>
+          <span class="ctrl-val" id="lr-val">0.05</span>
+        </div>
+        <input type="range" id="lr-slider" min="1" max="100" value="5"
+          oninput="updateLR(this.value)"/>
+      </div>
+
+      <!-- Speed -->
+      <div class="ctrl">
+        <div class="ctrl-head">
+          <span class="ctrl-lbl">Speed</span>
+          <span class="ctrl-val" id="spd-val">5</span>
+        </div>
+        <input type="range" id="spd-slider" min="1" max="20" value="5"
+          oninput="updateSpeed(this.value)"/>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Surface presets -->
+      <div class="ctrl">
+        <div class="ctrl-head"><span class="ctrl-lbl">Surface</span></div>
+        <div class="presets">
+          <div class="preset-btn active" data-surface="two-valleys">Two Valleys</div>
+          <div class="preset-btn" data-surface="saddle">Saddle Point</div>
+          <div class="preset-btn" data-surface="ravine">Ravine</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- Play controls -->
+      <div class="controls">
+        <div class="play-row">
+          <div class="btn primary" id="play-btn" onclick="togglePlay()">▶ Play</div>
+          <div class="btn" onclick="resetSim()">↺</div>
+        </div>
+        <div class="hint">Click the landscape to place the ball at any starting point.</div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── CONFIG ───────────────────────────────────────────────
+const W = 620, H = 340;
+const LW = 620, LH = 90;
+const STEPS = 200;
+
+// ─── STATE ────────────────────────────────────────────────
+let surface    = 'two-valleys';
+let optimizer  = 'sgd';
+let lr         = 0.05;
+let speed      = 5;
+let playing    = false;
+let animId     = null;
+let stepsSinceFrame = 0;
+
+// Ball state
+let bx, by;           // 0..1 normalized
+let vx = 0, vy = 0;   // momentum velocity
+let mx = 0, my = 0;   // adam first moment
+let vvx = 0, vvy = 0; // adam second moment
+let adamT = 0;
+
+let history = [];      // [{x,y,loss}]
+let lossHistory = [];
+
+// ─── LOSS SURFACES ────────────────────────────────────────
+const surfaces = {
+  'two-valleys': {
+    f: (x, y) => {
+      // Two valleys: global min near (.25,.5), local min near (.75,.5)
+      const g = 3*(x-0.25)*(x-0.25) + 5*(y-0.5)*(y-0.5);
+      const l = 4*(x-0.75)*(x-0.75) + 5*(y-0.5)*(y-0.5) + 0.4;
+      return Math.min(g, l) + 0.08 * Math.sin(12*x) * Math.sin(8*y) * 0.15;
+    },
+    start: [0.8, 0.2]
+  },
+  'saddle': {
+    f: (x, y) => {
+      const cx = x - 0.5, cy = y - 0.5;
+      return 2*cx*cx - 2*cy*cy + 0.5 + 0.3*Math.sin(4*x)*Math.cos(4*y)*0.2;
+    },
+    start: [0.52, 0.52]
+  },
+  'ravine': {
+    f: (x, y) => {
+      return 10*(y - x*x)*(y - x*x) + (1-x)*(1-x) * 0.5
+             + 0.05*Math.sin(16*x)*Math.sin(16*y)*0.1;
+    },
+    start: [0.1, 0.9]
+  }
+};
+
+// Numerical gradient
+function grad(x, y) {
+  const h = 0.002;
+  const f = surfaces[surface].f;
+  return [
+    (f(x+h,y) - f(x-h,y)) / (2*h),
+    (f(x,y+h) - f(x,y-h)) / (2*h)
+  ];
+}
+
+// ─── CANVAS SETUP ─────────────────────────────────────────
+const lc = document.getElementById('landscape');
+const ctx = lc.getContext('2d');
+const lcc = document.getElementById('losscurve');
+const lctx = lcc.getContext('2d');
+
+// ─── COLOR MAP ────────────────────────────────────────────
+function lossColor(t) {
+  // t in [0,1]: deep blue → teal → amber
+  t = Math.max(0, Math.min(1, t));
+  if (t < 0.5) {
+    const s = t / 0.5;
+    return [
+      Math.round(10 + s * 30),
+      Math.round(20 + s * 100),
+      Math.round(40 + s * 80)
+    ];
+  } else {
+    const s = (t - 0.5) / 0.5;
+    return [
+      Math.round(40 + s * 211),
+      Math.round(120 - s * 60),
+      Math.round(120 - s * 100)
+    ];
+  }
+}
+
+// ─── DRAW LANDSCAPE ───────────────────────────────────────
+let cachedImage = null;
+let cachedSurface = null;
+
+function buildLandscape() {
+  if (cachedSurface === surface) return;
+  cachedSurface = surface;
+
+  // Sample loss surface
+  const res = 3; // pixel resolution
+  const cols = Math.ceil(W/res);
+  const rows = Math.ceil(H/res);
+
+  let minL = Infinity, maxL = -Infinity;
+  const vals = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const nx = c / cols;
+      const ny = r / rows;
+      const v = surfaces[surface].f(nx, ny);
+      vals.push(v);
+      if (v < minL) minL = v;
+      if (v > maxL) maxL = v;
+    }
+  }
+
+  const offscreen = document.createElement('canvas');
+  offscreen.width  = W;
+  offscreen.height = H;
+  const oc = offscreen.getContext('2d');
+  const imgData = oc.createImageData(W, H);
+
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const v = vals[r * cols + c];
+      const t = (v - minL) / (maxL - minL + 1e-9);
+      const [rr, gg, bb] = lossColor(t);
+      for (let pr = 0; pr < res && r*res+pr < H; pr++) {
+        for (let pc = 0; pc < res && c*res+pc < W; pc++) {
+          const idx = ((r*res+pr)*W + c*res+pc) * 4;
+          imgData.data[idx]   = rr;
+          imgData.data[idx+1] = gg;
+          imgData.data[idx+2] = bb;
+          imgData.data[idx+3] = 255;
+        }
+      }
+    }
+  }
+  oc.putImageData(imgData, 0, 0);
+
+  // Draw contours (iso-lines) on top
+  oc.strokeStyle = 'rgba(0,0,0,0.25)';
+  oc.lineWidth = 0.8;
+  const nContours = 12;
+  for (let ci = 0; ci <= nContours; ci++) {
+    const threshold = minL + (ci / nContours) * (maxL - minL);
+    // March squares (simplified: just mark pixels at boundary)
+    for (let r = 1; r < rows-1; r++) {
+      for (let c = 1; c < cols-1; c++) {
+        const v  = vals[r*cols+c];
+        const vr = vals[r*cols+c+1];
+        if ((v < threshold) !== (vr < threshold)) {
+          const px = c * res + res/2;
+          const py = r * res + res/2;
+          oc.beginPath();
+          oc.arc(px, py, 0.6, 0, Math.PI*2);
+          oc.fillStyle = 'rgba(0,0,0,0.4)';
+          oc.fill();
+        }
+      }
+    }
+  }
+
+  cachedImage = offscreen;
+}
+
+function drawFrame() {
+  buildLandscape();
+  ctx.drawImage(cachedImage, 0, 0, W, H);
+
+  // Draw trail
+  if (history.length > 1) {
+    for (let i = 1; i < history.length; i++) {
+      const a = history[i-1], b = history[i];
+      const alpha = 0.15 + 0.6 * (i / history.length);
+      ctx.beginPath();
+      ctx.moveTo(a.x * W, a.y * H);
+      ctx.lineTo(b.x * W, b.y * H);
+      ctx.strokeStyle = `rgba(45, 212, 191, ${alpha})`;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+    // Dots on trail
+    for (let i = 0; i < history.length - 1; i += 5) {
+      const pt = history[i];
+      ctx.beginPath();
+      ctx.arc(pt.x * W, pt.y * H, 2, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(45,212,191,0.35)`;
+      ctx.fill();
+    }
+  }
+
+  // Draw ball
+  if (bx !== undefined) {
+    const px = bx * W, py = by * H;
+    // Glow
+    const grd = ctx.createRadialGradient(px, py, 0, px, py, 18);
+    grd.addColorStop(0, 'rgba(45,212,191,0.4)');
+    grd.addColorStop(1, 'rgba(45,212,191,0)');
+    ctx.beginPath();
+    ctx.arc(px, py, 18, 0, Math.PI*2);
+    ctx.fillStyle = grd;
+    ctx.fill();
+    // Ball
+    ctx.beginPath();
+    ctx.arc(px, py, 6, 0, Math.PI*2);
+    ctx.fillStyle = '#2dd4bf';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 1.5;
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
+function drawLossCurve() {
+  lctx.clearRect(0, 0, LW, LH);
+  lctx.fillStyle = '#0a0a0a';
+  lctx.fillRect(0, 0, LW, LH);
+
+  if (lossHistory.length < 2) return;
+
+  const maxLoss = Math.max(...lossHistory);
+  const minLoss = Math.min(...lossHistory);
+  const range = maxLoss - minLoss || 1;
+
+  const pad = 16;
+  const cw = LW - pad*2;
+  const ch = LH - pad*2;
+
+  // Grid line
+  lctx.strokeStyle = '#1a1a1a';
+  lctx.lineWidth = 1;
+  lctx.beginPath();
+  lctx.moveTo(pad, pad + ch/2);
+  lctx.lineTo(pad + cw, pad + ch/2);
+  lctx.stroke();
+
+  // Loss curve
+  lctx.beginPath();
+  for (let i = 0; i < lossHistory.length; i++) {
+    const x = pad + (i / STEPS) * cw;
+    const y = pad + ch - ((lossHistory[i] - minLoss) / range) * ch;
+    i === 0 ? lctx.moveTo(x, y) : lctx.lineTo(x, y);
+  }
+  lctx.strokeStyle = '#2dd4bf';
+  lctx.lineWidth = 1.5;
+  lctx.stroke();
+
+  // Gradient fill
+  const grad = lctx.createLinearGradient(0, pad, 0, pad+ch);
+  grad.addColorStop(0, 'rgba(45,212,191,0.2)');
+  grad.addColorStop(1, 'rgba(45,212,191,0)');
+  lctx.lineTo(pad + ((lossHistory.length-1)/STEPS)*cw, pad+ch);
+  lctx.lineTo(pad, pad+ch);
+  lctx.closePath();
+  lctx.fillStyle = grad;
+  lctx.fill();
+}
+
+// ─── SIMULATION ───────────────────────────────────────────
+function initBall(nx, ny) {
+  bx = Math.max(0.01, Math.min(0.99, nx));
+  by = Math.max(0.01, Math.min(0.99, ny));
+  vx = 0; vy = 0;
+  mx = 0; my = 0; vvx = 0; vvy = 0; adamT = 0;
+  history = [];
+  lossHistory = [];
+  const loss = surfaces[surface].f(bx, by);
+  history.push({x: bx, y: by, loss});
+  lossHistory.push(loss);
+  updateOverlay();
+  drawFrame();
+  drawLossCurve();
+}
+
+function step() {
+  if (history.length >= STEPS) {
+    stopPlay();
+    document.getElementById('s-status').textContent = 'converged';
+    document.getElementById('s-status').className = 'stat-val sm green';
+    return;
+  }
+
+  const [gx, gy] = grad(bx, by);
+  const gradNorm = Math.sqrt(gx*gx + gy*gy);
+
+  if (optimizer === 'sgd') {
+    bx -= lr * gx;
+    by -= lr * gy;
+
+  } else if (optimizer === 'momentum') {
+    const beta = 0.85;
+    vx = beta * vx + lr * gx;
+    vy = beta * vy + lr * gy;
+    bx -= vx;
+    by -= vy;
+
+  } else if (optimizer === 'adam') {
+    adamT++;
+    const beta1 = 0.9, beta2 = 0.999, eps = 1e-8;
+    mx  = beta1 * mx  + (1 - beta1) * gx;
+    my  = beta1 * my  + (1 - beta1) * gy;
+    vvx = beta2 * vvx + (1 - beta2) * gx * gx;
+    vvy = beta2 * vvy + (1 - beta2) * gy * gy;
+    const mxh = mx  / (1 - Math.pow(beta1, adamT));
+    const myh = my  / (1 - Math.pow(beta1, adamT));
+    const vxh = vvx / (1 - Math.pow(beta2, adamT));
+    const vyh = vvy / (1 - Math.pow(beta2, adamT));
+    bx -= lr * mxh / (Math.sqrt(vxh) + eps);
+    by -= lr * myh / (Math.sqrt(vyh) + eps);
+  }
+
+  // Clamp
+  bx = Math.max(0.01, Math.min(0.99, bx));
+  by = Math.max(0.01, Math.min(0.99, by));
+
+  const loss = surfaces[surface].f(bx, by);
+  history.push({x: bx, y: by, loss});
+  lossHistory.push(loss);
+
+  updateOverlay();
+  drawFrame();
+  drawLossCurve();
+
+  // Divergence check
+  if (loss > 10) {
+    stopPlay();
+    document.getElementById('s-status').textContent = 'diverged!';
+    document.getElementById('s-status').className = 'stat-val sm red';
+  }
+}
+
+function updateOverlay() {
+  const loss = surfaces[surface].f(bx, by);
+  const [gx, gy] = grad(bx, by);
+  const gn = Math.sqrt(gx*gx+gy*gy).toFixed(3);
+
+  document.getElementById('ov-step').textContent = history.length;
+  document.getElementById('ov-loss').textContent = loss.toFixed(4);
+  document.getElementById('ov-grad').textContent = gn;
+  document.getElementById('s-loss').textContent  = loss.toFixed(4);
+  document.getElementById('s-step').textContent  = `${history.length} / ${STEPS}`;
+
+  // Color loss by magnitude
+  const el = document.getElementById('s-loss');
+  el.className = loss < 0.05 ? 'stat-val green' : loss > 2 ? 'stat-val red' : 'stat-val';
+}
+
+// ─── ANIMATION LOOP ───────────────────────────────────────
+function animate() {
+  for (let i = 0; i < speed; i++) step();
+  if (playing) animId = requestAnimationFrame(animate);
+}
+
+function togglePlay() {
+  if (playing) {
+    stopPlay();
+  } else {
+    startPlay();
+  }
+}
+
+function startPlay() {
+  if (bx === undefined) initBall(...surfaces[surface].start);
+  playing = true;
+  document.getElementById('play-btn').textContent = '⏸ Pause';
+  document.getElementById('s-status').textContent = 'running';
+  document.getElementById('s-status').className = 'stat-val sm';
+  animId = requestAnimationFrame(animate);
+}
+
+function stopPlay() {
+  playing = false;
+  document.getElementById('play-btn').textContent = '▶ Play';
+  if (animId) { cancelAnimationFrame(animId); animId = null; }
+}
+
+function resetSim() {
+  stopPlay();
+  cachedSurface = null; // force redraw
+  initBall(...surfaces[surface].start);
+  document.getElementById('s-status').textContent = 'ready';
+  document.getElementById('s-status').className = 'stat-val sm green';
+}
+
+// ─── CONTROLS ─────────────────────────────────────────────
+function updateLR(v) {
+  lr = (v / 100) * 0.5;
+  document.getElementById('lr-val').textContent = lr.toFixed(3);
+}
+
+function updateSpeed(v) {
+  speed = parseInt(v);
+  document.getElementById('spd-val').textContent = speed;
+}
+
+// Optimizer tabs
+document.querySelectorAll('.opt-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.opt-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    optimizer = tab.dataset.opt;
+    if (playing) resetSim();
+  });
+});
+
+// Surface presets
+document.querySelectorAll('.preset-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    surface = btn.dataset.surface;
+    resetSim();
+  });
+});
+
+// Click on canvas to place ball
+lc.addEventListener('click', e => {
+  const rect = lc.getBoundingClientRect();
+  const scaleX = W / rect.width;
+  const scaleY = H / rect.height;
+  const nx = (e.clientX - rect.left) * scaleX / W;
+  const ny = (e.clientY - rect.top)  * scaleY / H;
+  stopPlay();
+  initBall(nx, ny);
+  document.getElementById('s-status').textContent = 'placed';
+  document.getElementById('s-status').className = 'stat-val sm';
+});
+
+// ─── INIT ─────────────────────────────────────────────────
+initBall(...surfaces[surface].start);
+</script>
+</body>
+</html>

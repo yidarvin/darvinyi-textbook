@@ -1,0 +1,36 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap");
+@import "katex/dist/katex.min.css";
+@import "tailwindcss";
+@source "../index.html";
+@source "./src/**/*.{js,jsx}";
+
+:root {
+  --bg: #0d0d0d; --bg2: #111; --bg3: #161616; --bg4: #1e1e1e;
+  --border: #242424; --border-lt: #2e2e2e;
+  --text: #e8eaed; --text-muted: #555; --text-mid: #888;
+  --accent: #2dd4bf; --accent-dim: #0b2422;
+  --accent-glow: rgba(45,212,191,0.15);
+  --math-color: #fbbf24;
+  --green: #34d399; --red: #f87171; --orange: #fb923c;
+  --purple: #a78bfa; --code-bg: #0a0a0a;
+}
+body { background: var(--bg); color: var(--text); }
+* { box-sizing: border-box; }
+.widget-placeholder {
+  border: 1px dashed var(--border-lt);
+  border-radius: 8px;
+  height: 220px;
+  margin: 28px 0;
+  background: var(--bg2);
+}
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-thumb { background: var(--border-lt); border-radius: 2px; }
+input[type=range] {
+  -webkit-appearance: none; height: 2px;
+  background: var(--border-lt); border-radius: 2px; cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 12px; height: 12px;
+  border-radius: 50%; background: var(--accent);
+  box-shadow: 0 0 6px var(--accent-glow);
+}
