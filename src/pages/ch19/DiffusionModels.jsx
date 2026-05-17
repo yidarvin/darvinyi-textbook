@@ -3,10 +3,10 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
-import ForwardDiffusion from "../../components/widgets/ch13/ForwardDiffusion";
-import ReverseDenoising from "../../components/widgets/ch13/ReverseDenoising";
-import NoiseSchedule from "../../components/widgets/ch13/NoiseSchedule";
-import ScoreFunction from "../../components/widgets/ch13/ScoreFunction";
+import ForwardDiffusion from "../../components/widgets/ch19/ForwardDiffusion";
+import ReverseDenoising from "../../components/widgets/ch19/ReverseDenoising";
+import NoiseSchedule from "../../components/widgets/ch19/NoiseSchedule";
+import ScoreFunction from "../../components/widgets/ch19/ScoreFunction";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -57,7 +57,7 @@ export default function DiffusionModels() {
           marginBottom: "12px",
         }}
       >
-        Chapter 13 · Part III — Generative Models
+        Chapter 19 · Part V — Image Generative Models
       </div>
 
       <h1

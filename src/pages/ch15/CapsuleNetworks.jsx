@@ -3,9 +3,9 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
-import CnnVsCapsnet from "../../components/widgets/ch10/CnnVsCapsnet";
-import CapsuleVector from "../../components/widgets/ch10/CapsuleVector";
-import DynamicRouting from "../../components/widgets/ch10/DynamicRouting";
+import CnnVsCapsnet from "../../components/widgets/ch15/CnnVsCapsnet";
+import CapsuleVector from "../../components/widgets/ch15/CapsuleVector";
+import DynamicRouting from "../../components/widgets/ch15/DynamicRouting";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -53,7 +53,7 @@ export default function CapsuleNetworks() {
           marginBottom: "12px",
         }}
       >
-        Chapter 10 · Part II — Architectures
+        Chapter 15 · Part IV — Other Architectures
       </div>
 
       <h1

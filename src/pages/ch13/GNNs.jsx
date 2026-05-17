@@ -3,10 +3,10 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
-import MessagePassing from "../../components/widgets/ch14/MessagePassing";
-import GraphAttention from "../../components/widgets/ch14/GraphAttention";
-import NodeClassification from "../../components/widgets/ch14/NodeClassification";
-import GraphVsGrid from "../../components/widgets/ch14/GraphVsGrid";
+import MessagePassing from "../../components/widgets/ch13/MessagePassing";
+import GraphAttention from "../../components/widgets/ch13/GraphAttention";
+import NodeClassification from "../../components/widgets/ch13/NodeClassification";
+import GraphVsGrid from "../../components/widgets/ch13/GraphVsGrid";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -56,7 +56,7 @@ export default function GNNs() {
           marginBottom: "12px",
         }}
       >
-        Chapter 14 · Part IV — Advanced Topics
+        Chapter 13 · Part IV — Other Architectures
       </div>
 
       <h1

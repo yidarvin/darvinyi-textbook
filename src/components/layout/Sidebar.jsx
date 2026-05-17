@@ -1,6 +1,6 @@
 import { NavLink, useLocation } from "react-router-dom";
 
-// ─── Chapter data: all 17 chapters across 6 parts ───────────────────────────
+// ─── Chapter data: all 22 chapters across 7 parts ───────────────────────────
 const PARTS = [
   {
     label: "Part I — Foundations",
@@ -9,50 +9,61 @@ const PARTS = [
       { num: "01", title: "Statistical Learning",    widgets: 4,  path: "/ch/01", live: true },
       { num: "02", title: "Neural Networks",          widgets: 4,  path: "/ch/02", live: true },
       { num: "03", title: "Optimization",             widgets: 5,  path: "/ch/03", live: true },
+      { num: "04", title: "Training Techniques",      widgets: 6,  path: "/ch/04", live: true },
+      { num: "05", title: "Word Embeddings",          widgets: 5,  path: "/ch/05", live: true },
     ],
   },
   {
-    label: "Part II — Architectures",
+    label: "Part II — Sequence & Attention",
     color: "var(--purple)",
     chapters: [
-      { num: "04", title: "Training Techniques",      widgets: 6,  path: "/ch/04", live: true },
-      { num: "05", title: "Convolutional Nets",       widgets: 5,  path: "/ch/05", live: true },
-      { num: "06", title: "Recurrent Networks",       widgets: 4,  path: "/ch/06", live: true },
+      { num: "06", title: "Recurrent Networks & LSTMs", widgets: 4, path: "/ch/06", live: true },
       { num: "07", title: "Attention",                widgets: 4,  path: "/ch/07", live: true },
       { num: "08", title: "Transformers",             widgets: 4,  path: "/ch/08", live: true },
-      { num: "09", title: "Multimodal Networks",      widgets: 4,  path: "/ch/09", live: true },
-      { num: "10", title: "Capsule Networks",         widgets: 3,  path: "/ch/10", live: true },
     ],
   },
   {
-    label: "Part III — Generative",
-    color: "var(--orange)",
+    label: "Part III — Large Language Models",
+    color: "#a78bfa",
     chapters: [
-      { num: "11", title: "Variational Autoencoders", widgets: 4,  path: "/ch/11", live: true },
-      { num: "12", title: "GANs",                     widgets: 4,  path: "/ch/12", live: true },
-      { num: "13", title: "Diffusion Models",         widgets: 4,  path: "/ch/13", live: true },
+      { num: "09", title: "LLM Architectures",        widgets: 5,  path: "/ch/09", live: true },
+      { num: "10", title: "LLM Training & Alignment", widgets: 6,  path: "/ch/10", live: true },
+      { num: "11", title: "Multimodal Networks",      widgets: 4,  path: "/ch/11", live: true },
     ],
   },
   {
-    label: "Part IV — Advanced",
+    label: "Part IV — Other Architectures",
     color: "var(--green)",
     chapters: [
-      { num: "14", title: "Graph Neural Nets",        widgets: 4,  path: "/ch/14", live: true },
-      { num: "15", title: "Datasets & Benchmarks",    widgets: 3,  path: "/ch/15", live: true },
+      { num: "12", title: "Convolutional Networks",   widgets: 5,  path: "/ch/12", live: true },
+      { num: "13", title: "Graph Neural Networks",    widgets: 4,  path: "/ch/13", live: true },
+      { num: "14", title: "Reinforcement Learning",   widgets: 6,  path: "/ch/14", live: true },
+      { num: "15", title: "Advanced Architectures",   widgets: 3,  path: "/ch/15", live: true },
     ],
   },
   {
-    label: "Part V — Reinforcement Learning",
-    color: "#f472b6",
+    label: "Part V — Image Generative Models",
+    color: "var(--orange)",
     chapters: [
-      { num: "16", title: "Reinforcement Learning",   widgets: 6,  path: "/ch/16", live: true },
+      { num: "16", title: "Variational Autoencoders", widgets: 4,  path: "/ch/16", live: true },
+      { num: "17", title: "Generative Adversarial Networks", widgets: 4, path: "/ch/17", live: true },
+      { num: "18", title: "Image-to-Image Translation", widgets: 6, path: "/ch/18", live: true },
+      { num: "19", title: "Diffusion Models",         widgets: 4,  path: "/ch/19", live: true },
     ],
   },
   {
-    label: "Part VI — AI Agents",
+    label: "Part VI — Evaluation",
+    color: "var(--green)",
+    chapters: [
+      { num: "20", title: "Datasets & Benchmarks",    widgets: 3,  path: "/ch/20", live: true },
+    ],
+  },
+  {
+    label: "Part VII — AI Agents",
     color: "#38bdf8",
     chapters: [
-      { num: "17", title: "AI Agents",                widgets: 5,  path: "/ch/17", live: true },
+      { num: "21", title: "AI Agents",                widgets: 5,  path: "/ch/21", live: true },
+      { num: "22", title: "AI Agent Harnesses",       widgets: 6,  path: "/ch/22", live: true },
     ],
   },
 ];

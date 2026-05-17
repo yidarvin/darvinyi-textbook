@@ -3,10 +3,10 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
-import ContrastiveLearning from "../../components/widgets/ch09/ContrastiveLearning";
-import EmbeddingSpace from "../../components/widgets/ch09/EmbeddingSpace";
-import VitPatches from "../../components/widgets/ch09/VitPatches";
-import CrossModalRetrieval from "../../components/widgets/ch09/CrossModalRetrieval";
+import ContrastiveLearning from "../../components/widgets/ch11/ContrastiveLearning";
+import EmbeddingSpace from "../../components/widgets/ch11/EmbeddingSpace";
+import VitPatches from "../../components/widgets/ch11/VitPatches";
+import CrossModalRetrieval from "../../components/widgets/ch11/CrossModalRetrieval";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -56,7 +56,7 @@ export default function Multimodal() {
           marginBottom: "12px",
         }}
       >
-        Chapter 09 · Part II — Architectures
+        Chapter 11 · Part III — Large Language Models
       </div>
 
       <h1

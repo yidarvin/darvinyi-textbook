@@ -3,12 +3,12 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import MathBlock from "../../components/shared/MathBlock";
 import Citations from "../../components/shared/Citations";
-import MDPExplorer from "../../components/widgets/ch16/MDPExplorer";
-import QLearning from "../../components/widgets/ch16/QLearning";
-import PolicyGradient from "../../components/widgets/ch16/PolicyGradient";
-import PPOClipping from "../../components/widgets/ch16/PPOClipping";
-import RLHFPipeline from "../../components/widgets/ch16/RLHFPipeline";
-import RLVRvsRLHF from "../../components/widgets/ch16/RLVRvsRLHF";
+import MDPExplorer from "../../components/widgets/ch14/MDPExplorer";
+import QLearning from "../../components/widgets/ch14/QLearning";
+import PolicyGradient from "../../components/widgets/ch14/PolicyGradient";
+import PPOClipping from "../../components/widgets/ch14/PPOClipping";
+import RLHFPipeline from "../../components/widgets/ch14/RLHFPipeline";
+import RLVRvsRLHF from "../../components/widgets/ch14/RLVRvsRLHF";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -62,7 +62,7 @@ export default function ReinforcementLearning() {
           marginBottom: "12px",
         }}
       >
-        Chapter 16 · Part V — Reinforcement Learning
+        Chapter 14 · Part IV — Other Architectures
       </div>
 
       <h1

@@ -2,9 +2,9 @@ import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
-import DatasetTimeline from "../../components/widgets/ch15/DatasetTimeline";
-import BenchmarkLeaderboard from "../../components/widgets/ch15/BenchmarkLeaderboard";
-import DatasetBias from "../../components/widgets/ch15/DatasetBias";
+import DatasetTimeline from "../../components/widgets/ch20/DatasetTimeline";
+import BenchmarkLeaderboard from "../../components/widgets/ch20/BenchmarkLeaderboard";
+import DatasetBias from "../../components/widgets/ch20/DatasetBias";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -54,7 +54,7 @@ export default function Datasets() {
           marginBottom: "12px",
         }}
       >
-        Chapter 15 · Part IV — Advanced Topics
+        Chapter 20 · Part VI — Evaluation
       </div>
 
       <h1

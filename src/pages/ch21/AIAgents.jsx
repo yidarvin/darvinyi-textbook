@@ -2,11 +2,11 @@ import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
-import ReActLoop from "../../components/widgets/ch17/ReActLoop";
-import ToolUseFlow from "../../components/widgets/ch17/ToolUseFlow";
-import MemoryArchitecture from "../../components/widgets/ch17/MemoryArchitecture";
-import MultiAgent from "../../components/widgets/ch17/MultiAgent";
-import FailureModes from "../../components/widgets/ch17/FailureModes";
+import ReActLoop from "../../components/widgets/ch21/ReActLoop";
+import ToolUseFlow from "../../components/widgets/ch21/ToolUseFlow";
+import MemoryArchitecture from "../../components/widgets/ch21/MemoryArchitecture";
+import MultiAgent from "../../components/widgets/ch21/MultiAgent";
+import FailureModes from "../../components/widgets/ch21/FailureModes";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -59,7 +59,7 @@ export default function AIAgents() {
           marginBottom: "12px",
         }}
       >
-        Chapter 17 · Part VI — AI Agents
+        Chapter 21 · Part VII — AI Agents
       </div>
 
       <h1

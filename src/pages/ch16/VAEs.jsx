@@ -3,10 +3,10 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
-import AutoencoderVsVAE from "../../components/widgets/ch11/AutoencoderVsVAE";
-import LatentSpaceExplorer from "../../components/widgets/ch11/LatentSpaceExplorer";
-import KLDivergence from "../../components/widgets/ch11/KLDivergence";
-import ELBODecomposition from "../../components/widgets/ch11/ELBODecomposition";
+import AutoencoderVsVAE from "../../components/widgets/ch16/AutoencoderVsVAE";
+import LatentSpaceExplorer from "../../components/widgets/ch16/LatentSpaceExplorer";
+import KLDivergence from "../../components/widgets/ch16/KLDivergence";
+import ELBODecomposition from "../../components/widgets/ch16/ELBODecomposition";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -57,7 +57,7 @@ export default function VAEs() {
           marginBottom: "12px",
         }}
       >
-        Chapter 11 · Part III — Generative Models
+        Chapter 16 · Part V — Image Generative Models
       </div>
 
       <h1

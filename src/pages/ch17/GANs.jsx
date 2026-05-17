@@ -3,10 +3,10 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
-import MinimaxGame from "../../components/widgets/ch12/MinimaxGame";
-import TrainingDynamics from "../../components/widgets/ch12/TrainingDynamics";
-import ModeCollapse from "../../components/widgets/ch12/ModeCollapse";
-import DBEvolution from "../../components/widgets/ch12/DBEvolution";
+import MinimaxGame from "../../components/widgets/ch17/MinimaxGame";
+import TrainingDynamics from "../../components/widgets/ch17/TrainingDynamics";
+import ModeCollapse from "../../components/widgets/ch17/ModeCollapse";
+import DBEvolution from "../../components/widgets/ch17/DBEvolution";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -57,7 +57,7 @@ export default function GANs() {
           marginBottom: "12px",
         }}
       >
-        Chapter 12 · Part III — Generative Models
+        Chapter 17 · Part V — Image Generative Models
       </div>
 
       <h1

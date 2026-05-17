@@ -3,11 +3,11 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
-import ConvolutionExplorer from "../../components/widgets/ch05/ConvolutionExplorer";
-import ReceptiveField from "../../components/widgets/ch05/ReceptiveField";
-import ArchitectureTimeline from "../../components/widgets/ch05/ArchitectureTimeline";
-import SkipConnection from "../../components/widgets/ch05/SkipConnection";
-import DilatedConvolution from "../../components/widgets/ch05/DilatedConvolution";
+import ConvolutionExplorer from "../../components/widgets/ch12/ConvolutionExplorer";
+import ReceptiveField from "../../components/widgets/ch12/ReceptiveField";
+import ArchitectureTimeline from "../../components/widgets/ch12/ArchitectureTimeline";
+import SkipConnection from "../../components/widgets/ch12/SkipConnection";
+import DilatedConvolution from "../../components/widgets/ch12/DilatedConvolution";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -58,7 +58,7 @@ export default function ConvNets() {
           marginBottom: "12px",
         }}
       >
-        Chapter 05 · Part II — Architectures
+        Chapter 12 · Part IV — Other Architectures
       </div>
 
       <h1
