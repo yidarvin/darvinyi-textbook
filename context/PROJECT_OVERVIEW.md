@@ -64,16 +64,19 @@ darvinyi-textbook/
 └── vercel.json
 ```
 
-## Curriculum Summary (17 chapters, 6 parts)
+## Curriculum Summary (22 chapters, 7 parts)
 
 | Part | Chapters | Focus |
 |---|---|---|
-| I — Foundations | 1-4 | Statistical learning, neural nets, optimization, training techniques |
-| II — Architectures | 5-10 | CNNs, RNNs, attention, transformers, multimodal, capsule nets |
-| III — Generative | 11-13 | VAEs, GANs, diffusion models |
-| IV — Advanced | 14-15 | GNNs, datasets & benchmarks |
-| V — Reinforcement Learning | 16 | Q-learning → DQN → PPO → RLHF/RLEF/RLVR |
-| VI — AI Agents | 17 | ReAct, tool use, LangGraph, multi-agent systems |
+| I — Foundations | 1-5 | Statistical learning, neural nets, optimization, training techniques, word embeddings |
+| II — Sequence & Attention | 6-8 | RNNs/LSTMs, attention, transformers |
+| III — Large Language Models | 9-11 | LLM architectures, LLM training & alignment, multimodal networks |
+| IV — Other Architectures | 12-15 | ConvNets, GNNs, reinforcement learning, capsule networks |
+| V — Image Generative Models | 16-19 | VAEs, GANs, image-to-image, diffusion models |
+| VI — Evaluation | 20 | Datasets & benchmarks |
+| VII — AI Agents | 21-22 | AI agents, agent harnesses |
+
+The authoritative per-chapter list lives in [CURRICULUM.md](CURRICULUM.md).
 
 ## V1 Scope (build first)
 
@@ -85,24 +88,29 @@ Everything else is scaffolded (routes exist, pages are placeholder) but content 
 
 ## Widget Count by Chapter
 
-- Ch 1: 4 widgets (Polynomial Fit, Bias-Variance, Regularization, Decision Boundary)
-- Ch 2: 4 widgets (Universal Approx, Computation Graph, Activation Zoo, Loss Function)
-- Ch 3: 5 widgets (Gradient Descent Navigator [BUILT], Optimizer Race, LR Finder, LR Schedule, Adam Internals)
+- Ch 1: 4 widgets
+- Ch 2: 4 widgets
+- Ch 3: 5 widgets
 - Ch 4: 6 widgets
 - Ch 5: 5 widgets
 - Ch 6: 4 widgets
 - Ch 7: 4 widgets
 - Ch 8: 4 widgets
-- Ch 9: 4 widgets
-- Ch 10: 3 widgets
+- Ch 9: 5 widgets
+- Ch 10: 6 widgets
 - Ch 11: 4 widgets
-- Ch 12: 4 widgets
+- Ch 12: 5 widgets
 - Ch 13: 4 widgets
-- Ch 14: 4 widgets
+- Ch 14: 6 widgets
 - Ch 15: 3 widgets
-- Ch 16: 6 widgets
-- Ch 17: 5 widgets
-**Total: ~75 widgets**
+- Ch 16: 4 widgets
+- Ch 17: 4 widgets
+- Ch 18: 6 widgets
+- Ch 19: 4 widgets
+- Ch 20: 3 widgets
+- Ch 21: 5 widgets
+- Ch 22: 6 widgets
+**Total: 101 widgets**
 
 ## Routing
 

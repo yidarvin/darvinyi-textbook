@@ -3,12 +3,18 @@ import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
 import MathBlock from "../../components/shared/MathBlock";
+import InlineMath from "../../components/shared/InlineMath";
 import InstructionTuning from "../../components/widgets/ch10/InstructionTuning";
 import TrainingPipeline from "../../components/widgets/ch10/TrainingPipeline";
 import ConstitutionalAI from "../../components/widgets/ch10/ConstitutionalAI";
 import ToolCallingTraining from "../../components/widgets/ch10/ToolCallingTraining";
 import SafetyRefusal from "../../components/widgets/ch10/SafetyRefusal";
 import DPOvsRLHF from "../../components/widgets/ch10/DPOvsRLHF";
+import BaseVsSFTBehavior from "../../components/diagrams/ch10/BaseVsSFTBehavior";
+import RLHFThreeStep from "../../components/diagrams/ch10/RLHFThreeStep";
+import ConstitutionalAILoop from "../../components/diagrams/ch10/ConstitutionalAILoop";
+import ToolCallExchange from "../../components/diagrams/ch10/ToolCallExchange";
+import SafetyBoundary from "../../components/diagrams/ch10/SafetyBoundary";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -109,6 +115,33 @@ export default function LLMTraining() {
         broad capability first, then format, then preference, then constraint.
       </p>
 
+      <p style={prose}>
+        The stages are extremely uneven in cost. Pretraining is overwhelmingly the
+        most compute-expensive — for a frontier-class model, it consumes 95–99% of
+        the total training budget and runs for weeks to months on thousands of GPUs.
+        Every subsequent stage is comparatively cheap. LLaMA 2 [7] is a useful
+        public reference point: roughly <InlineMath>{"1.7 \\times 10^6"}</InlineMath>{" "}
+        GPU-hours on pretraining versus a small fraction of that on instruction
+        tuning and RLHF combined. The implication is structural — most of the
+        model's capability comes from pretraining, while post-training mostly shapes{" "}
+        <em>how</em> the model expresses that capability. You cannot SFT a capability
+        into a model that doesn't already have it; you can only redirect what's
+        already there.
+      </p>
+
+      <p style={prose}>
+        Each post-training stage applies a narrower objective to a more capable model,
+        and the narrowing has a cost. Models often score slightly worse on raw
+        benchmarks — perplexity on held-out text, completion accuracy on open-ended
+        generation — after alignment than before. This gap is sometimes called the{" "}
+        <em>alignment tax</em>. Part of it is inherent (a model that refuses some
+        requests is less useful for those specific requests) and part is an artifact
+        of imperfect training signals (preference data and constitutional principles
+        can over-fit to surface patterns). Modern recipes work hard to minimize the
+        tax through better data quality, KL-regularization against the pretrained
+        policy, and capability-preserving fine-tuning, but some tax remains.
+      </p>
+
       <TrainingPipeline />
 
       {/* ── Section 2: Instruction Tuning ─────────────────────────────────── */}
@@ -121,14 +154,42 @@ export default function LLMTraining() {
         respond to instructions. Given "Translate this to French:", it might
         continue with another similar instruction rather than producing the
         translation. Instruction tuning fixes this by fine-tuning the model on
-        a curated dataset of (instruction, response) pairs — typically tens to
-        hundreds of thousands of human-written examples spanning many tasks.
-        The training objective is unchanged from pretraining (cross-entropy on
-        the response tokens), but the format teaches the model that the instruction
-        is a request to be fulfilled, not a pattern to extend.
+        a curated dataset of <InlineMath>{"(\\text{instruction},\\, \\text{response})"}</InlineMath>{" "}
+        pairs — typically tens to hundreds of thousands of human-written examples
+        spanning many tasks. The training objective is unchanged from pretraining
+        (cross-entropy on the response tokens), but the format teaches the model
+        that the instruction is a request to be fulfilled, not a pattern to extend.
       </p>
 
-      <MathBlock>{`L_SFT = -E_{(x, y) ~ D_SFT} [ sum_t log p_theta(y_t | x, y_<t) ]`}</MathBlock>
+      <MathBlock>{"$$\\mathcal{L}_{\\text{SFT}} = -\\mathbb{E}_{(x, y) \\sim \\mathcal{D}_{\\text{SFT}}}\\!\\left[\\sum_t \\log p_\\theta(y_t \\mid x, y_{<t})\\right]$$"}</MathBlock>
+
+      <p style={prose}>
+        Hand-writing instruction–response pairs is expensive — labelers cost time
+        and don't scale. Wang, Kordi, Mishra, Liu, Smith, Khashabi &amp; Hajishirzi
+        (2023) [4] showed that a base LM could <em>generate its own</em> instruction
+        tuning data: seed the model with a small handful of human-written examples,
+        prompt it to produce more, filter for quality, and use the result as
+        training data. The Stanford Alpaca model was famously SFT-trained on roughly
+        52K Self-Instruct examples generated by GPT-3.5, and matched far more
+        expensive human-annotated alternatives on simple benchmarks. Modern
+        instruction datasets increasingly mix human and model-generated examples,
+        with care taken to avoid the model-self-distillation failure mode where the
+        student inherits the teacher's biases at scale.
+      </p>
+
+      <p style={prose}>
+        LIMA [6] sharpened a related point. Zhou et al. (2023) fine-tuned LLaMA-65B
+        on just 1,000 carefully curated instruction–response pairs and compared to
+        the same model fine-tuned on millions. The 1,000-example model was preferred
+        to GPT-3.5 in 43% of head-to-head comparisons and to Bard in 58%. The
+        interpretation: SFT does not teach new capabilities, it <em>surfaces</em>{" "}
+        capabilities already learned during pretraining. A small, high-quality
+        dataset is enough to surface them; more data adds diminishing returns and
+        can hurt if quality drops. This finding shifted the practical recipe from
+        "scrape the largest possible SFT corpus" toward "curate a small clean one."
+      </p>
+
+      <BaseVsSFTBehavior />
 
       <InstructionTuning />
 
@@ -149,8 +210,42 @@ export default function LLMTraining() {
         recent open-weight models use DPO or a close variant.
       </p>
 
-      <MathBlock>{`L_DPO = -E [ log sigma( beta * log(pi_theta(y_w|x)/pi_ref(y_w|x))
-                       - beta * log(pi_theta(y_l|x)/pi_ref(y_l|x)) ) ]`}</MathBlock>
+      <p style={prose}>
+        Ouyang et al. (2022) [1] gave the field its template with InstructGPT, a
+        three-stage pipeline that became the de facto standard. <strong>Stage 1</strong>:
+        SFT on demonstration data, producing a baseline policy. <strong>Stage 2</strong>:
+        collect human preference comparisons over pairs of model outputs and train
+        a reward model <InlineMath>{"r_\\phi(x, y)"}</InlineMath> to predict which
+        output is preferred. <strong>Stage 3</strong>: optimize the policy{" "}
+        <InlineMath>{"\\pi_\\theta"}</InlineMath> against this reward model using
+        PPO, with a KL penalty against the SFT policy to prevent reward hacking.
+        Without the KL term, the policy quickly finds outputs that fool the reward
+        model into giving high scores while drifting away from sensible behavior —
+        a classic Goodhart phenomenon. PPO is notoriously fiddly: small
+        implementation differences produce dramatic outcomes, hyperparameters need
+        careful tuning, and the loop is expensive because every training step
+        requires generating samples on-policy.
+      </p>
+
+      <p style={prose}>
+        Rafailov, Sharma, Mitchell, Ermon, Manning &amp; Finn (2023) [2] noticed
+        that under the KL-regularized RLHF objective, the optimal policy has a
+        closed-form relationship to the reference policy and reward function:{" "}
+        <InlineMath>{"\\pi^*(y \\mid x) \\propto \\pi_{\\text{ref}}(y \\mid x) \\exp(r(x, y) / \\beta)"}</InlineMath>.
+        Inverting this expression gives the reward in terms of the policy log-ratios,
+        eliminating the explicit reward model entirely. The resulting DPO loss is a
+        single binary cross-entropy over preference pairs — no RL loop, no separate
+        reward model, no on-policy sampling. In the asymptotic limit DPO is
+        mathematically equivalent to RLHF; in practice it is dramatically simpler
+        and more stable, and has become the default for open-weight model
+        post-training. Several variants now exist — IPO (Identity PO), KTO
+        (Kahneman–Tversky), ORPO, SimPO — each tuning the loss form for different
+        stability or data-efficiency properties.
+      </p>
+
+      <MathBlock>{`$$\\mathcal{L}_{\\text{DPO}} = -\\mathbb{E}_{(x, y_w, y_l) \\sim \\mathcal{D}}\\!\\left[\\log \\sigma\\!\\left(\\beta \\log \\frac{\\pi_\\theta(y_w \\mid x)}{\\pi_{\\text{ref}}(y_w \\mid x)} - \\beta \\log \\frac{\\pi_\\theta(y_l \\mid x)}{\\pi_{\\text{ref}}(y_l \\mid x)}\\right)\\right]$$`}</MathBlock>
+
+      <RLHFThreeStep />
 
       <DPOvsRLHF />
 
@@ -172,6 +267,38 @@ export default function LLMTraining() {
         for the Claude model family.
       </p>
 
+      <p style={prose}>
+        Bai et al. (2022) [3] introduced the technique with two phases.{" "}
+        <strong>SL-CAI (supervised)</strong>: the model produces a response to a
+        prompt, then is prompted to critique that response against a written
+        principle ("Identify ways the response could be harmful, unethical…"), then
+        is prompted to revise the response in light of the critique. The (prompt,
+        revised response) pair becomes a training example. <strong>RL-CAI
+        (reinforcement)</strong>: a separate model labels preferences over pairs of
+        responses according to the same principles — Reinforcement Learning from AI
+        Feedback (RLAIF) — and a policy is trained against these AI-generated
+        preferences, structurally similar to RLHF but with the labeler replaced by
+        the constitutional model.
+      </p>
+
+      <p style={prose}>
+        The original CAI constitution drew from sources including the UN Universal
+        Declaration of Human Rights, Apple's terms of service, and Anthropic's own
+        internal research on what makes responses helpful and harmless. Principles
+        are written in natural language — for example,{" "}
+        <em>"Choose the response that is most respectful of the user's right to
+        privacy"</em> — and the model evaluates against them at training time.
+        Compared to RLHF, the visible advantage is transparency: the model's training
+        objective is a written document anyone can read and critique. The visible
+        disadvantage is that the model's behavior depends on the model's <em>own</em>{" "}
+        judgment of what each principle means, which can drift. Anthropic and other
+        groups have continued to refine the approach, including more recent work on
+        Collective Constitutional AI, which sources principles from broader public
+        deliberation rather than a single team.
+      </p>
+
+      <ConstitutionalAILoop />
+
       <ConstitutionalAI />
 
       {/* ── Section 5: Tool Calling ───────────────────────────────────────── */}
@@ -192,6 +319,35 @@ export default function LLMTraining() {
         transformer can do it once trained.
       </p>
 
+      <p style={prose}>
+        Schick, Dwivedi-Yu, Dessì, Raileanu, Lomeli, Zettlemoyer, Cancedda &amp;
+        Scialom (2023) [5] introduced one of the cleanest formulations: a language
+        model can teach itself to use tools by self-supervised generation. Given a
+        text corpus, the model proposes candidate tool calls (calculator, calendar
+        lookup, translation API, and so on) at each position, executes them, and
+        keeps only those whose result <em>reduces the perplexity of completing the
+        surrounding text</em>. The filtered tool-call-augmented corpus becomes the
+        training set. The technique works because the supervision signal — "did
+        inserting this tool call make the next tokens more predictable?" — is fully
+        automatic.
+      </p>
+
+      <p style={prose}>
+        Frontier models in 2024–2026 have moved well beyond single tool calls. The
+        training data now includes multi-turn interactions where the assistant
+        calls a tool, observes the result, decides what to call next, observes that
+        result, and so on across many steps — an entire agentic trajectory. The
+        model learns when to plan, when to execute, when to recover from a failed
+        call, and when to stop. The structured-output format (JSON in delimited
+        blocks, or function-call syntax inline) is consistent across providers, but
+        the depth and reliability of multi-step tool use is one of the main
+        capability axes that distinguishes 2024-class models from 2022-class ones.
+        Tool calling has stopped being a special trick and become a first-class
+        capability.
+      </p>
+
+      <ToolCallExchange />
+
       <ToolCallingTraining />
 
       {/* ── Section 6: Safety & Refusal ───────────────────────────────────── */}
@@ -211,6 +367,41 @@ export default function LLMTraining() {
         forbidden behavior — is a separate axis of safety training, addressed through
         red-teaming and contrastive examples.
       </p>
+
+      <p style={prose}>
+        Concretely, a perfectly safe model that refused every request would be
+        useless, and a perfectly helpful model that complied with every request
+        would be dangerous. Real systems live on a Pareto frontier between these
+        failure modes. The frontier is shaped by training data: refusal examples
+        teach the model where to decline; helpful examples on superficially-risky
+        topics (chemistry, security research, medical questions) teach the model
+        where the line is not. Most observed quality regressions in safety releases
+        come from training-data imbalance — a few too many over-broad refusal
+        examples and the model starts refusing legitimate questions about
+        pharmacology or self-defense; a few too many "always be helpful" examples
+        and the model loses calibration on actual harm. Both failure modes are
+        constantly monitored in practice.
+      </p>
+
+      <p style={prose}>
+        Perez, Huang, Song, Cai, Ring, Aslanides, Glaese, McAleese &amp; Irving
+        (2022) [8] demonstrated that language models themselves can be used to
+        systematically find failure modes in other language models — automated red
+        teaming. The technique scales beyond what manual red teamers can probe:
+        prompt one LM to generate test cases targeting a behavior class ("get the
+        target model to produce code for a SQL injection"), evaluate the target
+        model's responses, and use the failures as training signal for the next
+        round. Beyond automated red teaming, modern adversarial pressure includes{" "}
+        <strong>prompt-injection attacks</strong> (embedding instructions in
+        retrieved documents), <strong>adversarial suffixes</strong> (Zou et al.
+        2023's GCG, which produces token sequences that reliably bypass safety
+        training), and <strong>persuasion-based jailbreaks</strong> (multi-turn
+        social-engineering of the model). No current model is fully robust to all
+        of these; safety training is best understood as defense-in-depth alongside
+        system-level mitigations, not as a single trained-in invariant.
+      </p>
+
+      <SafetyBoundary />
 
       <SafetyRefusal />
 

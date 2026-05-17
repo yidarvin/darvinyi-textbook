@@ -1,19 +1,27 @@
+import katex from 'katex';
+
 export default function InlineMath({ children }) {
+  const raw = typeof children === 'string' ? children : String(children ?? '');
+
+  let html;
+  try {
+    html = katex.renderToString(raw, {
+      displayMode: false,
+      throwOnError: false,
+      strict: false,
+      output: 'html',
+    });
+  } catch {
+    html = raw;
+  }
+
   return (
     <span
       style={{
-        fontFamily: "'JetBrains Mono', monospace",
-        fontSize: '12.5px',
-        fontWeight: 400,
         color: 'var(--math-color)',
-        background: 'var(--code-bg)',
-        border: '1px solid var(--border-lt)',
-        padding: '1px 7px',
-        borderRadius: '4px',
         whiteSpace: 'nowrap',
       }}
-    >
-      {children}
-    </span>
+      dangerouslySetInnerHTML={{ __html: html }}
+    />
   );
 }

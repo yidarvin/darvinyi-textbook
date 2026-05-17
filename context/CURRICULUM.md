@@ -21,7 +21,7 @@
 - Ch12: Convolutional Networks
 - Ch13: Graph Neural Networks
 - Ch14: Reinforcement Learning
-- Ch15: Advanced Architectures (Capsules · SSMs · MoE)
+- Ch15: Capsule Networks
 
 ## Part V — Image Generative Models
 - Ch16: Variational Autoencoders

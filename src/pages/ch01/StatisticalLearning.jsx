@@ -7,6 +7,10 @@ import PolynomialFit from "../../components/widgets/ch01/PolynomialFit";
 import BiasVariance from "../../components/widgets/ch01/BiasVariance";
 import RegularizationExplorer from "../../components/widgets/ch01/RegularizationExplorer";
 import DecisionBoundary from "../../components/widgets/ch01/DecisionBoundary";
+import BiasVarianceDartboard from "../../components/diagrams/ch01/BiasVarianceDartboard";
+import DoubleDescentCurve from "../../components/diagrams/ch01/DoubleDescentCurve";
+import L1L2Geometry from "../../components/diagrams/ch01/L1L2Geometry";
+import DecisionBoundaryShapes from "../../components/diagrams/ch01/DecisionBoundaryShapes";
 
 // ─── Prose styles ─────────────────────────────────────────────────────────────
 const prose = {
@@ -53,61 +57,6 @@ const CITATIONS = [
     tag: "paper",
   },
 ];
-
-// ─── Widget placeholder ───────────────────────────────────────────────────────
-function WidgetPlaceholder({ id, title }) {
-  return (
-    <div
-      className="widget-placeholder"
-      style={{
-        border: "1px dashed var(--border-lt)",
-        borderRadius: "8px",
-        padding: "40px 24px",
-        margin: "28px 0",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "8px",
-        background: "var(--bg2)",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "9.5px",
-          fontWeight: 600,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: "var(--accent)",
-          background: "var(--accent-dim)",
-          padding: "2px 8px",
-          borderRadius: "3px",
-        }}
-      >
-        Interactive · {id}
-      </span>
-      <span
-        style={{
-          fontFamily: "'Crimson Pro', serif",
-          fontSize: "18px",
-          color: "var(--text-mid)",
-          marginTop: "4px",
-        }}
-      >
-        {title}
-      </span>
-      <span
-        style={{
-          fontFamily: "'Inter', sans-serif",
-          fontSize: "12px",
-          color: "var(--text-muted)",
-        }}
-      >
-        Widget coming soon
-      </span>
-    </div>
-  );
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function StatisticalLearning() {
@@ -184,6 +133,23 @@ export default function StatisticalLearning() {
         of the field.
       </p>
 
+      <p style={prose}>
+        ERM admits a rigorous justification through learning theory [4]: under
+        mild assumptions, with high probability the gap between empirical and
+        true risk is bounded by a quantity that grows with the capacity of the
+        hypothesis class — formalized through its Vapnik–Chervonenkis dimension{" "}
+        <InlineMath>d</InlineMath> — and shrinks with the sample size{" "}
+        <InlineMath>n</InlineMath>, roughly as{" "}
+        <InlineMath>{"O(\\sqrt{d/n})"}</InlineMath>. The intuition is simple: a
+        small hypothesis class cannot overfit much, because it contains too few
+        functions to memorize noise; a large class can, unless{" "}
+        <InlineMath>n</InlineMath> is also large enough to single out the right
+        one. This is the formal reason that gathering more data works — it
+        tightens the bound. Modern deep networks complicate this picture, since
+        their effective capacity is enormous and yet they generalize anyway, a
+        puzzle we return to in the next section.
+      </p>
+
       <PolynomialFit />
 
       {/* ── Section 2: Bias-Variance Tradeoff ────────────────────────────── */}
@@ -191,21 +157,46 @@ export default function StatisticalLearning() {
 
       <p style={prose}>
         The expected test error of any estimator decomposes into three
-        irreducible terms: the squared bias (how far the average prediction
+        irreducible terms [2]: the squared bias (how far the average prediction
         strays from the truth), the variance (how much predictions fluctuate
-        across different training sets), and irreducible noise. These two
-        quantities trade off against each other as model complexity grows.
+        across different training sets), and irreducible noise from the data
+        itself. These quantities trade off against each other as model
+        complexity grows — gaining flexibility to capture the signal also gains
+        flexibility to chase the noise.
       </p>
-
-      <MathBlock>{"$$\\mathbb{E}\\bigl[(y - \\hat{f}(x))^2\\bigr] = \\underbrace{\\mathrm{Bias}^2[\\hat{f}(x)]}_{\\text{underfitting}} + \\underbrace{\\mathrm{Var}[\\hat{f}(x)]}_{\\text{overfitting}} + \\sigma^2$$"}</MathBlock>
 
       <p style={prose}>
         A model with too few parameters (high bias) fails to capture the signal;
         a model with too many (high variance) fits training noise and fails to
         transfer. The optimal complexity sits at the sweet spot where total
         expected error is minimized — a point that depends on both the true
-        function and the size of the training set.
+        function and the size of the training set, and which the formal
+        decomposition makes precise [1].
       </p>
+
+      <BiasVarianceDartboard />
+
+      <MathBlock>{"$$\\mathbb{E}\\bigl[(y - \\hat{f}(x))^2\\bigr] = \\underbrace{\\mathrm{Bias}^2[\\hat{f}(x)]}_{\\text{underfitting}} + \\underbrace{\\mathrm{Var}[\\hat{f}(x)]}_{\\text{overfitting}} + \\sigma^2$$"}</MathBlock>
+
+      <p style={prose}>
+        The classical U-shape was the dominant view of overfitting for a
+        generation. Then Belkin, Hsu, Ma, and Mandal (2019) showed that for many
+        widely used models — neural networks, random features, kernel machines,
+        even decision trees — pushing complexity past the{" "}
+        <em>interpolation threshold</em> (the point at which training error
+        first hits zero) produces a <em>second</em> descent in test error: the
+        curve climbs into a sharp peak at the threshold, then falls again as
+        the model becomes massively overparameterized. The mechanism is
+        intuitive: at the threshold the model is forced into a unique, brittle
+        solution that fits the noise rigidly, while past it an entire family of
+        zero-error solutions becomes available and the optimizer's implicit
+        bias selects smoother members of that family. This <em>double
+        descent</em> is much of the reason scaling up neural networks works at
+        all, and we return to the inductive bias of optimization itself in
+        later chapters.
+      </p>
+
+      <DoubleDescentCurve />
 
       <BiasVariance />
 
@@ -219,10 +210,13 @@ export default function StatisticalLearning() {
         <InlineMath>L2</InlineMath> (ridge), which penalizes the squared norm of
         the weights, and <InlineMath>L1</InlineMath> (lasso), which penalizes
         the absolute norm and induces sparsity by driving individual weights
-        exactly to zero.
+        exactly to zero — geometrically, because the L1 constraint region has
+        corners on the coordinate axes that the loss contours tend to intersect.
       </p>
 
       <MathBlock>{"$$\\hat{f}_{\\lambda} = \\arg\\min_{f \\in \\mathcal{H}} \\frac{1}{n}\\sum_{i=1}^{n} L(f(x_i), y_i) + \\lambda\\,\\Omega(f)$$"}</MathBlock>
+
+      <L1L2Geometry />
 
       <p style={prose}>
         The regularization strength <InlineMath>λ</InlineMath> is a
@@ -231,6 +225,23 @@ export default function StatisticalLearning() {
         practice, <InlineMath>λ</InlineMath> is selected via cross-validation,
         and the right choice can be the single largest lever for improving
         generalization on a fixed architecture.
+      </p>
+
+      <p style={prose}>
+        More broadly, regularization is the <em>injection of prior belief</em>{" "}
+        about what a good function looks like, expressed as a preference for
+        simpler solutions in the absence of contrary evidence. <InlineMath>L2</InlineMath>{" "}
+        says "all weights should be small"; <InlineMath>L1</InlineMath> says
+        "most weights should be exactly zero." This view generalizes far beyond
+        explicit norms: dropout is regularization by input noise, early stopping
+        is regularization through finite optimization time, data augmentation
+        encodes invariance priors, and weight tying enforces shared structure.
+        In modern deep learning much of the work is in fact done by{" "}
+        <em>implicit</em> regularization — the architecture itself acts as a
+        structural prior (a CNN's translation equivariance is a hardcoded
+        invariance, not a learned one), and the optimizer adds its own bias
+        (SGD with small batches preferentially settles into flatter minima that
+        generalize better).
       </p>
 
       <RegularizationExplorer />
@@ -248,13 +259,31 @@ export default function StatisticalLearning() {
       </p>
 
       <p style={prose}>
-        The No Free Lunch theorem [3] formalizes the intuition that no single
-        model dominates all problems: averaged over all possible data-generating
-        distributions, every algorithm performs equally. This means the choice
-        of hypothesis class is always a bet on the structure of the specific
-        problem at hand, and understanding the geometry your model can and
-        cannot represent is essential for principled model selection.
+        The No Free Lunch theorem [3] formalizes this: averaged over all
+        possible data-generating distributions, every algorithm performs
+        equally — no model dominates all problems. The choice of hypothesis
+        class is therefore always a bet on the structure of the specific
+        problem at hand, and understanding the geometries your model can and
+        cannot represent is essential to principled model selection.
       </p>
+
+      <p style={prose}>
+        The operational concept here is <em>inductive bias</em>: the set of
+        boundary geometries a hypothesis class can express, together with the
+        preference ordering over them imposed by the loss and regularizer.
+        Linear models bias toward halfspaces; <InlineMath>k</InlineMath>-nearest
+        neighbours biases toward locally constant regions; decision trees bias
+        toward axis-aligned partitions; neural networks bias toward
+        compositionally structured boundaries whose form is shaped by depth and
+        connectivity. Read this way, No Free Lunch does not say all models are
+        equal in practice — it says they are equal{" "}
+        <em>averaged over all possible problems</em>. Real problems live in a
+        vanishingly thin slice of that space, and the entire game of supervised
+        learning is matching inductive bias to the structure that actually
+        appears in nature.
+      </p>
+
+      <DecisionBoundaryShapes />
 
       <DecisionBoundary />
 

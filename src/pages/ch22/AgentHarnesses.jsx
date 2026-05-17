@@ -8,6 +8,11 @@ import ClaudeCodeVsCodex from "../../components/widgets/ch22/ClaudeCodeVsCodex";
 import LangChainComposition from "../../components/widgets/ch22/LangChainComposition";
 import LangGraphStateMachine from "../../components/widgets/ch22/LangGraphStateMachine";
 import CrewAIvsAutoGPT from "../../components/widgets/ch22/CrewAIvsAutoGPT";
+import WorkflowsToAgentsSpectrum from "../../components/diagrams/ch22/WorkflowsToAgentsSpectrum";
+import CLICodingAgentArchetype from "../../components/diagrams/ch22/CLICodingAgentArchetype";
+import CompositionSpectrum from "../../components/diagrams/ch22/CompositionSpectrum";
+import StateMachineVsFreeForm from "../../components/diagrams/ch22/StateMachineVsFreeForm";
+import MultiAgentFrameworkLandscape from "../../components/diagrams/ch22/MultiAgentFrameworkLandscape";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -108,6 +113,48 @@ export default function AgentHarnesses() {
         choice of harness shapes what is even possible to build.
       </p>
 
+      <p style={prose}>
+        The most influential framing for this design space comes from Anthropic's
+        December 2024 engineering post <em>Building Effective Agents</em> [1]. The
+        post draws a sharp distinction: a <em>workflow</em> has predefined paths
+        with LLM-driven routing — humans designed the structure, the model makes
+        decisions inside it. An <em>agent</em> is a system where the LLM decides
+        its own path — fully model-driven control flow. The piece argues, with
+        concrete examples, that workflows are sufficient and preferable for most
+        production use cases, and that fully autonomous agents are warranted only
+        when the task genuinely requires open-ended exploration, parallel
+        speculation, or dynamic tool selection that can't be predicted in advance.
+        The post then enumerates six concrete patterns that span this spectrum:
+        prompt chaining (sequential LLM calls), routing (a classifier dispatches
+        to specialized handlers), parallelization (independent LLM calls run
+        concurrently), orchestrator-workers (an orchestrator decomposes a task
+        and delegates), evaluator-optimizer (an evaluator critiques outputs and
+        an optimizer improves them), and autonomous agents (model-driven loops
+        with extended tool use). Almost every harness covered in this chapter is
+        implementing one or more of these patterns; the differences are in which
+        patterns they support, how they expose them to developers, and what
+        defaults they choose.
+      </p>
+
+      <WorkflowsToAgentsSpectrum />
+
+      <p style={prose}>
+        Once a pattern is chosen, every harness has to answer the same recurring
+        engineering questions. Where does reasoning live — does the model produce
+        its own chain-of-thought, or does the harness drive an explicit reasoning
+        loop? How is context managed — full conversation history, summarized,
+        retrieved? Compaction at threshold or never? What is the safety posture —
+        permissions on each tool call, dangerous-action confirmations, sandboxing?
+        How do extensions plug in — built-in plugins, MCP servers, custom Python?
+        How is work delegated — single agent with tools, hierarchical subagents,
+        parallel workers, peer collaboration? How is state persisted — across
+        runs, across sessions, across machines? Each harness gives a different
+        combination of answers. As frontier models have converged in raw
+        capability through 2025–2026, harnesses are increasingly where the
+        user-facing differentiation happens — the gap between a great agent and
+        a frustrating one is more often in the harness than the model.
+      </p>
+
       <HarnessTaxonomy />
 
       {/* ── Section 2: CLI Coding Agents ────────────────────────────────────── */}
@@ -127,6 +174,55 @@ export default function AgentHarnesses() {
         designs represent contrasting bets about where intelligence should live.
       </p>
 
+      <p style={prose}>
+        Anthropic's <em>Building Agents with the Claude Agent SDK</em> [2] (the
+        SDK underlying Claude Code, renamed from Claude Code SDK in 2025)
+        documented the architectural choices that make terminal coding agents
+        work. A small set of file-system primitives — <span className="math">View</span>,
+        {' '}<span className="math">Edit</span>, <span className="math">Write</span>,
+        {' '}<span className="math">Bash</span>, <span className="math">Glob</span>,
+        {' '}<span className="math">Grep</span> — are exposed as the agent's tools,
+        deliberately kept simple, each doing one thing well. Subagent delegation
+        via a <span className="math">Task</span> tool lets the parent agent spawn
+        a focused subagent for a self-contained subtask (for instance, "search
+        the codebase for X and return relevant files"), keeping the parent's
+        context clean. Context compaction automatically summarizes earlier turns
+        of a conversation when context approaches the model's limit, preserving
+        recent activity in full while compressing the rest. The permission system
+        requires explicit user approval (configurable per-session) for dangerous
+        actions like shell execution. Hooks (<span className="math">PreToolUse</span>,
+        {' '}<span className="math">PostToolUse</span>, and others) let users
+        intercept agent behavior for logging, validation, or override. The
+        VILA-Lab paper <em>Dive into Claude Code</em> [3] analyzed these choices
+        as a coherent design philosophy: keep primitives small, push complex
+        behavior into the model's reasoning, use the harness for safety and
+        state management rather than for clever orchestration.
+      </p>
+
+      <p style={prose}>
+        OpenAI's Codex CLI [8] (released 2025) targets the same use case with a
+        different philosophy — fewer harness-level abstractions, more reliance
+        on the model's raw decisions, lighter context management. The two
+        designs represent a genuine philosophical disagreement: how much
+        intelligence should live in the harness versus the model? Cursor, Cline,
+        and Aider sit nearby on this spectrum, each making slightly different
+        trade-offs between IDE integration, headless operation, and harness
+        opinionation. What unifies all of them is the Model Context Protocol
+        (MCP) [9], Anthropic's November 2024 specification for tool integration —
+        a wire format that lets any MCP-compatible client (Claude Code, Cursor,
+        Codex via the OpenAI Agents SDK shim, others) discover and call tools
+        exposed by any MCP server (GitHub, Slack, file systems, browsers, dozens
+        of others). MCP turns the tool layer into a configurable plugin system
+        rather than a custom-coded integration, which is why most major harnesses
+        now support it directly or via shims. CLI coding agents are, by 2026,
+        the most demonstrably useful agent category — they handle real
+        software-engineering tasks in real codebases for real users, and the
+        design patterns developed here are increasingly being adapted to other
+        agent domains.
+      </p>
+
+      <CLICodingAgentArchetype />
+
       <ClaudeCodeArchitecture />
 
       <ClaudeCodeVsCodex />
@@ -137,16 +233,42 @@ export default function AgentHarnesses() {
       </div>
 
       <p style={prose}>
-        LangChain emerged in 2022 as a Python library for composing the building
-        blocks of LLM applications. Its core abstractions — Chains, Agents, Memory,
-        Tools, Retrievers — let developers wire together LLM calls, vector
-        databases, search APIs, and custom logic with minimal boilerplate. The
-        library's strength and weakness are the same: it is comprehensive. Hundreds
-        of integrations exist for popular models, databases, and APIs. The downside
-        is that the abstractions sometimes feel heavy, and the rate of API changes
-        has historically been high. LangChain's value is less in any single
-        primitive and more in the surface area it covers.
+        LangChain (Harrison Chase, 2022) [4] was the first major Python library
+        to treat LLM applications as compositions of primitives — Chains, Agents,
+        Memory, Tools, Retrievers, Output Parsers, Document Loaders — and it
+        became the default starting point for thousands of LLM-powered
+        applications between 2022 and 2024. Its later LangChain Expression
+        Language (LCEL) introduced a more functional composition syntax where
+        pipelines are built with the <span className="math">|</span> operator,
+        making the chain structure visible in the code rather than buried in
+        nested constructor calls. The library's design choice — comprehensive
+        coverage of every conceivable LLM-application building block — was a
+        strength when developers wanted batteries-included quick-starts, and a
+        weakness when the resulting code became hard to debug, refactor, or
+        migrate as APIs evolved. The history of API churn has been a recurring
+        complaint; LangChain has rewritten its core abstractions multiple times.
       </p>
+
+      <p style={prose}>
+        Several alternatives have grown around LangChain. DSPy (Khattab et al.
+        2023) takes a declarative approach: developers specify what the program
+        should do, and the framework optimizes prompts and demonstrations
+        automatically — a compiler-like model that is compelling for production
+        teams that want to decouple prompt engineering from application logic.
+        LlamaIndex focuses specifically on RAG and document-retrieval pipelines.
+        Haystack targets enterprise search and retrieval use cases. But the most
+        significant trend in 2025–2026 is in the opposite direction: many teams
+        that started on LangChain have moved to lighter wrappers around the
+        OpenAI, Anthropic, and Google APIs directly, often a few hundred lines
+        of custom code that handles their specific needs. The lesson — articulated
+        repeatedly in Anthropic's <em>Building Effective Agents</em> and by other
+        practitioners — is that for simpler use cases (which most production use
+        cases turn out to be), the cost of a heavy framework's abstractions often
+        exceeds the benefit. Composition libraries are useful when their
+        primitives match your application; they become an obstacle when they don't.
+      </p>
+
+      <CompositionSpectrum />
 
       <LangChainComposition />
 
@@ -156,16 +278,41 @@ export default function AgentHarnesses() {
       </div>
 
       <p style={prose}>
-        LangGraph extends LangChain with explicit graph-based agent control flow.
-        Each node in the graph is a function — often an LLM call or tool use —
-        and edges define how state flows between nodes. Conditional edges allow
-        the graph to branch based on the agent's decisions. This makes agent
-        behavior auditable: rather than asking an LLM to decide what to do next
-        in unstructured prose, the developer defines a state machine and the LLM
-        just makes the routing decisions. LangGraph has become the recommended
-        approach for production agent workflows where reliability matters more
-        than flexibility.
+        LangGraph [5] (LangChain, 2024) made explicit what production-grade
+        LangChain users had been building informally for years — agent
+        applications are state machines, designed by an engineer, with
+        humans-in-the-loop checkpoints at critical phases. The framework's
+        contribution is making the graph structure first-class: nodes are
+        functions (typically LLM calls or tool invocations), edges define how
+        state flows, conditional edges let the graph branch based on an LLM's
+        decision or a deterministic check, and the full execution trace is
+        captured for debugging. Rather than asking an LLM to decide what to do
+        next in unstructured prose, the developer defines a state machine and
+        the LLM just makes the routing decisions inside it. This sounds like a
+        small change but has large consequences: agent behavior becomes auditable
+        (you can inspect which path through the graph any particular execution
+        took), testable (you can unit-test individual nodes), and incrementally
+        improvable (you can replace a node without rewriting the rest).
       </p>
+
+      <p style={prose}>
+        LangGraph isn't operating in isolation. Traditional workflow engines
+        like Temporal and Inngest have added LLM-specific features and now
+        compete in the same space — they bring durable execution (workflows
+        that survive process restarts, can pause for hours or days, and handle
+        retries automatically) which LangGraph itself only recently added. The
+        intellectual debt to traditional state machines and BPMN-style workflow
+        modeling is acknowledged — "make the structure explicit, let the model
+        make decisions inside it" is not a new engineering principle. LangGraph
+        Studio provides visual graph editing; LangSmith provides observability
+        and trace inspection across runs. For production agent workflows where
+        reliability matters more than flexibility, state-machine-based harnesses
+        have become the recommended approach by 2026, with the autonomous-agent
+        alternative reserved for cases where the task genuinely requires
+        open-ended exploration.
+      </p>
+
+      <StateMachineVsFreeForm />
 
       <LangGraphStateMachine />
 
@@ -187,7 +334,60 @@ export default function AgentHarnesses() {
         toward more structured, role-based, or graph-based designs.
       </p>
 
+      <p style={prose}>
+        CrewAI [6] (João Moura, 2024) is the most widely adopted role-based
+        multi-agent framework — agents are defined by a role, a goal, a backstory,
+        and a toolkit; tasks are assigned to agents; the framework orchestrates
+        handoffs and aggregation. AutoGen (Microsoft, 2023) emphasizes
+        conversational patterns — agents talk to each other in turn-based
+        discussions until they reach a conclusion. OpenAI Swarm (2024, since
+        renamed and superseded by the OpenAI Agents SDK) took a minimalist
+        approach: a small library where agents are simple objects with handoff
+        functions, designed to be easy to read in a single afternoon. AutoGPT
+        [7] started the era — a viral 2023 experiment where a single agent
+        operated in an unsupervised loop, decomposing tasks and self-evaluating
+        progress toward an arbitrary user-specified goal. AutoGPT's fully
+        autonomous design proved more fragile than the demos suggested: without
+        clear structural delegation, agents drifted, looped, hallucinated
+        progress, and accumulated errors over long horizons. The viral demos
+        receded; the autonomous-agent paradigm walked back substantially. By
+        2026, the multi-agent space has consolidated around more structured
+        patterns — role-based with explicit handoffs (CrewAI), graph-based with
+        state machines (LangGraph), or supervisor-worker patterns (the model
+        Claude Code uses internally with subagents). The recurring lesson from
+        Chapter 21 holds: complex multi-agent systems rarely outperform a single
+        capable agent unless the task genuinely benefits from specialization,
+        parallel exploration, or human-in-the-loop phase gates.
+      </p>
+
+      <MultiAgentFrameworkLandscape />
+
       <CrewAIvsAutoGPT />
+
+      <p style={prose}>
+        Several trends are visible in 2026 and likely to continue. Standardization
+        at the tool layer: MCP has become the de-facto wire format and is gaining
+        adoption beyond Anthropic — the tool ecosystem now exists somewhat
+        independently of the harness that uses it. Durable execution becoming
+        standard: agent workflows that survive process restarts, pause for human
+        input, and handle long-running tasks are moving from a specialty
+        workflow-engine feature into baseline harness functionality. Better
+        evaluation: agent-specific benchmarks (SWE-Bench Agent, WebArena, GAIA,
+        the increasing focus on multi-step task completion rather than single-turn
+        correctness) are reshaping how harnesses are compared and chosen. Longer
+        horizons: the time scale at which agents can operate reliably is
+        extending — from minutes in 2023 to multi-hour sessions in 2026 — and
+        the next frontier is multi-day or multi-week durable agent operation.
+        Convergence on the workflow majority: the field's center of gravity has
+        shifted from "build an autonomous agent" toward "design a workflow with
+        LLM-driven steps," reserving the autonomous-agent toolkit for tasks
+        that genuinely need it. The textbook closes here, with the field still
+        actively defining what "good" looks like for agent harnesses — but with
+        the working answers increasingly resembling traditional software
+        engineering disciplines (state machines, durable execution, observability,
+        evaluation harnesses) more than the autonomous-AI futures imagined in
+        2023.
+      </p>
 
       {/* ── Citations ─────────────────────────────────────────────────────────── */}
       <Citations citations={CITATIONS} />

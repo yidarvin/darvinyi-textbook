@@ -2,12 +2,17 @@ import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
+import InlineMath from "../../components/shared/InlineMath";
 import MathBlock from "../../components/shared/MathBlock";
 import GradientDescentNavigator from "../../components/widgets/ch03/GradientDescentNavigator";
 import OptimizerRace from "../../components/widgets/ch03/OptimizerRace";
 import LRFinder from "../../components/widgets/ch03/LRFinder";
 import LRSchedule from "../../components/widgets/ch03/LRSchedule";
 import AdamInternals from "../../components/widgets/ch03/AdamInternals";
+import GradientDescentGeometry from "../../components/diagrams/ch03/GradientDescentGeometry";
+import MomentumRavine from "../../components/diagrams/ch03/MomentumRavine";
+import FlatVsSharpMinima from "../../components/diagrams/ch03/FlatVsSharpMinima";
+import AdamUnpacking from "../../components/diagrams/ch03/AdamUnpacking";
 
 // ─── Prose styles ─────────────────────────────────────────────────────────────
 const prose = {
@@ -80,60 +85,6 @@ const TOC_SECTIONS = [
   { id: "adam-internals",      label: "Adam Internals"            },
 ];
 
-// ─── Widget placeholder ───────────────────────────────────────────────────────
-function WidgetPlaceholder({ id, title }) {
-  return (
-    <div
-      style={{
-        border: "1px dashed var(--border-lt)",
-        borderRadius: "8px",
-        padding: "40px 24px",
-        margin: "28px 0",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: "8px",
-        background: "var(--bg2)",
-      }}
-    >
-      <span
-        style={{
-          fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "9.5px",
-          fontWeight: 600,
-          letterSpacing: "0.1em",
-          textTransform: "uppercase",
-          color: "var(--accent)",
-          background: "var(--accent-dim)",
-          padding: "2px 8px",
-          borderRadius: "3px",
-        }}
-      >
-        Interactive · {id}
-      </span>
-      <span
-        style={{
-          fontFamily: "'Crimson Pro', serif",
-          fontSize: "18px",
-          color: "var(--text-mid)",
-          marginTop: "4px",
-        }}
-      >
-        {title}
-      </span>
-      <span
-        style={{
-          fontFamily: "'Inter', sans-serif",
-          fontSize: "12px",
-          color: "var(--text-muted)",
-        }}
-      >
-        Widget coming soon
-      </span>
-    </div>
-  );
-}
-
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function Optimization() {
   useTocSections(TOC_SECTIONS);
@@ -189,7 +140,7 @@ export default function Optimization() {
 
       <p style={prose}>
         Gradient descent updates parameters by stepping opposite the gradient
-        of the loss, proportional to the learning rate η — the core
+        of the loss, proportional to the learning rate <InlineMath>{"\\eta"}</InlineMath> — the core
         optimization primitive used across all neural network training.
         Stochastic gradient descent (SGD) estimates this gradient from a
         single random sample, drastically reducing computation per step but
@@ -200,7 +151,39 @@ export default function Optimization() {
         parallelism over full-batch computation.
       </p>
 
-      <MathBlock>{"θ ← θ − η ∇_θ L(θ)"}</MathBlock>
+      <MathBlock>{"$$\\theta \\leftarrow \\theta - \\eta\\, \\nabla_\\theta L(\\theta)$$"}</MathBlock>
+
+      <GradientDescentGeometry />
+
+      <p style={prose}>
+        The stochastic estimate is unbiased — its expectation equals the true
+        full-batch gradient — but the per-step variance is high. Two
+        consequences follow. First, the loss curve during training is jagged
+        rather than monotonic; this is typical, not a bug. Second, SGD never
+        converges to a single point. It wanders within a noise ball around
+        the minimum whose radius scales roughly as <InlineMath>{"\\eta \\cdot \\sqrt{\\text{variance} / \\text{batch\\_size}}"}</InlineMath>.
+        Tight convergence requires a decaying learning rate; in practice most
+        modern training anneals near the end and accepts the noise ball as
+        the operating point. The noise itself does useful work — it can knock
+        the optimizer out of sharp minima toward flatter ones, a phenomenon
+        explored in the loss-landscape section below.
+      </p>
+
+      <p style={prose}>
+        Batch size is therefore not just a compute knob but a regularization
+        knob. Smaller batches mean higher gradient noise, which acts as
+        implicit regularization and often improves generalization — Keskar
+        et al. (2017) documented a "generalization gap" for large-batch
+        training on ImageNet, where very large batches converged to sharper
+        minima and tested slightly worse despite matching training loss.
+        Larger batches mean lower noise but require proportionally larger
+        learning rates to maintain the same effective step size — the linear
+        scaling rule of Goyal et al. (2017). Modern recipes split along these
+        lines: small batches (32–256) with SGD for vision benchmarks; very
+        large batches (millions of tokens) with Adam or AdamW for language
+        model pretraining, with linear warmup to keep the early steps from
+        destabilizing.
+      </p>
 
       <GradientDescentNavigator />
 
@@ -210,22 +193,53 @@ export default function Optimization() {
       </div>
 
       <p style={prose}>
-        Momentum augments gradient descent by accumulating an exponential
-        moving average of past gradients — a velocity term that helps the
-        optimizer build speed across consistently downhill directions and
-        dampen oscillation in noisy directions. RMSProp adapts the learning
-        rate per parameter by dividing each gradient by the root mean square
-        of recent gradient magnitudes, automatically scaling down updates for
-        frequently-activated parameters and scaling up those that receive rare
-        signals. Adam unifies both ideas: it maintains a first moment (mean
-        gradient) and a second moment (uncentered variance), then applies
-        bias-correction factors to compensate for the zero-initialization of
-        these estimates during the first few steps.
+        The momentum idea predates deep learning by decades — Polyak's
+        "heavy ball" method (1964) and Nesterov's accelerated gradient (1983)
+        both add a velocity term to gradient descent, smoothing oscillations
+        across noisy directions and accelerating along consistently downhill
+        ones. Sutskever, Martens, Dahl & Hinton (2013) [3] was the empirical
+        revelation for neural networks: properly tuned momentum, combined
+        with careful initialization, was enough to train deep networks that
+        had previously required exotic pre-training tricks. Their reframing
+        of Nesterov momentum — gradient computed at the look-ahead position
+        rather than the current one — remains the standard implementation
+        today.
       </p>
 
-      <MathBlock>
-        {"m̂ₜ = mₜ / (1 − β₁ᵗ)     v̂ₜ = vₜ / (1 − β₂ᵗ)     θ ← θ − η · m̂ₜ / (√v̂ₜ + ε)"}
-      </MathBlock>
+      <p style={prose}>
+        The adaptive lineage runs AdaGrad → RMSProp → Adam → AdamW. AdaGrad
+        (Duchi, Hazan & Singer 2011) [6] introduced the idea of a
+        per-parameter learning rate, dividing each parameter's update by the
+        square root of the sum of all past squared gradients — beautiful in
+        convex or sparse settings, fatal in non-convex deep learning because
+        the denominator grows monotonically and the effective learning rate
+        decays to zero, stalling training. RMSProp (Hinton's unpublished
+        Coursera lecture, circa 2012) fixed this by replacing the running
+        sum with an exponential moving average, so old gradients fade out of
+        the denominator instead of accumulating forever. Adam (Kingma & Ba
+        2015) [1] then combined RMSProp's adaptive scaling with momentum
+        and added bias correction for the cold-start steps.
+      </p>
+
+      <MathBlock>{`$$\\begin{aligned}
+  \\hat{m}_t &= \\frac{m_t}{1 - \\beta_1^t} \\qquad \\hat{v}_t = \\frac{v_t}{1 - \\beta_2^t} \\\\
+  \\theta &\\leftarrow \\theta - \\eta \\cdot \\frac{\\hat{m}_t}{\\sqrt{\\hat{v}_t} + \\varepsilon}
+\\end{aligned}$$`}</MathBlock>
+
+      <MomentumRavine />
+
+      <p style={prose}>
+        AdamW is the modern default, but it took years to get there. Adam has
+        one subtle defect: when L2 regularization is added as <InlineMath>{"\\lambda \\|\\theta\\|^2"}</InlineMath> to the
+        loss, the gradient of that term gets scaled by Adam's per-parameter
+        <InlineMath>{"1/\\sqrt{\\hat{v}}"}</InlineMath> factor — which is not the same as classical weight decay.
+        Loshchilov & Hutter (2019) [2] showed that this scaling
+        materially hurts performance and proposed AdamW, which decouples
+        weight decay from the gradient and applies it directly to the
+        parameters as <InlineMath>{"\\theta \\leftarrow (1 - \\eta \\lambda)\\, \\theta"}</InlineMath> at each step. AdamW is now the
+        standard optimizer for transformer training; nearly every large
+        language model in the past five years uses it.
+      </p>
 
       <OptimizerRace />
 
@@ -248,6 +262,37 @@ export default function Optimization() {
         distribution shift [4].
       </p>
 
+      <p style={prose}>
+        The dominance of saddle points over genuine minima becomes
+        mathematically inevitable in high dimensions, as Dauphin et al.
+        (2014) made precise. For a critical point to be a minimum in
+        <InlineMath>{"N"}</InlineMath>-dimensional space, all <InlineMath>{"N"}</InlineMath> Hessian eigenvalues must be positive;
+        under reasonable randomness assumptions this is exponentially
+        unlikely, with the probability that a random critical point is a
+        minimum dropping roughly as <InlineMath>{"2^{-N}"}</InlineMath>. Almost every gradient-zero point
+        in a deep network's parameter space — where <InlineMath>{"N"}</InlineMath> is in the millions —
+        is a saddle, not a local minimum. The empirical fact that SGD still
+        escapes them comes down to gradient noise: any non-zero curvature in
+        a negative direction is amplified stochastically and pulls the
+        optimizer off the saddle within a few steps.
+      </p>
+
+      <p style={prose}>
+        Visualizing high-dimensional loss surfaces is genuinely hard — you
+        can only see 2D slices, and naive slices distort the geometry. Li
+        et al. (2018) [4] introduced "filter normalization" to make slices
+        visually comparable across architectures, then used the technique to
+        show that residual connections produce dramatically smoother
+        landscapes: a ResNet's loss surface around its solution looks
+        nearly convex, while the same network with skip connections removed
+        shows chaotic, ridge-filled terrain. This is one of the cleanest
+        empirical pictures we have for why residual networks train so well —
+        they restructure the optimization problem before any optimizer
+        touches it.
+      </p>
+
+      <FlatVsSharpMinima />
+
       <LRFinder />
 
       {/* ── Section 4: Learning Rate Schedules ───────────────────────────── */}
@@ -269,6 +314,43 @@ export default function Optimization() {
         at the end of training.
       </p>
 
+      <MathBlock>{"$$\\eta_t = \\eta_{\\min} + \\tfrac{1}{2}(\\eta_{\\max} - \\eta_{\\min})\\bigl(1 + \\cos(\\pi t / T)\\bigr)$$"}</MathBlock>
+
+      <p style={prose}>
+        Warmup is non-negotiable for transformer training. At step 0, Adam's
+        second-moment estimate <InlineMath>{"\\hat{v}"}</InlineMath> is near zero and noisy, which makes the
+        effective per-parameter learning rate <InlineMath>{"\\eta / \\sqrt{\\hat{v}}"}</InlineMath> enormous and chaotic.
+        Combined with a freshly-initialized network whose representations
+        are still random, large early updates can destabilize training
+        irrecoverably — the loss-spike failure mode familiar to anyone who
+        has trained a transformer. Linear warmup, typically over the first
+        few hundred to few thousand steps, gives <InlineMath>{"\\hat{v}"}</InlineMath> time to accumulate
+        before allowing full step sizes. The trick was used in the original
+        Transformer (Vaswani et al. 2017) and has been standard ever since.
+      </p>
+
+      <p style={prose}>
+        SGDR (Loshchilov & Hutter 2017) [5] extended cosine annealing
+        with periodic warm restarts: when the schedule reaches its minimum,
+        the learning rate snaps back to peak and another cosine begins.
+        Restarts can help the optimizer escape sharp minima found in earlier
+        cycles, though for modern transformer pretraining a single
+        warmup-then-cosine schedule has become more common — restarts
+        complicate the loss-curve signal that practitioners use to judge
+        training health.
+      </p>
+
+      <p style={prose}>
+        Leslie Smith's one-cycle policy goes the other direction: a single
+        aggressive warmup-and-cooldown cycle with a larger peak learning
+        rate than would otherwise be stable, often combined with cyclical
+        momentum that runs in the opposite phase. On smaller benchmarks the
+        policy produces "super-convergence" — final accuracy in a fraction
+        of the usual epochs — and remains a practical recipe outside
+        large-scale pretraining, where the simplicity of warmup-then-cosine
+        usually wins.
+      </p>
+
       <LRSchedule />
 
       {/* ── Section 5: Adam Internals ─────────────────────────────────────── */}
@@ -278,14 +360,44 @@ export default function Optimization() {
 
       <p style={prose}>
         Adam maintains two running estimates per parameter: the first moment
-        m̂ₜ tracks the mean direction of recent gradients, while the second
-        moment v̂ₜ tracks their uncentered variance — together determining an
+        <InlineMath>{"\\hat{m}_t"}</InlineMath> tracks the mean direction of recent gradients, while the second
+        moment <InlineMath>{"\\hat{v}_t"}</InlineMath> tracks their uncentered variance — together determining an
         effective per-parameter learning rate that adapts continuously to
         gradient history. Both estimates are initialized at zero and divided
-        by (1 − βᵗ) to correct for cold-start bias in the first few steps,
+        by <InlineMath>{"(1 - \\beta^t)"}</InlineMath> to correct for cold-start bias in the first few steps,
         after which the correction factor becomes negligible and Adam behaves
         like a fully adaptive method [1].
       </p>
+
+      <p style={prose}>
+        The Kingma & Ba defaults — <InlineMath>{"\\beta_1 = 0.9"}</InlineMath>, <InlineMath>{"\\beta_2 = 0.999"}</InlineMath>, <InlineMath>{"\\varepsilon = 10^{-8}"}</InlineMath> — have
+        proven remarkably robust across architectures and tasks. <InlineMath>{"\\beta_1 = 0.9"}</InlineMath>
+        means the first moment is an EMA with an effective window of roughly
+        10 steps; <InlineMath>{"\\beta_2 = 0.999"}</InlineMath> means the second moment averages over roughly
+        1000 steps. The bias correction matters most at the very beginning:
+        at step 1, the uncorrected <InlineMath>{"m_1"}</InlineMath> equals <InlineMath>{"(1 - \\beta_1)\\, g_1 = 0.1\\, g_1"}</InlineMath> — a tenth
+        of the true gradient, which would make the network learn ten times
+        too slowly. Dividing by <InlineMath>{"1 - \\beta_1^t"}</InlineMath> restores <InlineMath>{"\\hat{m}_1"}</InlineMath> to approximately <InlineMath>{"g_1"}</InlineMath>.
+        By step 100 or so, the correction factor is negligible and Adam runs
+        in its steady-state regime.
+      </p>
+
+      <p style={prose}>
+        The effective per-parameter learning rate <InlineMath>{"\\eta \\cdot \\hat{m}_t / \\sqrt{\\hat{v}_t}"}</InlineMath> makes Adam
+        roughly invariant to gradient scale — large-gradient parameters get
+        small steps and vice versa, automatically — which is why Adam needs
+        much less learning-rate tuning than SGD. The cost is
+        well-documented: on many vision benchmarks, Adam-trained networks
+        generalize slightly worse than SGD-with-momentum-trained ones
+        (Wilson et al. 2017), and the cause is still actively debated.
+        Despite this, Adam and AdamW are the universal default for sequence
+        models, where SGD reliably fails to train transformers — the
+        adaptive scaling is essentially required to handle the very
+        different gradient magnitudes across attention layers, embeddings,
+        and biases.
+      </p>
+
+      <AdamUnpacking />
 
       <AdamInternals />
 

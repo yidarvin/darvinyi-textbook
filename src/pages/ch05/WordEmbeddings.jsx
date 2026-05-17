@@ -2,12 +2,17 @@ import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
+import InlineMath from "../../components/shared/InlineMath";
 import MathBlock from "../../components/shared/MathBlock";
 import OneHotVsEmbedding from "../../components/widgets/ch05/OneHotVsEmbedding";
 import SkipGram from "../../components/widgets/ch05/SkipGram";
 import SemanticArithmetic from "../../components/widgets/ch05/SemanticArithmetic";
 import GloVeFastText from "../../components/widgets/ch05/GloVeFastText";
 import ContextualEmbeddings from "../../components/widgets/ch05/ContextualEmbeddings";
+import SkipGramWindow from "../../components/diagrams/ch05/SkipGramWindow";
+import AnalogyParallelogram from "../../components/diagrams/ch05/AnalogyParallelogram";
+import FastTextSubwords from "../../components/diagrams/ch05/FastTextSubwords";
+import StaticVsContextual from "../../components/diagrams/ch05/StaticVsContextual";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -95,8 +100,35 @@ export default function WordEmbeddings() {
         into a compact, information-rich representation.
       </p>
 
-      <MathBlock>{`one-hot: v_king = [0, 0, ..., 1, ..., 0]   dim = |V|
-embedding: v_king = [0.41, -0.28, 0.73, ...]  dim = 50-300`}</MathBlock>
+      <MathBlock>{`$$\\begin{aligned}
+  \\text{one-hot:} \\quad &v_{\\text{king}} = [0, 0, \\ldots, 1, \\ldots, 0], \\quad \\dim = |V| \\\\
+  \\text{embedding:} \\quad &v_{\\text{king}} = [0.41,\\, -0.28,\\, 0.73,\\, \\ldots], \\quad \\dim = 50\\text{--}300
+\\end{aligned}$$`}</MathBlock>
+
+      <p style={prose}>
+        The reason dense embeddings work at all is Firth's distributional hypothesis
+        (1957): <i>"You shall know a word by the company it keeps."</i> If "cat" and
+        "dog" tend to appear in the same kinds of sentences — near "pet", "vet",
+        "leash", "fur" — then training a model to predict context will inevitably
+        place their embeddings near each other in the learned space. This is a
+        strong inductive bias: meaning is co-occurrence statistics, and co-occurrence
+        statistics are computable from raw text without labels. Every embedding
+        method in this chapter is, at root, a different way of summarizing those
+        statistics into a vector.
+      </p>
+
+      <p style={prose}>
+        Modern systems do not embed words. They embed <i>subword tokens</i> produced
+        by tokenizers like Byte Pair Encoding (BPE, used by GPT), WordPiece (BERT),
+        and SentencePiece (T5, LLaMA). A subword tokenizer splits "unconscionable"
+        into chunks like <code>un / con / scion / able</code>, allowing the model to
+        recognize morphological components and handle out-of-vocabulary words
+        gracefully — "tweetable", a word the tokenizer has never seen, decomposes
+        into known subwords. The embedding layer is the same as in this chapter;
+        only the unit being embedded has shrunk. Everything that follows applies to
+        subword embeddings just as well as to word embeddings — the conceptual leap
+        is the same.
+      </p>
 
       <OneHotVsEmbedding />
 
@@ -106,18 +138,49 @@ embedding: v_king = [0.41, -0.28, 0.73, ...]  dim = 50-300`}</MathBlock>
       </div>
 
       <p style={prose}>
-        Word2Vec introduced two efficient training objectives on large text corpora.
-        The skip-gram model takes a center word and tries to predict the surrounding
-        context words within a window. The continuous bag-of-words (CBOW) model
-        does the inverse: predict the center word from its context. Both are trained
-        with a shallow neural network using noise-contrastive estimation to avoid
-        computing a full softmax over the entire vocabulary. The learned weights
-        of the hidden layer are the embeddings. No labels are required — the text
-        itself provides the supervision signal.
+        Word2Vec [1] introduced two efficient training objectives on large text
+        corpora. The skip-gram model takes a center word and tries to predict the
+        surrounding context words within a window. The continuous bag-of-words
+        (CBOW) model does the inverse: predict the center word from its context.
+        Both are trained with a shallow neural network using noise-contrastive
+        estimation to avoid computing a full softmax over the entire vocabulary.
+        The learned weights of the hidden layer are the embeddings. No labels are
+        required — the text itself provides the supervision signal.
       </p>
 
-      <MathBlock>{`skip-gram: maximize sum_{-c <= j <= c, j!=0} log P(w_{t+j} | w_t)
-P(w_O | w_I) = exp(v'_{w_O}^T * v_{w_I}) / sum_{w=1}^{W} exp(v'_w^T * v_{w_I})`}</MathBlock>
+      <MathBlock>{`$$\\begin{aligned}
+  \\text{skip-gram:} \\quad &\\max \\sum_{-c \\leq j \\leq c,\\ j \\neq 0} \\log P(w_{t+j} \\mid w_t) \\\\
+  &P(w_O \\mid w_I) = \\frac{\\exp\\bigl(v'^{\\top}_{w_O} v_{w_I}\\bigr)}{\\sum_{w=1}^{W} \\exp\\bigl(v'^{\\top}_w v_{w_I}\\bigr)}
+\\end{aligned}$$`}</MathBlock>
+
+      <SkipGramWindow />
+
+      <p style={prose}>
+        The architecture is shallower than it looks. Word2Vec is, mechanically, a
+        two-layer neural network: a linear projection from the input one-hot vector
+        into a hidden embedding (just a lookup into the embedding matrix), followed
+        by a linear output layer producing a softmax over the entire vocabulary.
+        The hidden layer's weights <i>are</i> the embeddings — once trained, the
+        network is discarded and only the embedding matrix is kept. Skip-gram trains
+        a single center word to predict each of its surrounding context words
+        (within a window of usually 5–10 tokens). CBOW does the reverse: average
+        the context word embeddings and predict the center word. Skip-gram trains
+        slower but produces better embeddings for rare words; CBOW is faster and
+        smoother for common words.
+      </p>
+
+      <p style={prose}>
+        Computing the full softmax over a 100,000-word vocabulary for every training
+        pair is prohibitively expensive. Mikolov, Sutskever, Chen, Corrado &amp; Dean
+        (2013) [2] introduced <b>negative sampling</b>: instead of the full softmax,
+        for each true (center, context) pair, sample <InlineMath>{"k"}</InlineMath> random "noise" words
+        (typically <InlineMath>{"k = 5"}</InlineMath> to <InlineMath>{"20"}</InlineMath>), and train a binary classifier to distinguish the
+        true pair from the noise pairs. The loss becomes a sum of <InlineMath>{"k+1"}</InlineMath> simple sigmoid
+        terms rather than a softmax over the whole vocabulary. Negative sampling is
+        a specific case of the broader noise-contrastive estimation framework, and
+        it is the technique that made Word2Vec fast enough to train on billions of
+        tokens of text on a single machine.
+      </p>
 
       <SkipGram />
 
@@ -137,8 +200,38 @@ P(w_O | w_I) = exp(v'_{w_O}^T * v_{w_I}) / sum_{w=1}^{W} exp(v'_w^T * v_{w_I})`}
         training text — imperfect and biased, but structurally rich.
       </p>
 
-      <MathBlock>{`v("king") - v("man") + v("woman") ≈ v("queen")
-v("France") - v("Paris") + v("Rome") ≈ v("Italy")`}</MathBlock>
+      <MathBlock>{`$$\\begin{aligned}
+  v(\\text{king}) - v(\\text{man}) + v(\\text{woman}) &\\approx v(\\text{queen}) \\\\
+  v(\\text{France}) - v(\\text{Paris}) + v(\\text{Rome}) &\\approx v(\\text{Italy})
+\\end{aligned}$$`}</MathBlock>
+
+      <AnalogyParallelogram />
+
+      <p style={prose}>
+        Mikolov, Yih &amp; Zweig (2013) [7] systematized this observation into a
+        benchmark of analogies across syntactic and semantic relationships: gender
+        (man:woman :: king:queen), capital cities (France:Paris :: Italy:Rome),
+        comparatives (good:better :: bad:worse), verb tense (run:ran ::
+        walk:walked), country-currency, plurality, and more. Word2Vec-style
+        embeddings scored remarkably well — typically 50–75% accuracy on these
+        tasks — <i>without ever being trained on the concept of "analogy"</i>. The
+        structure emerged purely from co-occurrence statistics. The discovery
+        wasn't a one-off curiosity; it was a reproducible property of the learned
+        geometry.
+      </p>
+
+      <p style={prose}>
+        The same geometry inherits the biases of its training corpus. Bolukbasi,
+        Chang, Zou, Saligrama &amp; Kalai (2016) — in a paper titled "Man is to
+        Computer Programmer as Woman is to Homemaker?" — showed the same arithmetic
+        that gives <InlineMath>{"\\text{king} - \\text{man} + \\text{woman} \\approx \\text{queen}"}</InlineMath> also produces <InlineMath>{"\\text{programmer} - \\text{man} + \\text{woman} \\approx \\text{homemaker}"}</InlineMath> and <InlineMath>{"\\text{doctor} - \\text{he} + \\text{she} \\approx \\text{nurse}"}</InlineMath>. Word embeddings amplify
+        whatever social biases are present in the training text, and naive analogy
+        completion will surface them on demand. This is not a bug fixable by
+        post-processing — Gonen &amp; Goldberg (2019) later showed that "debiased"
+        embeddings still cluster biased words together; the bias lives in the
+        geometry, not just on a single axis. Modern systems built on these
+        embeddings have inherited the problem.
+      </p>
 
       <SemanticArithmetic />
 
@@ -159,8 +252,40 @@ v("France") - v("Paris") + v("Rome") ≈ v("Italy")`}</MathBlock>
         word forms vary heavily.
       </p>
 
-      <MathBlock>{`GloVe loss: sum_{i,j} f(X_ij)(v_i^T * v_j + b_i + b_j - log X_ij)^2
-fastText: v(word) = (1/|G_w|) * sum_{g in G_w} z_g`}</MathBlock>
+      <MathBlock>{`$$\\begin{aligned}
+  \\text{GloVe loss:} \\quad &\\sum_{i,j} f(X_{ij})\\bigl(v_i^{\\top} v_j + b_i + b_j - \\log X_{ij}\\bigr)^2 \\\\
+  \\text{fastText:} \\quad &v(\\text{word}) = \\frac{1}{|G_w|} \\sum_{g \\in G_w} z_g
+\\end{aligned}$$`}</MathBlock>
+
+      <FastTextSubwords />
+
+      <p style={prose}>
+        Pennington, Socher &amp; Manning (2014) [3] argued that local-context methods
+        like Word2Vec underuse the global co-occurrence statistics that are already
+        implicit in the corpus. Their key observation: it's not the <i>individual</i>{" "}
+        co-occurrence probabilities that encode meaning best, but their <i>ratios</i>.
+        The ratio <InlineMath>{"P(\\text{ice} \\mid k) / P(\\text{steam} \\mid k)"}</InlineMath> is large when <InlineMath>{"k = \\text{``solid''}"}</InlineMath>, near zero
+        when <InlineMath>{"k = \\text{``gas''}"}</InlineMath>, and near one when <InlineMath>{"k"}</InlineMath> is unrelated to either (like "water").
+        GloVe's loss function is designed so that the dot product of two word
+        vectors approximates the log of this ratio — making the learned geometry an
+        explicit, interpretable summary of global co-occurrence structure. On many
+        analogy benchmarks GloVe slightly outperforms Word2Vec, but the gap is
+        small; both are alive in the wild.
+      </p>
+
+      <p style={prose}>
+        Bojanowski, Grave, Joulin &amp; Mikolov (2017) [4] attacked a different
+        limitation: Word2Vec treats "play", "plays", "played", and "playing" as
+        four unrelated tokens and learns them independently. fastText represents
+        each word as the sum of its character n-grams — "playing" becomes the
+        average of vectors for &lt;pl, pla, lay, ayi, yin, ing, ng&gt;, plus the
+        whole-word vector. Words with shared morphology share embedding components
+        automatically, and <i>out-of-vocabulary</i> words receive sensible
+        embeddings — "unfollowable" is built from familiar subword pieces even if
+        no training sentence contained that exact form. This makes fastText
+        especially strong on morphologically rich languages (Finnish, Turkish,
+        Russian) and on social-media text full of slang and typos.
+      </p>
 
       <GloVeFastText />
 
@@ -170,16 +295,36 @@ fastText: v(word) = (1/|G_w|) * sum_{g in G_w} z_g`}</MathBlock>
       </div>
 
       <p style={prose}>
-        Word2Vec, GloVe, and fastText produce a single fixed vector per word.
-        "Bank" has one embedding regardless of whether the sentence is about a
-        riverbank or a financial institution. ELMo (Embeddings from Language Models)
-        was the first widely-adopted contextual embedding — it ran a bidirectional
-        LSTM over the whole sentence and produced a different vector for each word
-        depending on its context. BERT extended this to a transformer architecture
-        trained with masked language modeling, producing contextual embeddings that
-        became the foundation of modern NLP. The shift from static to contextual
-        is the shift from lookup tables to representation — and sets the stage for
-        everything the remaining chapters cover.
+        Word2Vec, GloVe, and fastText all share one constraint: each word gets one
+        vector, fixed forever. The same "bank" embedding is used for <i>"deposit at
+        the bank"</i> and <i>"sat on the river bank"</i> — the model has no mechanism
+        to distinguish. ELMo (Peters, Neumann, Iyyer, Gardner, Clark, Lee &amp;
+        Zettlemoyer 2018) [5] was the first widely-adopted fix: run a bidirectional
+        LSTM over the whole sentence and use the LSTM's hidden states <i>as</i> the
+        embeddings. Now "bank" in the financial sentence and "bank" in the river
+        sentence get genuinely different vectors, because each is conditioned on a
+        different surrounding sequence.
+      </p>
+
+      <MathBlock>{`$$\\begin{aligned}
+  \\text{static:} \\quad &v(\\text{bank}) \\quad \\text{— same vector everywhere} \\\\
+  \\text{contextual:} \\quad &v(\\text{bank} \\mid \\text{\`\`river ___''}) \\neq v(\\text{bank} \\mid \\text{\`\`Federal ___''})
+\\end{aligned}$$`}</MathBlock>
+
+      <StaticVsContextual />
+
+      <p style={prose}>
+        BERT (Devlin, Chang, Lee &amp; Toutanova 2019) [6] replaced ELMo's biLSTM
+        with a transformer encoder and trained it with <i>masked language modeling</i>
+        — randomly hiding 15% of tokens and asking the model to predict them from
+        the surrounding context. The result was a single pretrained model that
+        could produce strong contextual embeddings for any token in any sentence,
+        fine-tunable to dozens of downstream tasks with small task-specific heads.
+        BERT-style pretraining became the foundation of NLP from 2019 onward.
+        Static word embeddings are now mostly a teaching tool — in production,
+        every modern model is some descendant of BERT or GPT, and "word embedding"
+        usually means a contextual token representation extracted from one of those
+        models.
       </p>
 
       <ContextualEmbeddings />

@@ -2,12 +2,18 @@ import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
+import InlineMath from "../../components/shared/InlineMath";
 import MathBlock from "../../components/shared/MathBlock";
 import ThreeParadigms from "../../components/widgets/ch09/ThreeParadigms";
 import KVCache from "../../components/widgets/ch09/KVCache";
 import AttentionVariants from "../../components/widgets/ch09/AttentionVariants";
 import RoPE from "../../components/widgets/ch09/RoPE";
 import MixtureOfExperts from "../../components/widgets/ch09/MixtureOfExperts";
+import TrainingObjectives from "../../components/diagrams/ch09/TrainingObjectives";
+import KVCacheReuse from "../../components/diagrams/ch09/KVCacheReuse";
+import MHAvsMQAvsGQA from "../../components/diagrams/ch09/MHAvsMQAvsGQA";
+import RoPEFrequencySpectrum from "../../components/diagrams/ch09/RoPEFrequencySpectrum";
+import MoERouting from "../../components/diagrams/ch09/MoERouting";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -110,6 +116,40 @@ export default function LLMArchitectures() {
         explicitly trained on, simply through in-context learning.
       </p>
 
+      <p style={prose}>
+        Three things tilted the field toward causal language models <em>[1] [2]</em>.
+        First, the training objective is dirt-cheap to implement — every token in
+        the corpus is simultaneously a training example, requiring no special
+        masking schedule or denoising scheme. Second, GPT-2 (Radford, Wu, Child,
+        Luan, Amodei &amp; Sutskever 2019) showed that a sufficiently large
+        autoregressive model could perform tasks zero-shot just by being prompted,
+        and GPT-3 (Brown et al. 2020) generalized this to <em>in-context learning</em>
+        — putting a few examples into the prompt and getting the model to extrapolate.
+        Neither encoder-only nor encoder-decoder paradigms had a natural way to do
+        this; both required task-specific fine-tuning. Third, generation,
+        classification, and retrieval can all be cast as next-token prediction, but
+        the reverse is not true. The decoder-only paradigm subsumed every other use
+        case — Radford et al. (2018), the original GPT paper, had already foreseen
+        this generality before scale made it inarguable.
+      </p>
+
+      <p style={prose}>
+        The other two families are still alive in narrower niches. Encoder-only
+        models <em>[3]</em> remain the default for <em>embeddings</em> — converting
+        text into fixed-dimensional vectors for retrieval, clustering, and similarity
+        search. Sentence-BERT and its descendants are still the workhorses behind
+        RAG systems. Encoder-decoder models <em>[4]</em> remain useful for
+        sequence-to-sequence tasks where input and output are structurally distinct:
+        translation, summarization, structured extraction. T5's "everything is
+        text-to-text" framing was elegant but ultimately less scalable than just
+        adding a system prompt to a causal LM. A small modern variant —
+        <em> prefix-LM</em> (used in some PaLM training) — sits between the families
+        by allowing bidirectional attention over the prompt and causal attention
+        over the generated completion.
+      </p>
+
+      <TrainingObjectives />
+
       <ThreeParadigms />
 
       {/* ── Section 2: KV Cache ───────────────────────────────────────────── */}
@@ -123,15 +163,49 @@ export default function LLMArchitectures() {
         step recomputes keys and values for all prior tokens — quadratic total cost.
         The KV cache stores the key and value projections from all previous layers
         and all previous tokens, reusing them at each new step. Only the new token's
-        keys and values need to be computed. This reduces per-step compute from
-        O(T²d) to O(Td) but introduces a new constraint: the KV cache grows linearly
-        with sequence length and consumes significant GPU memory — a 70B parameter
-        model at 128K context requires tens of gigabytes for the cache alone.
+        keys and values need to be computed. This reduces per-step compute from{" "}
+        <InlineMath>{"\\mathcal{O}(T^2 d)"}</InlineMath> to{" "}
+        <InlineMath>{"\\mathcal{O}(T d)"}</InlineMath> but introduces a new
+        constraint: the KV cache grows linearly with sequence length and consumes
+        significant GPU memory — a 70B parameter model at 128K context requires
+        tens of gigabytes for the cache alone.
       </p>
 
-      <MathBlock>{`Without cache: O(T^2 * d) per token over T steps = O(T^3 * d) total
-With cache:    O(T * d) per token over T steps = O(T^2 * d) total
-KV cache size: 2 * num_layers * num_heads * head_dim * seq_len * bytes_per_element`}</MathBlock>
+      <MathBlock>{`$$\\begin{aligned}
+  \\text{without cache:} \\quad &\\mathcal{O}(T^2 d) \\text{ per token} \\times T \\text{ steps} = \\mathcal{O}(T^3 d) \\text{ total} \\\\
+  \\text{with cache:} \\quad &\\mathcal{O}(T d) \\text{ per token} \\times T \\text{ steps} = \\mathcal{O}(T^2 d) \\text{ total} \\\\
+  \\text{KV size:} \\quad &2 \\cdot L \\cdot h \\cdot d_{\\text{head}} \\cdot T \\cdot \\text{bytes}
+\\end{aligned}$$`}</MathBlock>
+
+      <KVCacheReuse />
+
+      <p style={prose}>
+        The memory hierarchy makes this worse than it looks. A 70B-parameter LLM at
+        128K context with FP16 keys and values runs to roughly 40 GB of KV cache
+        <em> per inference request</em>. Multiply by batch size and you saturate HBM
+        (high-bandwidth memory) on even an 80 GB H100. This is why the bottleneck
+        for serving LLMs is rarely compute — it's memory bandwidth and capacity.
+        Production systems use <em>continuous batching</em> (vLLM's PagedAttention
+        treats the KV cache like virtual memory, with pages of cache reused across
+        requests) and <em>quantized caches</em> (storing keys and values at FP8 or
+        INT8) to fit more requests onto the same GPU.
+      </p>
+
+      <p style={prose}>
+        FlashAttention sidesteps a different bottleneck <em>[9]</em>. Dao, Fu,
+        Ermon, Rudra &amp; Ré (2022) attacked attention from a hardware angle. The
+        naïve attention computation materializes the full{" "}
+        <InlineMath>{"T \\times T"}</InlineMath> attention matrix in HBM and
+        reads and writes it multiple times — a memory-bound operation even though
+        it looks compute-bound on paper. FlashAttention fuses the softmax-with-V
+        step and tiles the computation so the intermediate values stay in SRAM (an
+        order of magnitude faster than HBM), never materializing the full attention
+        matrix. The result: 2–4× faster attention with no approximation, and
+        quadratically less HBM allocation. Every modern inference and training
+        stack uses FlashAttention or a descendant (FlashAttention-2,
+        FlashAttention-3 for Hopper); without it, training a long-context LLM at
+        scale would be impractical.
+      </p>
 
       <KVCache />
 
@@ -141,21 +215,56 @@ KV cache size: 2 * num_layers * num_heads * head_dim * seq_len * bytes_per_eleme
       </div>
 
       <p style={prose}>
-        Standard multi-head attention (MHA) uses h separate Q, K, V projection
-        matrices, one per head. At inference, the KV cache must store key-value
-        pairs for all h heads — memory-intensive as sequence lengths grow. Multi-query
-        attention (MQA) collapses K and V to a single shared head while keeping
-        separate Q projections per head: identical computation graphs, dramatically
-        smaller KV cache. Grouped-query attention (GQA) is the middle ground — K
-        and V are shared within groups of g heads. LLaMA 2 and 3, Mistral, and
+        Standard multi-head attention (MHA) uses{" "}
+        <InlineMath>{"h"}</InlineMath> separate Q, K, V projection matrices,
+        one per head. At inference, the KV cache must store key-value pairs for
+        all <InlineMath>{"h"}</InlineMath> heads — memory-intensive as sequence
+        lengths grow. Multi-query attention (MQA) collapses K and V to a single
+        shared head while keeping separate Q projections per head: identical
+        computation graphs, dramatically smaller KV cache. Grouped-query attention
+        (GQA) is the middle ground — K and V are shared within groups of{" "}
+        <InlineMath>{"h/G"}</InlineMath> heads. LLaMA 2 and 3, Mistral, and
         Gemini all adopted GQA: it retains most of MHA's representational capacity
-        while cutting KV cache size by a factor of g. Quality at inference is nearly
+        while cutting KV cache size by a factor of{" "}
+        <InlineMath>{"h/G"}</InlineMath>. Quality at inference is nearly
         indistinguishable; memory savings are substantial.
       </p>
 
-      <MathBlock>{`MHA:  Q_i, K_i, V_i for i = 1..h     KV size: h * seq_len * d_head
-MQA:  Q_i for i = 1..h, K, V shared   KV size: 1 * seq_len * d_head
-GQA:  Q_i for i = 1..h, K_g, V_g for g = 1..G   KV size: G * seq_len * d_head`}</MathBlock>
+      <MathBlock>{`$$\\begin{aligned}
+  \\text{MHA:} \\quad &Q_i, K_i, V_i \\text{ for } i = 1..h \\qquad &\\text{KV size: } h \\cdot T \\cdot d_{\\text{head}} \\\\
+  \\text{MQA:} \\quad &Q_i \\text{ for } i = 1..h,\\ K, V \\text{ shared} \\qquad &\\text{KV size: } 1 \\cdot T \\cdot d_{\\text{head}} \\\\
+  \\text{GQA:} \\quad &Q_i \\text{ for } i = 1..h,\\ K_g, V_g \\text{ for } g = 1..G \\qquad &\\text{KV size: } G \\cdot T \\cdot d_{\\text{head}}
+\\end{aligned}$$`}</MathBlock>
+
+      <MHAvsMQAvsGQA />
+
+      <p style={prose}>
+        MQA came first; GQA interpolated <em>[5]</em>. Multi-query attention was
+        originally proposed by Shazeer (2019) as a memory optimization that traded
+        a small quality drop for a much smaller KV cache. The technique worked for
+        some tasks but cost noticeable quality on others — a single shared K and V
+        proved too restrictive for capturing diverse positional and semantic
+        relationships. Grouped-query attention (Ainslie, Lee-Thorp, de Jong,
+        Zelaski, Sanghai &amp; Xu 2023) gave the field a way to interpolate: instead
+        of <InlineMath>{"h"}</InlineMath> separate K/V projections (MHA) or 1 shared
+        (MQA), use <InlineMath>{"G"}</InlineMath> groups where{" "}
+        <InlineMath>{"h/G"}</InlineMath> Q-heads share each K/V projection.
+        The original GQA paper showed quality almost matching MHA at the cost of
+        MQA. LLaMA 2 <em>[8]</em> adopted GQA with 8 K/V groups for 32 Q-heads;
+        LLaMA 3, Mistral, and Gemini all followed.
+      </p>
+
+      <p style={prose}>
+        Beyond GQA: latent attention. DeepSeek-V2 introduced
+        <em> Multi-head Latent Attention</em> (MLA, 2024), which compresses the K
+        and V projections through a low-rank latent space before storing them in
+        the cache, then decompresses at attention time. This reduces KV cache size
+        by another order of magnitude beyond GQA while preserving most of MHA's
+        quality. The pattern is clear: every architectural fork in modern LLMs is,
+        in part, an effort to manage the KV cache. The model's compute pattern is
+        shaped as much by inference memory constraints as by training-time quality
+        concerns.
+      </p>
 
       <AttentionVariants />
 
@@ -169,18 +278,50 @@ GQA:  Q_i for i = 1..h, K_g, V_g for g = 1..G   KV size: G * seq_len * d_head`}<
         before the transformer. This works but has limitations: the model sees
         absolute position, not relative position, and generalizing to sequence
         lengths longer than those seen in training is unreliable. Rotary positional
-        embeddings encode position by rotating the query and key vectors in 2D
-        subspaces of the feature dimension before computing attention scores.
-        The dot product between a query at position m and a key at position n
-        then depends only on their relative offset (m − n), not their absolute
-        positions. RoPE is now the default choice in LLaMA, Mistral, Qwen, and
-        most open-weight frontier models.
+        embeddings <em>[6]</em> encode position by rotating the query and key
+        vectors in 2D subspaces of the feature dimension before computing attention
+        scores. The dot product between a query at position{" "}
+        <InlineMath>{"m"}</InlineMath> and a key at position{" "}
+        <InlineMath>{"n"}</InlineMath> then depends only on their relative
+        offset <InlineMath>{"(m - n)"}</InlineMath>, not their absolute positions.
+        RoPE is now the default choice in LLaMA, Mistral, Qwen, and most
+        open-weight frontier models.
       </p>
 
-      <MathBlock>{`RoPE rotation of dimension pair (2i, 2i+1) at position m:
-[q_{2i}' ]   [cos(m*theta_i)  -sin(m*theta_i)] [q_{2i} ]
-[q_{2i+1}'] = [sin(m*theta_i)   cos(m*theta_i)] [q_{2i+1}]
-theta_i = base^(-2i / d),   base = 10000 (or 500000 for long-context)`}</MathBlock>
+      <p style={prose}>
+        RoPE doesn't apply a single rotation; it applies many. The feature dimension
+        is split into <InlineMath>{"d/2"}</InlineMath> pairs, and each pair{" "}
+        <InlineMath>{"(2i, 2i+1)"}</InlineMath> is rotated at a frequency{" "}
+        <InlineMath>{"\\theta_i = \\text{base}^{-2i/d}"}</InlineMath>. Low-index
+        pairs rotate slowly (long wavelength, sensitive to coarse-grained position);
+        high-index pairs rotate quickly (short wavelength, sensitive to
+        fine-grained local position). The model sees position as a
+        <em> multi-scale</em> signal, similar in spirit to sinusoidal encoding but
+        baked into the attention operation rather than added to the embedding.
+      </p>
+
+      <RoPEFrequencySpectrum />
+
+      <p style={prose}>
+        The frequency spectrum directly controls how far the model can reliably
+        "see." If the longest wavelength is shorter than the training context
+        length, RoPE generalizes poorly beyond it. LLaMA 1 used{" "}
+        <InlineMath>{"\\text{base} = 10000"}</InlineMath> for 2K context.
+        LLaMA 3 extended to 128K context by raising{" "}
+        <InlineMath>{"\\text{base} = 500000"}</InlineMath>, which slows down
+        every frequency proportionally — longer wavelengths cover more positions.
+        More sophisticated schemes (Position Interpolation, NTK-aware scaling,
+        YaRN) interpolate or extrapolate the frequencies more selectively, often
+        allowing a model trained at 8K context to extend to 128K with minimal
+        fine-tuning. RoPE's elegance is that all these tricks operate on a single
+        hyperparameter — the base frequency — rather than requiring architecture
+        changes.
+      </p>
+
+      <MathBlock>{`$$\\begin{aligned}
+  \\begin{pmatrix} q'_{2i} \\\\ q'_{2i+1} \\end{pmatrix} &= \\begin{pmatrix} \\cos(m\\theta_i) & -\\sin(m\\theta_i) \\\\ \\sin(m\\theta_i) & \\cos(m\\theta_i) \\end{pmatrix} \\begin{pmatrix} q_{2i} \\\\ q_{2i+1} \\end{pmatrix} \\\\
+  \\theta_i &= \\text{base}^{-2i/d}, \\quad \\text{base} = 10000 \\text{ (or } 500000 \\text{ for long-context)}
+\\end{aligned}$$`}</MathBlock>
 
       <RoPE />
 
@@ -191,21 +332,54 @@ theta_i = base^(-2i / d),   base = 10000 (or 500000 for long-context)`}</MathBlo
 
       <p style={prose}>
         A dense transformer layer applies the same FFN weights to every token.
-        A mixture-of-experts (MoE) layer replaces the FFN with E expert networks
-        and a learned router that activates only the top-k experts for each token.
-        With k=2 and E=64, each token uses 2 expert FFNs rather than 1 — similar
-        compute to a dense model — but the total parameter count is 32 times larger.
-        More parameters means more capacity for knowledge storage without proportional
-        training cost. GPT-4, Gemini 1.5, and Mixtral are believed to use MoE.
-        The architectural cost is communication overhead in distributed training
-        and load imbalance: if most tokens route to the same few experts, capacity
-        is wasted and training destabilizes. Auxiliary load-balancing losses prevent
-        this collapse.
+        A mixture-of-experts (MoE) layer replaces the FFN with{" "}
+        <InlineMath>{"E"}</InlineMath> expert networks and a learned router
+        that activates only the top-<InlineMath>{"k"}</InlineMath> experts for each
+        token. With <InlineMath>{"k = 2"}</InlineMath> and{" "}
+        <InlineMath>{"E = 64"}</InlineMath>, each token uses 2 expert FFNs
+        rather than 1 — similar compute to a dense model — but the total parameter
+        count is 32 times larger. More parameters means more capacity for knowledge
+        storage without proportional training cost. GPT-4, Gemini 1.5, and Mixtral
+        are believed to use MoE. The architectural cost is communication overhead
+        in distributed training and load imbalance: if most tokens route to the
+        same few experts, capacity is wasted and training destabilizes. Auxiliary
+        load-balancing losses prevent this collapse.
       </p>
 
-      <MathBlock>{`MoE output: y = sum_{i in TopK(G(x),k)} G_i(x) * FFN_i(x)
-Router: G(x) = Softmax(TopK(W_g * x, k))
-Params: num_layers * k/E * dense_params  (active per token)`}</MathBlock>
+      <p style={prose}>
+        Dense models pay for every parameter on every forward pass. MoE models pay
+        only for the active subset. Switch Transformer (Fedus, Zoph &amp; Shazeer
+        2022) — one of the canonical sparse models, building on the earlier GShard
+        work of Lepikhin et al. (2020) — demonstrated that you could scale total
+        parameters by 10× while keeping per-token compute constant, and quality
+        improved as if you'd actually scaled compute. The decomposition decouples
+        <em> capacity</em> (total parameters, which holds knowledge) from
+        <em> compute</em> (active parameters per forward pass, which costs FLOPs
+        at training and inference). This decoupling is the entire pitch: more
+        capacity at the same compute, or the same capacity at less compute.
+      </p>
+
+      <MathBlock>{`$$\\begin{aligned}
+  y &= \\sum_{i \\in \\text{TopK}(G(x), k)} G_i(x) \\cdot \\text{FFN}_i(x) \\\\
+  G(x) &= \\text{Softmax}(\\text{TopK}(W_g \\cdot x,\\, k)) \\\\
+  \\text{active params per token} &\\approx \\tfrac{k}{E} \\cdot \\text{dense params}
+\\end{aligned}$$`}</MathBlock>
+
+      <MoERouting />
+
+      <p style={prose}>
+        Mixtral and the open-source MoE wave <em>[7]</em>. Mixtral 8×7B (Jiang et
+        al. 2024) was the first widely-deployed open-weight sparse model: 8 expert
+        FFNs per layer, top-2 routing, ~47B total parameters with ~13B active per
+        token. It matched LLaMA-2-70B quality at a fraction of the inference cost
+        — and could be served on hardware that wouldn't fit a 70B dense model.
+        The architectural cost is real: MoE training requires expert-parallel
+        distributed setups, suffers from communication overhead, and needs
+        auxiliary losses to keep experts balanced. GPT-4 and Gemini 1.5 are widely
+        believed to be MoE based on architectural hints in their inference
+        behavior. The trade-off is increasingly clear: dense models are simpler;
+        sparse models are bigger.
+      </p>
 
       <MixtureOfExperts />
 

@@ -2,11 +2,16 @@ import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
+import InlineMath from "../../components/shared/InlineMath";
 import MathBlock from "../../components/shared/MathBlock";
 import AttentionHeatmap from "../../components/widgets/ch07/AttentionHeatmap";
 import QKVInspector from "../../components/widgets/ch07/QKVInspector";
 import MultiHeadAttention from "../../components/widgets/ch07/MultiHeadAttention";
 import SoftmaxTemperature from "../../components/widgets/ch07/SoftmaxTemperature";
+import BottleneckVsAttention from "../../components/diagrams/ch07/BottleneckVsAttention";
+import QKVMechanism from "../../components/diagrams/ch07/QKVMechanism";
+import ScalingByDk from "../../components/diagrams/ch07/ScalingByDk";
+import MultiHeadSplit from "../../components/diagrams/ch07/MultiHeadSplit";
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
@@ -86,13 +91,36 @@ export default function Attention() {
       </div>
 
       <p style={prose}>
-        In a standard encoder-decoder RNN, the encoder reads the entire input and
-        compresses it into a single context vector — the final hidden state.
-        The decoder then generates each output token conditioned only on that one
-        vector. For short sentences this works. For long ones, the fixed-size
-        bottleneck forces the encoder to discard information, and translation quality
-        degrades sharply beyond ~20 words.
+        In the original encoder-decoder RNN of Sutskever et al., the encoder reads
+        the entire source sentence one token at a time and folds everything it has
+        seen into a single hidden state — a vector typically of dimension 256 to
+        1024. That one vector is the only thing the decoder receives. Every output
+        token, for every position, is generated conditioned on the same fixed
+        summary. Information about early tokens has already been overwritten by the
+        time the encoder reaches the end.
       </p>
+
+      <p style={prose}>
+        The empirical signature is unmistakable. BLEU scores on translation degrade
+        sharply once the source passes roughly twenty to thirty tokens. The model
+        has not forgotten how to translate — it has simply run out of bits. A few
+        hundred floats cannot losslessly encode an arbitrary paragraph, and the
+        decoder has no way to consult the source again once generation begins.
+      </p>
+
+      <p style={prose}>
+        Bahdanau, Cho, and Bengio proposed the fix in 2015. Rather than collapse the
+        encoder's output to a single vector, keep all hidden states <InlineMath>{"h_1, \\ldots, h_T"}</InlineMath> and
+        let the decoder, at each output step, compute a weighted combination of
+        them. The weights — the alignment — come from a small feed-forward network
+        that compares the decoder's current state to each encoder state. This is
+        additive attention. It was the conceptual breakthrough; the dot-product
+        simplification came later. Every refinement in the rest of this chapter —
+        queries and keys and values, scaling, multi-head — generalizes this one
+        idea.
+      </p>
+
+      <BottleneckVsAttention />
 
       <AttentionHeatmap />
 
@@ -102,15 +130,44 @@ export default function Attention() {
       </div>
 
       <p style={prose}>
-        Attention computes a weighted sum of Values, where weights are derived from
-        comparing Queries to Keys via dot products. Scaling by the square root of the
-        key dimension prevents the dot products from growing large in high dimensions,
-        which would push the softmax into regions of vanishingly small gradients.
-        The output is a context-sensitive blend of all values — each query attends
-        to exactly the information it needs.
+        Luong, Pham, and Manning replaced Bahdanau's learned alignment network with
+        a plain dot product <InlineMath>{"q^{\\top} k"}</InlineMath>. The two formulations have the same theoretical
+        complexity, but the dot-product variant is dramatically faster in practice:
+        a single matrix multiply, fully vectorized on GPU. The Vaswani paper notes
+        this directly — dot-product attention is faster and more memory-efficient
+        because it reduces to highly optimized matmul kernels. The shift from
+        additive to multiplicative was the unlock that made attention cheap enough
+        to apply everywhere.
       </p>
 
-      <MathBlock>{"Attention(Q, K, V) = softmax( Q Kt / sqrt(dk) ) * V"}</MathBlock>
+      <QKVMechanism />
+
+      <p style={prose}>
+        Generalize away from the seq2seq setting. A query is what the current
+        position is asking for. A key is what each candidate position advertises
+        about itself. A value is what each candidate contributes if it is selected.
+        The output is a query-weighted blend of values, where the blend coefficients
+        come from query-key similarity. The crucial structural point is that <InlineMath>{"Q"}</InlineMath>, <InlineMath>{"K"}</InlineMath>,
+        and <InlineMath>{"V"}</InlineMath> are produced by separate learned linear projections of the same
+        underlying inputs. The model can learn what to ask, what to advertise, and
+        what to pay out, each independently.
+      </p>
+
+      <MathBlock>{"$$\\text{Attention}(Q, K, V) = \\text{softmax}\\!\\left(\\frac{QK^{\\top}}{\\sqrt{d_k}}\\right) V$$"}</MathBlock>
+
+      <p style={prose}>
+        The <InlineMath>{"\\sqrt{d_k}"}</InlineMath> in the denominator is not cosmetic. If the components of <InlineMath>{"q"}</InlineMath> and <InlineMath>{"k"}</InlineMath>
+        are independent with mean 0 and variance 1, then <InlineMath>{"q^{\\top} k = \\sum_i q_i k_i"}</InlineMath> has mean 0
+        and variance <InlineMath>{"d_k"}</InlineMath>. As <InlineMath>{"d_k"}</InlineMath> grows — 64, 512, larger — the dot products spread
+        out and grow large in magnitude. Softmax of large logits is nearly one-hot,
+        and the gradient of softmax in that regime is near zero: training stalls.
+        Dividing by <InlineMath>{"\\sqrt{d_k}"}</InlineMath> rescales the variance back to 1, keeping softmax in its
+        responsive range. <InlineMath>{"1/\\sqrt{d_k}"}</InlineMath> is exactly the right factor; dividing by <InlineMath>{"d_k"}</InlineMath>
+        itself would shrink real differences too aggressively and blur useful
+        signal.
+      </p>
+
+      <ScalingByDk />
 
       <QKVInspector />
 
@@ -120,16 +177,43 @@ export default function Attention() {
       </div>
 
       <p style={prose}>
-        A single attention operation can only express one type of relationship between
-        tokens at a time. Multi-head attention runs h independent attention operations
-        in parallel, each with its own learned Q, K, V projections. One head might
-        track syntactic dependencies while another tracks coreference. Their outputs
-        are concatenated and projected back to the model dimension, giving the model
-        richer representational power than any single head could provide.
+        A single attention map has one set of projections (<InlineMath>{"W_Q, W_K, W_V"}</InlineMath>), so it
+        can learn one notion of similarity. But "what relates to what" in a sentence
+        is multi-faceted. Subject-verb agreement is a syntactic dependency. A
+        pronoun resolving to its antecedent is coreference. Positional locality is
+        another channel entirely, as is semantic similarity. One head, one signal —
+        and the model is asked to compress all of these into a single attention
+        pattern.
       </p>
 
-      <MathBlock>{`MultiHead(Q, K, V) = Concat(head1, ..., headh) * WO
-where headi = Attention(Q*WiQ, K*WiK, V*WiV)`}</MathBlock>
+      <p style={prose}>
+        The original Transformer uses <InlineMath>{"d_{\\text{model}} = 512"}</InlineMath> and <InlineMath>{"h = 8"}</InlineMath> heads, with
+        <InlineMath>{"d_k = d_v = d_{\\text{model}} / h = 64"}</InlineMath>. Each head receives its own learned
+        projections <InlineMath>{"W_Q^i, W_K^i, W_V^i"}</InlineMath> that map from 512 down to 64, runs scaled
+        dot-product attention in that 64-dimensional subspace, and produces a
+        64-dim output. The eight outputs are concatenated back to 512 and passed
+        through a final learned projection <InlineMath>{"W_O \\in \\mathbb{R}^{512 \\times 512}"}</InlineMath>. The compute
+        accounting is the punch line: because each head operates at reduced
+        dimension, the total cost of multi-head attention is essentially the same
+        as a single head at full dimensionality. Multi-head is not more
+        expensive — it is the same flops, rearranged into parallel subspaces.
+      </p>
+
+      <p style={prose}>
+        Probing work on trained Transformers has found heads that specialize in
+        syntactic relations, positional patterns, and coreference, though the
+        specialization is messier than the clean stories suggest. The architectural
+        argument stands on its own: giving the model multiple independent
+        similarity functions is cheap, and it consistently outperforms cramming
+        the same signal into one.
+      </p>
+
+      <MultiHeadSplit />
+
+      <MathBlock>{`$$\\begin{aligned}
+  \\text{MultiHead}(Q, K, V) &= \\text{Concat}(\\text{head}_1, \\ldots, \\text{head}_h)\\, W^O \\\\
+  \\text{where}\\ \\text{head}_i &= \\text{Attention}(Q W_i^Q,\\ K W_i^K,\\ V W_i^V)
+\\end{aligned}$$`}</MathBlock>
 
       <MultiHeadAttention />
 
@@ -139,15 +223,34 @@ where headi = Attention(Q*WiQ, K*WiK, V*WiV)`}</MathBlock>
       </div>
 
       <p style={prose}>
-        The sharpness of the attention distribution is controlled by temperature T,
-        applied by dividing logits before softmax. At low T the distribution sharpens
-        toward one-hot — hard attention, high confidence. At high T it flattens
-        toward uniform — soft attention, uncertainty. This same temperature parameter
-        appears in knowledge distillation, language model sampling, and contrastive
-        learning, making it one of the most broadly applicable ideas in the field.
+        Dividing logits by a scalar <InlineMath>{"T"}</InlineMath> before applying softmax controls the
+        sharpness of the output distribution. As <InlineMath>{"T \\to 0"}</InlineMath> the distribution collapses
+        toward argmax — hard attention, single winner. At <InlineMath>{"T = 1"}</InlineMath> it is the standard
+        softmax. As <InlineMath>{"T \\to \\infty"}</InlineMath> it flattens toward uniform. Viewed through this lens, the
+        <InlineMath>{"1/\\sqrt{d_k}"}</InlineMath> factor from the previous section is itself a fixed temperature: a
+        scaling chosen by variance argument, not exposed as a tunable knob.
       </p>
 
-      <MathBlock>{"softmax(z/T)i = exp(zi/T) / sum_j exp(zj/T)"}</MathBlock>
+      <MathBlock>{"$$\\text{softmax}(z/T)_i = \\frac{\\exp(z_i / T)}{\\sum_j \\exp(z_j / T)}$$"}</MathBlock>
+
+      <p style={prose}>
+        This is one of the most reused tricks in deep learning. In knowledge
+        distillation (Hinton et al., 2015), a student is trained to match a
+        teacher's softmax outputs at high <InlineMath>{"T"}</InlineMath>, which exposes the teacher's relative
+        confidences across non-top classes — the so-called dark knowledge that a
+        plain one-hot label cannot transmit. In language model sampling, <InlineMath>{"T"}</InlineMath>
+        controls the trade-off between deterministic and creative generation:
+        <InlineMath>{"T < 1"}</InlineMath> makes outputs sharper and more predictable, <InlineMath>{"T > 1"}</InlineMath> wilder. In
+        contrastive learning — CLIP, SimCLR, and their descendants — the
+        temperature on the contrastive softmax is a tuned hyperparameter that
+        controls how strongly negatives are pushed away from the anchor.
+      </p>
+
+      <p style={prose}>
+        Softmax temperature is the single tunable parameter that turns a sharp
+        decision into a soft distribution, and vice versa — and the same lever
+        shows up wherever a softmax does.
+      </p>
 
       <SoftmaxTemperature />
 
