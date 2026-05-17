@@ -13,9 +13,123 @@
   --math-color: #fbbf24;
   --green: #34d399; --red: #f87171; --orange: #fb923c;
   --purple: #a78bfa; --code-bg: #0a0a0a;
+
+  /* ── Responsive layout tokens ─────────────────────────────────────────
+     Desktop values match the existing inline-style values exactly so the
+     desktop rendering is unchanged. Mobile values are overridden below. */
+
+  /* Chapter wrapper */
+  --chapter-max-width: 740px;
+  --chapter-padding: 52px 44px 100px;
+
+  /* Chapter eyebrow ("Chapter NN · Part X — ...") */
+  --chapter-meta-size: 10.5px;
+
+  /* H1 title */
+  --h1-size: 42px;
+  --h1-line-height: 1.15;
+
+  /* Section titles (h2) */
+  --section-title-size: 26px;
+  --section-title-margin-top: 48px;
+  --section-title-margin-bottom: 20px;
+
+  /* Prose */
+  --prose-size: 15px;
+  --prose-line-height: 1.75;
+  --prose-margin-bottom: 20px;
+
+  /* Lede */
+  --lede-size: 15px;
+  --lede-line-height: 1.75;
+  --lede-margin: 20px 0 36px;
+  --lede-padding-left: 16px;
+
+  /* Layout chrome */
+  --sidebar-width: 252px;
+  --sidebar-display: flex;     /* hidden on mobile via drawer */
+  --topbar-padding-x: 28px;
+  --topbar-height: 52px;
+
+  /* TocRail (side navigation) */
+  --toc-rail-width: 180px;
+  --toc-rail-display: block;
+  --mobile-nav-display: none;
+
+  /* Math */
+  --mathblock-font-size: 13px;
+  --mathblock-padding: 18px 24px;
+  --mathblock-margin: 24px 0;
+
+  /* Citations */
+  --citations-margin-top: 64px;
+  --citations-padding-top: 32px;
+
+  /* Widget card */
+  --widget-card-padding: 20px 18px;
+  --widget-card-header-padding: 12px 18px;
 }
+
+@media (max-width: 767px) {
+  :root {
+    --chapter-max-width: 100%;
+    --chapter-padding: 28px 20px 64px;
+
+    --chapter-meta-size: 10px;
+
+    --h1-size: 30px;
+    --h1-line-height: 1.2;
+
+    --section-title-size: 20px;
+    --section-title-margin-top: 40px;
+    --section-title-margin-bottom: 14px;
+
+    --prose-size: 16px;
+    --prose-line-height: 1.7;
+    --prose-margin-bottom: 18px;
+
+    --lede-size: 15px;
+    --lede-line-height: 1.65;
+    --lede-margin: 16px 0 28px;
+    --lede-padding-left: 12px;
+
+    --sidebar-display: none;      /* hidden on mobile; shown via drawer */
+    --topbar-padding-x: 16px;
+
+    --toc-rail-display: none;     /* hidden on mobile; replaced by MobileNav */
+    --mobile-nav-display: block;
+
+    --mathblock-font-size: 12.5px;
+    --mathblock-padding: 14px 16px;
+    --mathblock-margin: 20px 0;
+
+    --citations-margin-top: 48px;
+    --citations-padding-top: 24px;
+
+    --widget-card-padding: 14px 12px;
+    --widget-card-header-padding: 10px 14px;
+  }
+}
+
+@media (max-width: 479px) {
+  :root {
+    --chapter-padding: 24px 16px 56px;
+    --h1-size: 26px;
+    --section-title-size: 18px;
+    --section-title-margin-top: 32px;
+    --prose-size: 15.5px;
+    --topbar-padding-x: 12px;
+  }
+}
+
 body { background: var(--bg); color: var(--text); }
 * { box-sizing: border-box; }
+
+/* Prevent accidental horizontal page-level scroll on mobile. Contained
+   horizontal scroll inside math blocks / wide figures is still allowed.
+   Applied to body only — applying to html can break `position: fixed`. */
+body { overflow-x: hidden; }
+
 .widget-placeholder {
   border: 1px dashed var(--border-lt);
   border-radius: 8px;
@@ -33,4 +147,45 @@ input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none; width: 12px; height: 12px;
   border-radius: 50%; background: var(--accent);
   box-shadow: 0 0 6px var(--accent-glow);
+}
+
+/* Larger slider thumbs on touch devices to meet the ~44px touch target.
+   Track stays visually thin; the thumb gets a transparent halo via a wider
+   thumb element so the effective tap area is generous. */
+@media (max-width: 767px) {
+  input[type=range] {
+    height: 28px; /* tap row */
+    background: transparent;
+    padding: 13px 0;
+    background-clip: content-box;
+    background-image: linear-gradient(var(--border-lt), var(--border-lt));
+    background-repeat: no-repeat;
+    background-size: 100% 2px;
+    background-position: center;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    width: 20px; height: 20px;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px;
+    border-radius: 50%; background: var(--accent); border: 0;
+    box-shadow: 0 0 6px var(--accent-glow);
+  }
+}
+
+/* Mobile-only utility — let any element with [data-mobile-only] participate
+   in the responsive flow without inline JS. */
+[data-mobile-only] { display: none; }
+@media (max-width: 767px) {
+  [data-mobile-only] { display: revert; }
+  [data-desktop-only] { display: none !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }

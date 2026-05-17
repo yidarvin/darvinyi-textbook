@@ -5,13 +5,14 @@ export default function SectionTitle({ children }) {
         display: 'flex',
         alignItems: 'center',
         gap: '16px',
-        margin: '48px 0 20px',
+        marginTop: 'var(--section-title-margin-top, 48px)',
+        marginBottom: 'var(--section-title-margin-bottom, 20px)',
       }}
     >
       <h2
         style={{
           fontFamily: "'Crimson Pro', serif",
-          fontSize: '26px',
+          fontSize: 'var(--section-title-size, 26px)',
           fontWeight: 600,
           color: 'var(--text)',
           margin: 0,

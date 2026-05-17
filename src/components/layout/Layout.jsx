@@ -1,7 +1,10 @@
+import { useContext, useEffect, useState } from "react";
 import { useLocation, Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import TocRail, { TocProvider } from "./TocRail";
+import TocRail, { TocContext, TocProvider } from "./TocRail";
+import MobileNav from "./MobileNav";
+import { useIsMobile } from "../../hooks/useMediaQuery";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const rootStyle = {
@@ -34,34 +37,172 @@ const contentScrollStyle = {
 };
 
 const contentInnerStyle = {
-  maxWidth: "740px",
+  maxWidth: "var(--chapter-max-width, 740px)",
   margin: "0 auto",
-  padding: "52px 44px 100px",
+  padding: "var(--chapter-padding, 52px 44px 100px)",
 };
+
+// ─── MobileNavMount: reads sections from TocContext and renders MobileNav.
+// Wrapped with data-mobile-only so it's hidden on desktop via CSS.
+function MobileNavMount() {
+  const { sections } = useContext(TocContext);
+  if (!sections.length) return null;
+  return (
+    <div data-mobile-only>
+      <MobileNav sections={sections} />
+    </div>
+  );
+}
+
+// ─── MobileSidebarDrawer: slide-out drawer wrapping the Sidebar on mobile.
+function MobileSidebarDrawer({ open, onClose }) {
+  // Lock body scroll while drawer is open
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
+  // Close on Escape
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, onClose]);
+
+  return (
+    <>
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        aria-hidden="true"
+        style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.55)",
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
+          transition: "opacity 0.18s ease",
+          zIndex: 90,
+        }}
+      />
+      {/* Panel */}
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Chapters"
+        style={{
+          position: "fixed",
+          top: 0,
+          left: 0,
+          bottom: 0,
+          width: "min(280px, 84vw)",
+          background: "var(--bg2)",
+          borderRight: "1px solid var(--border)",
+          transform: open ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 0.22s ease",
+          zIndex: 100,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
+        <Sidebar />
+      </div>
+    </>
+  );
+}
+
+function HamburgerButton({ onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="Open chapter menu"
+      data-mobile-only
+      style={{
+        background: "transparent",
+        border: "1px solid var(--border)",
+        borderRadius: 6,
+        width: 36,
+        height: 36,
+        display: "inline-flex",
+        alignItems: "center",
+        justifyContent: "center",
+        color: "var(--text)",
+        cursor: "pointer",
+        flexShrink: 0,
+        padding: 0,
+        marginRight: 6,
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+        <path
+          d="M2 4h12M2 8h12M2 12h12"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+        />
+      </svg>
+    </button>
+  );
+}
 
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export default function Layout() {
   const location = useLocation();
+  const isMobile = useIsMobile();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // Close drawer whenever the route changes (e.g. user picks a chapter)
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [location.pathname]);
+
+  // Close drawer when switching to desktop
+  useEffect(() => {
+    if (!isMobile) setDrawerOpen(false);
+  }, [isMobile]);
 
   return (
     <TocProvider>
       <div style={rootStyle}>
-        {/* Left sidebar — sticky, independently scrollable */}
-        <Sidebar />
+        {/* Left sidebar — sticky on desktop, drawer on mobile */}
+        {!isMobile && <Sidebar />}
+        {isMobile && (
+          <MobileSidebarDrawer
+            open={drawerOpen}
+            onClose={() => setDrawerOpen(false)}
+          />
+        )}
 
         {/* Main column: topbar + scrollable content + right TOC */}
         <div style={mainStyle}>
-          <Topbar pathname={location.pathname} />
+          <Topbar
+            pathname={location.pathname}
+            isMobile={isMobile}
+            HamburgerSlot={
+              isMobile ? (
+                <HamburgerButton onClick={() => setDrawerOpen(true)} />
+              ) : null
+            }
+          />
 
           <div style={contentWrapStyle}>
             {/* Scrollable content area */}
             <div id="content-scroll" style={contentScrollStyle}>
+              <MobileNavMount />
               <div style={contentInnerStyle}>
                 <Outlet />
               </div>
             </div>
 
-            {/* Right TOC rail — sticky, independently scrollable */}
+            {/* Right TOC rail — sticky, independently scrollable (CSS hides on mobile) */}
             <TocRail />
           </div>
         </div>

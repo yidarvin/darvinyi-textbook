@@ -25,13 +25,14 @@ export function TocProvider({ children }) {
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const railStyle = {
-  width: "180px",
-  minWidth: "180px",
+  width: "var(--toc-rail-width, 180px)",
+  minWidth: "var(--toc-rail-width, 180px)",
   flexShrink: 0,
   background: "var(--bg2)",
   borderLeft: "1px solid var(--border)",
   overflowY: "auto",
   height: "100%",
+  display: "var(--toc-rail-display, block)",
 };
 
 const innerStyle = {

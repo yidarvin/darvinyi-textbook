@@ -47,13 +47,13 @@ function useChapterNav(pathname) {
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const topbarStyle = {
-  height: "52px",
-  minHeight: "52px",
+  height: "var(--topbar-height, 52px)",
+  minHeight: "var(--topbar-height, 52px)",
   background: "var(--bg2)",
   borderBottom: "1px solid var(--border)",
   display: "flex",
   alignItems: "center",
-  padding: "0 28px",
+  padding: "0 var(--topbar-padding-x, 28px)",
   gap: "10px",
   flexShrink: 0,
 };
@@ -88,7 +88,7 @@ const rightStyle = {
   flexShrink: 0,
 };
 
-function NavBtn({ label, primary, onClick, disabled }) {
+function NavBtn({ label, primary, onClick, disabled, "aria-label": ariaLabel }) {
   const base = {
     fontSize: "11px",
     padding: "4px 12px",
@@ -107,6 +107,7 @@ function NavBtn({ label, primary, onClick, disabled }) {
   return (
     <button
       style={base}
+      aria-label={ariaLabel}
       onClick={disabled ? undefined : onClick}
       onMouseEnter={e => {
         if (!disabled) {
@@ -128,7 +129,7 @@ function NavBtn({ label, primary, onClick, disabled }) {
   );
 }
 
-export default function Topbar({ pathname }) {
+export default function Topbar({ pathname, HamburgerSlot, isMobile = false }) {
   const navigate = useNavigate();
   const { current, prev, next } = useChapterNav(pathname);
 
@@ -136,10 +137,11 @@ export default function Topbar({ pathname }) {
 
   return (
     <div style={topbarStyle}>
+      {HamburgerSlot}
       {/* Breadcrumb */}
       <div style={breadcrumbStyle}>
-        <span>darvinyi-textbook</span>
-        {!isHome && current.part && (
+        {!isMobile && <span>darvinyi-textbook</span>}
+        {!isMobile && !isHome && current.part && (
           <>
             <span style={sepStyle}>›</span>
             <span style={{ flexShrink: 0 }}>{current.part}</span>
@@ -147,13 +149,13 @@ export default function Topbar({ pathname }) {
         )}
         {!isHome && (
           <>
-            <span style={sepStyle}>›</span>
+            {!isMobile && <span style={sepStyle}>›</span>}
             <span style={currentStyle}>{current.title}</span>
           </>
         )}
         {isHome && (
           <>
-            <span style={sepStyle}>›</span>
+            {!isMobile && <span style={sepStyle}>›</span>}
             <span style={currentStyle}>Table of Contents</span>
           </>
         )}
@@ -163,16 +165,18 @@ export default function Topbar({ pathname }) {
       {!isHome && (
         <div style={rightStyle}>
           <NavBtn
-            label={prev ? `← ${prev.title}` : "← Prev"}
+            label={isMobile ? "←" : prev ? `← ${prev.title}` : "← Prev"}
             primary={false}
             disabled={!prev}
             onClick={() => prev && navigate(prev.path)}
+            aria-label={prev ? `Previous: ${prev.title}` : "Previous"}
           />
           <NavBtn
-            label={next ? `${next.title} →` : "Next →"}
+            label={isMobile ? "→" : next ? `${next.title} →` : "Next →"}
             primary={true}
             disabled={!next}
             onClick={() => next && navigate(next.path)}
+            aria-label={next ? `Next: ${next.title}` : "Next"}
           />
         </div>
       )}

@@ -18,11 +18,11 @@ import RewardSourceTaxonomy from "../../components/diagrams/ch14/RewardSourceTax
 
 const prose = {
   fontFamily: "'Inter', sans-serif",
-  fontSize: "15px",
+  fontSize: "var(--prose-size, 15px)",
   fontWeight: 400,
   color: "#b8c4cc",
-  lineHeight: 1.75,
-  margin: "0 0 20px",
+  lineHeight: "var(--prose-line-height, 1.75)",
+  margin: "0 0 var(--prose-margin-bottom, 20px)",
 };
 
 const CITATIONS = [
@@ -50,16 +50,16 @@ export default function ReinforcementLearning() {
   return (
     <article
       style={{
-        maxWidth: "740px",
+        maxWidth: "var(--chapter-max-width, 740px)",
         margin: "0 auto",
-        padding: "52px 44px 100px",
+        padding: "var(--chapter-padding, 52px 44px 100px)",
       }}
     >
       {/* Chapter header */}
       <div
         style={{
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: "10.5px",
+          fontSize: "var(--chapter-meta-size, 10.5px)",
           fontWeight: 400,
           letterSpacing: "0.1em",
           color: "var(--accent)",
@@ -74,11 +74,11 @@ export default function ReinforcementLearning() {
       <h1
         style={{
           fontFamily: "'Crimson Pro', serif",
-          fontSize: "42px",
+          fontSize: "var(--h1-size, 42px)",
           fontWeight: 600,
           color: "var(--text)",
           margin: "0 0 0",
-          lineHeight: 1.15,
+          lineHeight: "var(--h1-line-height, 1.15)",
         }}
       >
         Reinforcement Learning

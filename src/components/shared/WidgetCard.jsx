@@ -13,7 +13,7 @@ export default function WidgetCard({ title, number, children }) {
       {/* Header */}
       <div
         style={{
-          padding: '12px 18px',
+          padding: 'var(--widget-card-header-padding, 12px 18px)',
           background: 'var(--bg2)',
           borderBottom: '1px solid var(--border)',
           display: 'flex',
@@ -67,7 +67,7 @@ export default function WidgetCard({ title, number, children }) {
       </div>
 
       {/* Body */}
-      <div style={{ padding: '20px 18px' }}>
+      <div style={{ padding: 'var(--widget-card-padding, 20px 18px)', overflowX: 'auto' }}>
         {children}
       </div>
     </div>

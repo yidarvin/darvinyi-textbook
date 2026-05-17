@@ -42,9 +42,9 @@ export default function Citations({ citations = [] }) {
   return (
     <div
       style={{
-        marginTop: '64px',
+        marginTop: 'var(--citations-margin-top, 64px)',
         borderTop: '1px solid var(--border)',
-        paddingTop: '32px',
+        paddingTop: 'var(--citations-padding-top, 32px)',
       }}
     >
       <div
