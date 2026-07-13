@@ -1,4 +1,5 @@
 import { useTocSections } from "../../components/layout/TocRail";
+import { buildCitations } from "../../data/citations";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
@@ -23,17 +24,17 @@ const prose = {
   margin: "0 0 var(--prose-margin-bottom, 20px)",
 };
 
-const CITATIONS = [
-  { num: 1, title: "Building Effective Agents", authors: "Anthropic Engineering", venue: "Anthropic blog", year: "2024", tag: "paper" },
-  { num: 2, title: "Building Agents with the Claude Agent SDK", authors: "Anthropic Engineering", venue: "Anthropic blog", year: "2025", tag: "paper" },
-  { num: 3, title: "Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems", authors: "VILA-Lab", venue: "arXiv preprint", year: "2025", tag: "paper" },
-  { num: 4, title: "LangChain: Building Applications with LLMs through Composability", authors: "Chase", venue: "GitHub", year: "2022", tag: "paper" },
-  { num: 5, title: "LangGraph: Building Stateful, Multi-Actor Applications with LLMs", authors: "LangChain", venue: "LangChain docs", year: "2024", tag: "paper" },
-  { num: 6, title: "CrewAI: Framework for Orchestrating Role-playing, Autonomous AI Agents", authors: "Moura", venue: "GitHub", year: "2024", tag: "paper" },
-  { num: 7, title: "AutoGPT: An Autonomous GPT-4 Experiment", authors: "Significant Gravitas", venue: "GitHub", year: "2023", tag: "paper" },
-  { num: 8, title: "OpenAI Codex CLI", authors: "OpenAI", venue: "GitHub", year: "2025", tag: "paper" },
-  { num: 9, title: "Model Context Protocol (MCP) Specification", authors: "Anthropic", venue: "MCP docs", year: "2024", tag: "paper" },
-];
+const CITATIONS = buildCitations([
+  { title: "Building Effective Agents", authors: "Anthropic Engineering", venue: "Anthropic blog", year: "2024", tag: "paper" },
+  { title: "Building Agents with the Claude Agent SDK", authors: "Anthropic Engineering", venue: "Anthropic blog", year: "2025", tag: "paper" },
+  { title: "Dive into Claude Code: The Design Space of Today's and Future AI Agent Systems", authors: "VILA-Lab", venue: "arXiv preprint", year: "2025", tag: "paper" },
+  "langchain",
+  { title: "LangGraph: Building Stateful, Multi-Actor Applications with LLMs", authors: "LangChain", venue: "LangChain docs", year: "2024", tag: "paper" },
+  { title: "CrewAI: Framework for Orchestrating Role-playing, Autonomous AI Agents", authors: "Moura", venue: "GitHub", year: "2024", tag: "paper" },
+  "autogpt",
+  { title: "OpenAI Codex CLI", authors: "OpenAI", venue: "GitHub", year: "2025", tag: "paper" },
+  { title: "Model Context Protocol (MCP) Specification", authors: "Anthropic", venue: "MCP docs", year: "2024", tag: "paper" },
+]);
 
 const TOC_SECTIONS = [
   { id: "taxonomy",               label: "Harness Design Space" },

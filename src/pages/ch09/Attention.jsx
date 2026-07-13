@@ -1,4 +1,5 @@
 import { useTocSections } from "../../components/layout/TocRail";
+import { buildCitations } from "../../data/citations";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
@@ -21,13 +22,11 @@ const prose = {
   margin: "0 0 var(--prose-margin-bottom, 20px)",
 };
 
-const CITATIONS = [
-  { num: 1, title: "Neural Machine Translation by Jointly Learning to Align and Translate", authors: "Bahdanau, Cho, Bengio", venue: "ICLR", year: "2015", tag: "seminal" },
-  { num: 2, title: "Attention Is All You Need", authors: "Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, Polosukhin", venue: "NeurIPS", year: "2017", tag: "seminal" },
-  { num: 3, title: "Effective Approaches to Attention-based Neural Machine Translation", authors: "Luong, Pham, Manning", venue: "EMNLP", year: "2015", tag: "paper" },
-  { num: 4, title: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness", authors: "Dao, Fu, Ermon, Rudra", venue: "NeurIPS", year: "2022", tag: "paper" },
-  { num: 5, title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale", authors: "Dosovitskiy et al.", venue: "ICLR", year: "2021", tag: "paper" },
-];
+const CITATIONS = buildCitations([
+  { title: "Neural Machine Translation by Jointly Learning to Align and Translate", authors: "Bahdanau, Cho, Bengio", venue: "ICLR", year: "2015", tag: "seminal" },
+  "attention-is-all-you-need",
+  { title: "Effective Approaches to Attention-based Neural Machine Translation", authors: "Luong, Pham, Manning", venue: "EMNLP", year: "2015", tag: "paper" },
+]);
 
 const TOC_SECTIONS = [
   { id: "the-bottleneck-problem",       label: "The Bottleneck" },
@@ -108,7 +107,7 @@ export default function Attention() {
       </p>
 
       <p style={prose}>
-        Bahdanau, Cho, and Bengio proposed the fix in 2015. Rather than collapse the
+        Bahdanau, Cho, and Bengio proposed the fix in 2015 [1]. Rather than collapse the
         encoder's output to a single vector, keep all hidden states <InlineMath>{"h_1, \\ldots, h_T"}</InlineMath> and
         let the decoder, at each output step, compute a weighted combination of
         them. The weights — the alignment — come from a small feed-forward network
@@ -129,10 +128,10 @@ export default function Attention() {
       </div>
 
       <p style={prose}>
-        Luong, Pham, and Manning replaced Bahdanau's learned alignment network with
+        Luong, Pham, and Manning [3] replaced Bahdanau's learned alignment network with
         a plain dot product <InlineMath>{"q^{\\top} k"}</InlineMath>. The two formulations have the same theoretical
         complexity, but the dot-product variant is dramatically faster in practice:
-        a single matrix multiply, fully vectorized on GPU. The Vaswani paper notes
+        a single matrix multiply, fully vectorized on GPU. The Vaswani paper [2] notes
         this directly — dot-product attention is faster and more memory-efficient
         because it reduces to highly optimized matmul kernels. The shift from
         additive to multiplicative was the unlock that made attention cheap enough

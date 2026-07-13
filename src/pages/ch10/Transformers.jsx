@@ -1,4 +1,5 @@
 import { useTocSections } from "../../components/layout/TocRail";
+import { buildCitations } from "../../data/citations";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
@@ -22,14 +23,14 @@ const prose = {
   margin: "0 0 var(--prose-margin-bottom, 20px)",
 };
 
-const CITATIONS = [
-  { num: 1, title: "Attention Is All You Need", authors: "Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, Polosukhin", venue: "NeurIPS", year: "2017", tag: "seminal" },
-  { num: 2, title: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding", authors: "Devlin, Chang, Lee, Toutanova", venue: "NAACL", year: "2019", tag: "seminal" },
-  { num: 3, title: "Language Models are Few-Shot Learners (GPT-3)", authors: "Brown et al.", venue: "NeurIPS", year: "2020", tag: "seminal" },
-  { num: 4, title: "Training Compute-Optimal Large Language Models (Chinchilla)", authors: "Hoffmann et al.", venue: "NeurIPS", year: "2022", tag: "paper" },
-  { num: 5, title: "Scaling Laws for Neural Language Models", authors: "Kaplan, McCandlish, Henighan et al.", venue: "arXiv", year: "2020", tag: "paper" },
-  { num: 6, title: "RoFormer: Enhanced Transformer with Rotary Position Embedding", authors: "Su, Lu, Pan, Murtadha, Wen, Liu", venue: "arXiv", year: "2021", tag: "paper" },
-];
+const CITATIONS = buildCitations([
+  "attention-is-all-you-need",
+  "bert",
+  "gpt3",
+  { title: "Training Compute-Optimal Large Language Models (Chinchilla)", authors: "Hoffmann et al.", venue: "NeurIPS", year: "2022", tag: "paper" },
+  { title: "Scaling Laws for Neural Language Models", authors: "Kaplan, McCandlish, Henighan et al.", venue: "arXiv", year: "2020", tag: "paper" },
+  "roformer",
+]);
 
 const TOC_SECTIONS = [
   { id: "transformer-block-anatomy", label: "Block Anatomy" },

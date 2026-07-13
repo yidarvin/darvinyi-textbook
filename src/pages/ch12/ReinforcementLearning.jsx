@@ -1,4 +1,5 @@
 import { useTocSections } from "../../components/layout/TocRail";
+import { buildCitations } from "../../data/citations";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import MathBlock from "../../components/shared/MathBlock";
@@ -25,16 +26,16 @@ const prose = {
   margin: "0 0 var(--prose-margin-bottom, 20px)",
 };
 
-const CITATIONS = [
-  { num: 1, title: "Reinforcement Learning: An Introduction", authors: "Sutton & Barto", venue: "MIT Press", year: "1998", tag: "seminal" },
-  { num: 2, title: "Human-Level Control through Deep Reinforcement Learning (DQN)", authors: "Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, Petersen, Beattie, Sadik, Antonoglou, King, Kumaran, Wierstra, Legg, Hassabis", venue: "Nature", year: "2015", tag: "seminal" },
-  { num: 3, title: "Proximal Policy Optimization Algorithms", authors: "Schulman, Wolski, Dhariwal, Radford, Klimov", venue: "arXiv", year: "2017", tag: "seminal" },
-  { num: 4, title: "Training Language Models to Follow Instructions with Human Feedback (InstructGPT)", authors: "Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin, Zhang, Agarwal, Slama, Ray, Schulman, Hilton, Kelton, Miller, Simens, Askell, Welinder, Christiano, Leike, Lowe", venue: "NeurIPS", year: "2022", tag: "seminal" },
-  { num: 5, title: "Direct Preference Optimization: Your Language Model is Secretly a Reward Model", authors: "Rafailov, Sharma, Mitchell, Ermon, Manning, Finn", venue: "NeurIPS", year: "2023", tag: "seminal" },
-  { num: 6, title: "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning", authors: "DeepSeek-AI", venue: "arXiv", year: "2025", tag: "paper" },
-  { num: 7, title: "Mastering the Game of Go without Human Knowledge (AlphaGo Zero)", authors: "Silver, Schrittwieser, Simonyan, Antonoglou, Huang, Guez, Hubert, Baker, Lai, Bolton, Chen, Lillicrap, Hui, Sifre, van den Driessche, Graepel, Hassabis", venue: "Nature", year: "2017", tag: "paper" },
-  { num: 8, title: "Asynchronous Methods for Deep Reinforcement Learning (A3C)", authors: "Mnih, Badia, Mirza, Graves, Lillicrap, Harley, Silver, Kavukcuoglu", venue: "ICML", year: "2016", tag: "paper" },
-];
+const CITATIONS = buildCitations([
+  { title: "Reinforcement Learning: An Introduction", authors: "Sutton & Barto", venue: "MIT Press", year: "1998", tag: "seminal" },
+  { title: "Human-Level Control through Deep Reinforcement Learning (DQN)", authors: "Mnih, Kavukcuoglu, Silver, Rusu, Veness, Bellemare, Graves, Riedmiller, Fidjeland, Ostrovski, Petersen, Beattie, Sadik, Antonoglou, King, Kumaran, Wierstra, Legg, Hassabis", venue: "Nature", year: "2015", tag: "seminal" },
+  { title: "Proximal Policy Optimization Algorithms", authors: "Schulman, Wolski, Dhariwal, Radford, Klimov", venue: "arXiv", year: "2017", tag: "seminal" },
+  "instructgpt",
+  { title: "Direct Preference Optimization: Your Language Model is Secretly a Reward Model", authors: "Rafailov, Sharma, Mitchell, Ermon, Manning, Finn", venue: "NeurIPS", year: "2023", tag: "seminal" },
+  { title: "DeepSeek-R1: Incentivizing Reasoning Capability in LLMs via Reinforcement Learning", authors: "DeepSeek-AI", venue: "arXiv", year: "2025", tag: "paper" },
+  { title: "Mastering the Game of Go without Human Knowledge (AlphaGo Zero)", authors: "Silver, Schrittwieser, Simonyan, Antonoglou, Huang, Guez, Hubert, Baker, Lai, Bolton, Chen, Lillicrap, Hui, Sifre, van den Driessche, Graepel, Hassabis", venue: "Nature", year: "2017", tag: "paper" },
+  { title: "Asynchronous Methods for Deep Reinforcement Learning (A3C)", authors: "Mnih, Badia, Mirza, Graves, Lillicrap, Harley, Silver, Kavukcuoglu", venue: "ICML", year: "2016", tag: "paper" },
+]);
 
 const TOC_SECTIONS = [
   { id: "mdps-and-the-bellman-equation", label: "MDPs & Bellman" },
