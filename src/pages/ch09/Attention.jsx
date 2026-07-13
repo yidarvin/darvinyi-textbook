@@ -7,7 +7,6 @@ import MathBlock from "../../components/shared/MathBlock";
 import AttentionHeatmap from "../../components/widgets/ch09/AttentionHeatmap";
 import QKVInspector from "../../components/widgets/ch09/QKVInspector";
 import MultiHeadAttention from "../../components/widgets/ch09/MultiHeadAttention";
-import SoftmaxTemperature from "../../components/widgets/ch09/SoftmaxTemperature";
 import BottleneckVsAttention from "../../components/diagrams/ch09/BottleneckVsAttention";
 import QKVMechanism from "../../components/diagrams/ch09/QKVMechanism";
 import ScalingByDk from "../../components/diagrams/ch09/ScalingByDk";
@@ -34,7 +33,6 @@ const TOC_SECTIONS = [
   { id: "the-bottleneck-problem",       label: "The Bottleneck" },
   { id: "scaled-dot-product-attention", label: "Dot-Product Attention" },
   { id: "multi-head-attention",         label: "Multi-Head Attention" },
-  { id: "softmax-temperature",          label: "Softmax Temperature" },
 ];
 
 export default function Attention() {
@@ -217,42 +215,8 @@ export default function Attention() {
 
       <MultiHeadAttention />
 
-      {/* ── Section 4: Softmax Temperature ───────────────────────────────── */}
-      <div id="softmax-temperature">
-        <SectionTitle>Softmax Temperature</SectionTitle>
-      </div>
-
-      <p style={prose}>
-        Dividing logits by a scalar <InlineMath>{"T"}</InlineMath> before applying softmax controls the
-        sharpness of the output distribution. As <InlineMath>{"T \\to 0"}</InlineMath> the distribution collapses
-        toward argmax — hard attention, single winner. At <InlineMath>{"T = 1"}</InlineMath> it is the standard
-        softmax. As <InlineMath>{"T \\to \\infty"}</InlineMath> it flattens toward uniform. Viewed through this lens, the
-        <InlineMath>{"1/\\sqrt{d_k}"}</InlineMath> factor from the previous section is itself a fixed temperature: a
-        scaling chosen by variance argument, not exposed as a tunable knob.
-      </p>
-
-      <MathBlock>{"$$\\text{softmax}(z/T)_i = \\frac{\\exp(z_i / T)}{\\sum_j \\exp(z_j / T)}$$"}</MathBlock>
-
-      <p style={prose}>
-        This is one of the most reused tricks in deep learning. In knowledge
-        distillation (Hinton et al., 2015), a student is trained to match a
-        teacher's softmax outputs at high <InlineMath>{"T"}</InlineMath>, which exposes the teacher's relative
-        confidences across non-top classes — the so-called dark knowledge that a
-        plain one-hot label cannot transmit. In language model sampling, <InlineMath>{"T"}</InlineMath>
-        controls the trade-off between deterministic and creative generation:
-        <InlineMath>{"T < 1"}</InlineMath> makes outputs sharper and more predictable, <InlineMath>{"T > 1"}</InlineMath> wilder. In
-        contrastive learning — CLIP, SimCLR, and their descendants — the
-        temperature on the contrastive softmax is a tuned hyperparameter that
-        controls how strongly negatives are pushed away from the anchor.
-      </p>
-
-      <p style={prose}>
-        Softmax temperature is the single tunable parameter that turns a sharp
-        decision into a soft distribution, and vice versa — and the same lever
-        shows up wherever a softmax does.
-      </p>
-
-      <SoftmaxTemperature />
+      {/* Softmax Temperature moved to Chapter 14 (Efficient Inference &
+          Deployment) — see context/V2_PLAN.md queue item S2. */}
 
       {/* ── Citations ─────────────────────────────────────────────────────── */}
       <Citations citations={CITATIONS} />

@@ -8,12 +8,10 @@ import NormalizationComparison from "../../components/widgets/ch05/Normalization
 import DropoutVisualizer from "../../components/widgets/ch05/DropoutVisualizer";
 import InitializationExplorer from "../../components/widgets/ch05/InitializationExplorer";
 import KnowledgeDistillation from "../../components/widgets/ch05/KnowledgeDistillation";
-import LoRADecomposition from "../../components/widgets/ch05/LoRADecomposition";
 import GradientClipping from "../../components/widgets/ch05/GradientClipping";
 import NormalizationRegions from "../../components/diagrams/ch05/NormalizationRegions";
 import InitVariancePropagation from "../../components/diagrams/ch05/InitVariancePropagation";
 import DistillationSoftLabels from "../../components/diagrams/ch05/DistillationSoftLabels";
-import LoRAMatrixShapes from "../../components/diagrams/ch05/LoRAMatrixShapes";
 import GradientClipTrajectory from "../../components/diagrams/ch05/GradientClipTrajectory";
 
 const prose = {
@@ -32,9 +30,7 @@ const CITATIONS = [
   { num: 4, title: "Understanding the Difficulty of Training Deep Feedforward Neural Networks", authors: "Glorot & Bengio", venue: "AISTATS", year: "2010", tag: "seminal" },
   { num: 5, title: "Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet", authors: "He, Zhang, Ren, Sun", venue: "ICCV", year: "2015", tag: "paper" },
   { num: 6, title: "Distilling the Knowledge in a Neural Network", authors: "Hinton, Vinyals, Dean", venue: "NeurIPS Workshop", year: "2015", tag: "seminal" },
-  { num: 7, title: "LoRA: Low-Rank Adaptation of Large Language Models", authors: "Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Chen", venue: "ICLR", year: "2022", tag: "seminal" },
-  { num: 8, title: "QLoRA: Efficient Finetuning of Quantized LLMs", authors: "Dettmers, Pagnoni, Holtzman, Zettlemoyer", venue: "NeurIPS", year: "2023", tag: "paper" },
-  { num: 9, title: "MixUp: Beyond Empirical Risk Minimization", authors: "Zhang, Cisse, Dauphin, Lopez-Paz", venue: "ICLR", year: "2018", tag: "paper" },
+  { num: 7, title: "MixUp: Beyond Empirical Risk Minimization", authors: "Zhang, Cisse, Dauphin, Lopez-Paz", venue: "ICLR", year: "2018", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [
@@ -42,7 +38,6 @@ const TOC_SECTIONS = [
   { id: "dropout-regularization", label: "Dropout" },
   { id: "weight-initialization",  label: "Initialization" },
   { id: "knowledge-distillation", label: "Distillation" },
-  { id: "lora-peft",              label: "LoRA & PEFT" },
   { id: "gradient-clipping",      label: "Gradient Clipping" },
 ];
 
@@ -163,7 +158,7 @@ export default function TrainingTechniques() {
       <MathBlock>{"$$\\text{MixUp:}\\quad \\tilde{x} = \\lambda x_i + (1-\\lambda) x_j,\\quad \\tilde{y} = \\lambda y_i + (1-\\lambda) y_j,\\quad \\lambda \\sim \\text{Beta}(\\alpha, \\alpha)$$"}</MathBlock>
 
       <p style={prose}>
-        Dropout regularizes the function class. MixUp [9] (Zhang, Cisse, Dauphin &
+        Dropout regularizes the function class. MixUp [7] (Zhang, Cisse, Dauphin &
         Lopez-Paz 2018) regularizes the training data instead: for each batch,
         sample two examples <InlineMath>{"(x_i, y_i)"}</InlineMath> and <InlineMath>{"(x_j, y_j)"}</InlineMath>, draw <InlineMath>{"\\lambda \\sim \\text{Beta}(\\alpha, \\alpha)"}</InlineMath>, and train on
         the convex combination <InlineMath>{"(\\lambda x_i + (1-\\lambda) x_j,\\ \\lambda y_i + (1-\\lambda) y_j)"}</InlineMath>. This forces the model
@@ -260,48 +255,10 @@ export default function TrainingTechniques() {
 
       <KnowledgeDistillation />
 
-      {/* ── Section 5: LoRA & PEFT ───────────────────────────────────────── */}
-      <div id="lora-peft">
-        <SectionTitle>LoRA & Parameter-Efficient Fine-Tuning</SectionTitle>
-      </div>
+      {/* LoRA & Parameter-Efficient Fine-Tuning moved to Chapter 14 (Efficient
+          Inference & Deployment) — see context/V2_PLAN.md queue item S2. */}
 
-      <p style={prose}>
-        Fine-tuning all parameters of a large pretrained model is expensive and often
-        unnecessary. LoRA freezes the original weights <InlineMath>{"W_0"}</InlineMath> and learns a low-rank
-        perturbation <InlineMath>{"\\Delta W = BA"}</InlineMath>, where <InlineMath>{"r \\ll \\min(d, k)"}</InlineMath>. At rank <InlineMath>{"r=8"}</InlineMath>, a 7B-parameter model
-        can be adapted with under 0.1% additional parameters. QLoRA combines this with
-        4-bit quantization for even greater efficiency.
-      </p>
-
-      <MathBlock>{"$$h = W_0 x + \\Delta W x = W_0 x + BAx \\quad\\text{where}\\quad B \\in \\mathbb{R}^{d \\times r},\\ A \\in \\mathbb{R}^{r \\times k},\\ r \\ll \\min(d, k)$$"}</MathBlock>
-
-      <LoRAMatrixShapes />
-
-      <p style={prose}>
-        Hu et al. (2022) [7] start from an empirical observation: when you fine-tune
-        a large pretrained model, the matrix of weight changes <InlineMath>{"\\Delta W"}</InlineMath> tends to have very
-        low intrinsic rank — often a rank of 8 or 16 captures nearly all of the
-        update signal. LoRA exploits this directly: freeze the pretrained <InlineMath>{"W_0"}</InlineMath> and
-        parameterize the update as <InlineMath>{"\\Delta W = BA"}</InlineMath>, with <InlineMath>{"B \\in \\mathbb{R}^{d \\times r}"}</InlineMath>, <InlineMath>{"A \\in \\mathbb{R}^{r \\times k}"}</InlineMath>, and
-        <InlineMath>{"r \\ll \\min(d, k)"}</InlineMath>. Only <InlineMath>{"B"}</InlineMath> and <InlineMath>{"A"}</InlineMath> are trained. For a 7B-parameter model,
-        fine-tuning at rank 8 adds well under 0.1% additional trainable parameters.
-        At inference time, <InlineMath>{"BA"}</InlineMath> can be folded back into <InlineMath>{"W_0 + BA"}</InlineMath> so there is no latency
-        cost.
-      </p>
-
-      <p style={prose}>
-        QLoRA [8] (Dettmers, Pagnoni, Holtzman & Zettlemoyer 2023) pushed this
-        further by quantizing the frozen <InlineMath>{"W_0"}</InlineMath> to 4 bits while keeping the LoRA
-        adapters in higher precision. The frozen weights take a fraction of the
-        memory; the trainable adapters fit comfortably alongside. QLoRA made it
-        possible to fine-tune a 65B-parameter model on a single 48GB GPU — a
-        configuration that would otherwise need a multi-GPU setup. The technique is
-        the de facto standard for fine-tuning open-source LLMs today.
-      </p>
-
-      <LoRADecomposition />
-
-      {/* ── Section 6: Gradient Clipping ────────────────────────────────── */}
+      {/* ── Section 5: Gradient Clipping ─────────────────────────────────── */}
       <div id="gradient-clipping">
         <SectionTitle>Gradient Clipping</SectionTitle>
       </div>
