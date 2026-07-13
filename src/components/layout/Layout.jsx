@@ -153,6 +153,38 @@ function HamburgerButton({ onClick }) {
   );
 }
 
+// ─── On route change: scroll #content-scroll to the top, or to the section
+// named by the URL hash if one is present (shareable deep links). Chapter
+// pages are React.lazy, so the target section's element may not exist in the
+// DOM yet on the first effect run — poll a few frames until it mounts.
+function scrollToHashOrTop(hash) {
+  const scrollContainer = document.getElementById("content-scroll");
+  if (!scrollContainer) return;
+
+  if (!hash) {
+    scrollContainer.scrollTo({ top: 0 });
+    return;
+  }
+
+  const id = hash.slice(1);
+  const offset = 20;
+  let attempts = 0;
+  const tryScroll = () => {
+    const el = document.getElementById(id);
+    if (el) {
+      const y = scrollContainer.scrollTop
+        + el.getBoundingClientRect().top
+        - scrollContainer.getBoundingClientRect().top
+        - offset;
+      scrollContainer.scrollTo({ top: y });
+      return;
+    }
+    attempts += 1;
+    if (attempts < 60) requestAnimationFrame(tryScroll);
+  };
+  tryScroll();
+}
+
 // ─── Layout ───────────────────────────────────────────────────────────────────
 export default function Layout() {
   const location = useLocation();
@@ -163,6 +195,12 @@ export default function Layout() {
   useEffect(() => {
     setDrawerOpen(false);
   }, [location.pathname]);
+
+  // Reset scroll position on navigation — either to the top of the new
+  // chapter, or to the section named by a URL hash (deep link / TOC click).
+  useEffect(() => {
+    scrollToHashOrTop(location.hash);
+  }, [location.pathname, location.hash]);
 
   // Close drawer when switching to desktop
   useEffect(() => {

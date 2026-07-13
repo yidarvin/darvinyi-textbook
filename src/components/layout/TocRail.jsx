@@ -139,16 +139,18 @@ export default function TocRail() {
 
   function scrollToSection(id) {
     const el = document.getElementById(id);
-    if (!el) return;
-    const topbarHeight = 52;
-    const y = el.getBoundingClientRect().top + window.scrollY - topbarHeight - 20;
-    // Find the scrollable content container
     const scrollContainer = document.getElementById("content-scroll");
-    if (scrollContainer) {
-      scrollContainer.scrollTo({ top: y, behavior: "smooth" });
-    } else {
-      window.scrollTo({ top: y, behavior: "smooth" });
-    }
+    if (!el || !scrollContainer) return;
+    // The window never scrolls in this layout — #content-scroll is the only
+    // scrollable element — so the target must be computed relative to its own
+    // scroll position, not window.scrollY (which is always 0 here).
+    const offset = 20;
+    const y = scrollContainer.scrollTop
+      + el.getBoundingClientRect().top
+      - scrollContainer.getBoundingClientRect().top
+      - offset;
+    scrollContainer.scrollTo({ top: y, behavior: "smooth" });
+    window.history.replaceState(null, "", `#${id}`);
   }
 
   if (!sections.length) {

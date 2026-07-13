@@ -41,15 +41,17 @@ export default function MobileNav({ sections }) {
   function go(id) {
     setIsOpen(false);
     const el = document.getElementById(id);
-    if (!el) return;
-    const topbarHeight = 52;
-    const y = el.getBoundingClientRect().top + window.scrollY - topbarHeight - 16;
     const scrollContainer = document.getElementById("content-scroll");
-    if (scrollContainer) {
-      scrollContainer.scrollTo({ top: y, behavior: "smooth" });
-    } else {
-      window.scrollTo({ top: y, behavior: "smooth" });
-    }
+    if (!el || !scrollContainer) return;
+    // Same fix as TocRail: window never scrolls here, so the target must be
+    // relative to the scroll container's own position, not window.scrollY.
+    const offset = 16;
+    const y = scrollContainer.scrollTop
+      + el.getBoundingClientRect().top
+      - scrollContainer.getBoundingClientRect().top
+      - offset;
+    scrollContainer.scrollTo({ top: y, behavior: "smooth" });
+    window.history.replaceState(null, "", `#${id}`);
   }
 
   if (!sections.length) return null;
