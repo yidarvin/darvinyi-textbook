@@ -38,21 +38,23 @@ function makeGradients(pattern) {
 }
 
 function computeAdam(g, b1, b2) {
-  const m   = new Float64Array(N + 1);
-  const v   = new Float64Array(N + 1);
-  const mh  = new Float64Array(N + 1);
-  const vh  = new Float64Array(N + 1);
-  const elr = new Float64Array(N + 1);
+  const m      = new Float64Array(N + 1);
+  const v      = new Float64Array(N + 1);
+  const mh     = new Float64Array(N + 1);
+  const vh     = new Float64Array(N + 1);
+  const elr    = new Float64Array(N + 1);
+  const vCorr  = new Float64Array(N + 1); // bias-correction factor 1/(1-b2^t) applied to v_t
   let b1t = 1, b2t = 1;
   for (let t = 1; t <= N; t++) {
     b1t *= b1; b2t *= b2;
-    m[t]   = b1 * m[t - 1] + (1 - b1) * g[t];
-    v[t]   = b2 * v[t - 1] + (1 - b2) * g[t] * g[t];
-    mh[t]  = m[t] / (1 - b1t);
-    vh[t]  = v[t] / (1 - b2t);
-    elr[t] = ALPHA / (Math.sqrt(Math.max(0, vh[t])) + EPS);
+    m[t]     = b1 * m[t - 1] + (1 - b1) * g[t];
+    v[t]     = b2 * v[t - 1] + (1 - b2) * g[t] * g[t];
+    mh[t]    = m[t] / (1 - b1t);
+    vh[t]    = v[t] / (1 - b2t);
+    vCorr[t] = 1 / (1 - b2t);
+    elr[t]   = ALPHA / (Math.sqrt(Math.max(0, vh[t])) + EPS);
   }
-  return { m, v, mh, vh, elr };
+  return { m, v, mh, vh, elr, vCorr };
 }
 
 function fmt(x, d = 4) {
@@ -76,7 +78,7 @@ function drawLinePath(ctx, arr, lo, hi, y0, plotW) {
   ctx.stroke();
 }
 
-export default function AdamInternals() {
+export default function AdamInternals({ tryThis }) {
   const canvasRef = useRef(null);
   const [step,    setStep]    = useState(50);
   const [beta1,   setBeta1]   = useState(0.9);
@@ -219,21 +221,23 @@ export default function AdamInternals() {
 
   }, [gradients, adam, step]);
 
-  const t   = step;
-  const gv  = gradients[t];
-  const mt  = adam.m[t];
-  const mht = adam.mh[t];
-  const vt  = adam.v[t];
-  const vht = adam.vh[t];
-  const elr = adam.elr[t];
+  const t     = step;
+  const gv    = gradients[t];
+  const mt    = adam.m[t];
+  const mht   = adam.mh[t];
+  const vt    = adam.v[t];
+  const vht   = adam.vh[t];
+  const elr   = adam.elr[t];
+  const vcorr = adam.vCorr[t]; // v̂ₜ / vₜ = 1 / (1 - β₂ᵗ) — how much bias-correction is still inflating the second moment at this step
 
   const stats = [
-    { key: 'gₜ',      val: fmt(gv,  4), color: C.accent  },
-    { key: 'mₜ',      val: fmt(mt,  5), color: C.orange  },
-    { key: 'm̂ₜ',     val: fmt(mht, 5), color: C.orange  },
-    { key: 'vₜ',      val: fmt(vt,  6), color: C.purple  },
-    { key: 'v̂ₜ',     val: fmt(vht, 6), color: C.purple  },
-    { key: 'Eff. LR', val: fmt(elr, 5), color: C.textMid },
+    { key: 'gₜ',        val: fmt(gv,  4), color: C.accent  },
+    { key: 'mₜ',        val: fmt(mt,  5), color: C.orange  },
+    { key: 'm̂ₜ',       val: fmt(mht, 5), color: C.orange  },
+    { key: 'vₜ',        val: fmt(vt,  6), color: C.purple  },
+    { key: 'v̂ₜ',       val: fmt(vht, 6), color: C.purple  },
+    { key: 'v̂ₜ / vₜ',  val: `${fmt(vcorr, 2)}×`, color: C.purple },
+    { key: 'Eff. LR',   val: fmt(elr, 5), color: C.textMid },
   ];
 
   const sliders = [
@@ -243,7 +247,7 @@ export default function AdamInternals() {
   ];
 
   return (
-    <WidgetCard title="Adam Internals — moment estimation step by step" number="3.5">
+    <WidgetCard title="Adam Internals — moment estimation step by step" number="4.5" tryThis={tryThis}>
       {/* Canvas + stat panel */}
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
         <div style={{ flex: 1, borderRadius: '6px', overflow: 'hidden', background: C.codeBg }}>

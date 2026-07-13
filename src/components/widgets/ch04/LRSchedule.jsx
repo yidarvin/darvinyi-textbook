@@ -10,18 +10,19 @@ const SCHED = [
   { key: 'cosine',   label: 'Cosine',       color: '#2dd4bf' },
   { key: 'warmup',   label: 'Warmup+decay', color: '#fb923c' },
   { key: 'onecycle', label: 'OneCycleLR',   color: '#a78bfa' },
+  { key: 'wsd',      label: 'WSD',          color: '#4ade80' },
 ];
 
-const TABS    = ['None', 'Step', 'Cosine', 'Warmup', 'OneCycle'];
-const TAB_KEY = { None: null, Step: 'step', Cosine: 'cosine', Warmup: 'warmup', OneCycle: 'onecycle' };
-const TAB_COL = { None: '#666666', Step: '#888888', Cosine: '#2dd4bf', Warmup: '#fb923c', OneCycle: '#a78bfa' };
+const TABS    = ['None', 'Step', 'Cosine', 'Warmup', 'OneCycle', 'WSD'];
+const TAB_KEY = { None: null, Step: 'step', Cosine: 'cosine', Warmup: 'warmup', OneCycle: 'onecycle', WSD: 'wsd' };
+const TAB_COL = { None: '#666666', Step: '#888888', Cosine: '#2dd4bf', Warmup: '#fb923c', OneCycle: '#a78bfa', WSD: '#4ade80' };
 
 const LOG_MIN  = Math.log(0.0001);
 const LOG_MAX  = Math.log(0.1);
 const sliderToLR = v  => Math.exp(LOG_MIN + (v / 1000) * (LOG_MAX - LOG_MIN));
 const lrToSlider = lr => Math.round(((Math.log(lr) - LOG_MIN) / (LOG_MAX - LOG_MIN)) * 1000);
 
-function computeLR(key, t, { baseLR, totalSteps, warmupSteps }) {
+function computeLR(key, t, { baseLR, totalSteps, warmupSteps, wsdDecayFrac }) {
   const maxLR = baseLR * 10;
   const minLR = baseLR * 0.01;
   switch (key) {
@@ -43,6 +44,20 @@ function computeLR(key, t, { baseLR, totalSteps, warmupSteps }) {
       const decayT = t - half;
       return baseLR / 10 + 0.5 * (maxLR - baseLR / 10) * (1 + Math.cos(Math.PI * decayT / half));
     }
+    case 'wsd': {
+      // Warmup - Stable - Decay (Hu et al. 2024): ramp to peak, hold flat at
+      // peak for as long as needed (no total-step count required until the
+      // decay is triggered), then decay over a short tail.
+      const ws = Math.min(warmupSteps, totalSteps - 1);
+      const decaySteps = Math.max(1, Math.round(totalSteps * wsdDecayFrac));
+      const decayStart = Math.max(ws, totalSteps - decaySteps);
+      const floor = baseLR * 0.1;
+      if (ws > 0 && t < ws) return baseLR * t / ws;
+      if (t < decayStart) return baseLR;
+      const decayLen = totalSteps - decayStart; // always >= 1 since ws <= totalSteps - 1
+      const frac = Math.min(1, (t - decayStart) / decayLen);
+      return baseLR - (baseLR - floor) * frac;
+    }
     default: return baseLR;
   }
 }
@@ -55,16 +70,18 @@ function fmtLR(v) {
 
 const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
-export default function LRSchedule() {
+export default function LRSchedule({ tryThis }) {
   const canvasRef = useRef(null);
   const [totalSteps,  setTotalSteps]  = useState(500);
   const [warmupSteps, setWarmupSteps] = useState(50);
   const [lrSlider,    setLrSlider]    = useState(lrToSlider(0.01));
   const [currentStep, setCurrentStep] = useState(0);
   const [highlight,   setHighlight]   = useState('None');
+  const [wsdDecayPct, setWsdDecayPct] = useState(15);
 
-  const baseLR = sliderToLR(lrSlider);
-  const params = { baseLR, totalSteps, warmupSteps };
+  const baseLR       = sliderToLR(lrSlider);
+  const wsdDecayFrac = wsdDecayPct / 100;
+  const params = { baseLR, totalSteps, warmupSteps, wsdDecayFrac };
   const step   = Math.min(currentStep, totalSteps);
 
   useEffect(() => {
@@ -189,14 +206,14 @@ export default function LRSchedule() {
     }
     ctx.globalAlpha = 1;
 
-  }, [baseLR, totalSteps, warmupSteps, step, highlight]);
+  }, [baseLR, totalSteps, warmupSteps, wsdDecayFrac, step, highlight]);
 
   const lrVals = Object.fromEntries(
     SCHED.map(({ key }) => [key, computeLR(key, step, params)])
   );
 
   return (
-    <WidgetCard title="LR Schedules — step decay, cosine, warmup, OneCycle" number="3.4">
+    <WidgetCard title="LR Schedules — step decay, cosine, warmup, OneCycle, WSD" number="4.4" tryThis={tryThis}>
       {/* Canvas — full width */}
       <canvas
         ref={canvasRef}
@@ -208,7 +225,7 @@ export default function LRSchedule() {
 
       {/* Stats row */}
       <div style={{
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)',
+        display: 'grid', gridTemplateColumns: `repeat(${SCHED.length}, 1fr)`,
         gap: '0 12px', margin: '14px 0 0',
         background: 'var(--bg2)', border: '1px solid var(--border)',
         borderRadius: 8, padding: '12px 16px',
@@ -249,6 +266,7 @@ export default function LRSchedule() {
           { label: `warmup steps — ${warmupSteps}`, min: 0,   max: 200,        value: warmupSteps, onChange: v => setWarmupSteps(v) },
           { label: `base LR — ${baseLR.toFixed(4)}`,min: 0,   max: 1000,       value: lrSlider,    onChange: v => setLrSlider(v) },
           { label: `current step t — ${step}`,      min: 0,   max: totalSteps, value: step,        onChange: v => setCurrentStep(v) },
+          { label: `WSD decay tail — ${wsdDecayPct}%`, min: 5, max: 30,        value: wsdDecayPct, onChange: v => setWsdDecayPct(v) },
         ].map(({ label, min, max, value, onChange }) => (
           <div key={label} style={{ marginBottom: 12 }}>
             <div style={{ ...mono, fontSize: 11, color: 'var(--text-muted)', marginBottom: 4 }}>{label}</div>

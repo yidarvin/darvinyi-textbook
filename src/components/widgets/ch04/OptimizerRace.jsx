@@ -59,7 +59,7 @@ function makeState(x, y) {
   };
 }
 
-export default function OptimizerRace() {
+export default function OptimizerRace({ tryThis }) {
   const canvasRef     = useRef(null);
   const animRef       = useRef(null);
   const optsRef       = useRef(null);
@@ -331,7 +331,7 @@ export default function OptimizerRace() {
   const ctrlLbl = { ...mono, fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '.08em' };
 
   return (
-    <WidgetCard ref={cardRef} title="Optimizer Race — four algorithms, one landscape" number="3.2">
+    <WidgetCard ref={cardRef} title="Optimizer Race — four algorithms, one landscape" number="4.2" tryThis={tryThis}>
       <div style={{ margin: '-20px -18px' }}>
         <div style={{ display: 'flex' }}>
 

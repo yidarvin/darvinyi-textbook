@@ -4,6 +4,21 @@ import { useIsVisible } from '../../../hooks/useIsVisible';
 import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 const W = 620, H = 340, LH = 90, STEPS = 200;
+// Illustrative noise magnitude for the SGD gradient estimate — divided by
+// sqrt(batchSize) so a bigger "batch" gives a less noisy (more full-batch-like)
+// gradient, mirroring how mini-batch sampling variance actually scales.
+const SGD_NOISE_SCALE = 0.35;
+// Gradient-norm threshold below which a step-budget-exhausted run is honestly
+// "converged" rather than merely out of steps.
+const CONVERGE_GRAD_NORM = 0.05;
+
+function gaussianSample() {
+  // Box–Muller transform: one standard-normal N(0,1) sample.
+  let u = 0, v = 0;
+  while (u === 0) u = Math.random();
+  while (v === 0) v = Math.random();
+  return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+}
 
 const SURFACES = {
   'two-valleys': {
@@ -39,7 +54,7 @@ function lossColor(t) {
   return [Math.round(40 + s*211), Math.round(120 - s*60), Math.round(120 - s*100)];
 }
 
-export default function GradientDescentNavigator() {
+export default function GradientDescentNavigator({ tryThis }) {
   const landscapeRef = useRef(null);
   const losscurveRef = useRef(null);
   const animRef      = useRef(null);
@@ -71,6 +86,7 @@ export default function GradientDescentNavigator() {
   const surfaceRef   = useRef('two-valleys');
   const lrRef        = useRef(0.05);
   const speedRef     = useRef(5);
+  const batchSizeRef = useRef(8);
 
   // Display state
   const [playing,   setPlaying]   = useState(false);
@@ -78,6 +94,7 @@ export default function GradientDescentNavigator() {
   const [surface,   setSurface]   = useState('two-valleys');
   const [lr,        setLr]        = useState(0.05);
   const [speed,     setSpeed]     = useState(5);
+  const [batchSize, setBatchSize] = useState(8);
   const [dispStep,  setDispStep]  = useState(0);
   const [dispLoss,  setDispLoss]  = useState(null);
   const [dispGrad,  setDispGrad]  = useState(null);
@@ -271,20 +288,37 @@ export default function GradientDescentNavigator() {
   }
 
   function doStep() {
+    const bx = bxRef.current, by = byRef.current;
+    // True gradient at the current point — this is also what the ∇L readout
+    // shows, so the convergence check below can never contradict it.
+    const [gx, gy] = computeGrad(bx, by);
+    const gradNorm = Math.sqrt(gx*gx + gy*gy);
+
     if (historyRef.current.length >= STEPS) {
       doStopPlay();
-      setStatus('converged');
+      // Exhausting the step budget only counts as "converged" if the
+      // gradient has actually gone (near) flat — otherwise it's just out of steps.
+      setStatus(gradNorm < CONVERGE_GRAD_NORM ? 'converged' : 'stopped (step limit)');
       return false;
     }
-    const bx = bxRef.current, by = byRef.current;
-    const [gx, gy] = computeGrad(bx, by);
     const lr = lrRef.current;
     const opt = optimizerRef.current;
 
     if (opt === 'sgd') {
-      bxRef.current = bx - lr*gx;
-      byRef.current = by - lr*gy;
+      // Stochastic gradient descent: perturb the exact gradient with Gaussian
+      // noise scaled by 1/sqrt(batchSize) — a smaller batch is a noisier
+      // gradient estimate, producing the jagged loss curve / "noise ball"
+      // behavior described in the text; a large batch approaches full-batch GD.
+      const noiseStd = SGD_NOISE_SCALE / Math.sqrt(batchSizeRef.current);
+      const nx = gx + noiseStd * gaussianSample();
+      const ny = gy + noiseStd * gaussianSample();
+      bxRef.current = bx - lr*nx;
+      byRef.current = by - lr*ny;
     } else if (opt === 'momentum') {
+      // Classical (Polyak) heavy-ball momentum — matches the page's boxed
+      // update v_t <- beta*v_{t-1} + eta*grad L(theta); theta <- theta - v_t.
+      // Gradient is evaluated at the current position (bx, by), not a
+      // Nesterov look-ahead point.
       const beta = 0.85;
       vxRef.current = beta*vxRef.current + lr*gx;
       vyRef.current = beta*vyRef.current + lr*gy;
@@ -389,6 +423,11 @@ export default function GradientDescentNavigator() {
     speedRef.current = val; setSpeed(val);
   }
 
+  function handleBatchSize(v) {
+    const val = parseInt(v, 10);
+    batchSizeRef.current = val; setBatchSize(val);
+  }
+
   function handleSurface(s) {
     surfaceRef.current = s;
     setSurface(s); // triggers useEffect([surface])
@@ -418,7 +457,7 @@ export default function GradientDescentNavigator() {
 
   // ── Render ────────────────────────────────────────────────────
   return (
-    <WidgetCard ref={cardRef} title="Gradient Descent — navigate a loss landscape" number="3.1">
+    <WidgetCard ref={cardRef} title="Gradient Descent — navigate a loss landscape" number="4.1" tryThis={tryThis}>
       {/* Negate WidgetCard body padding so canvas is edge-to-edge */}
       <div style={{ margin: '-20px -18px' }}>
         <div style={{ display: 'flex' }}>
@@ -516,6 +555,23 @@ export default function GradientDescentNavigator() {
                     transition: 'all .12s',
                   }}>{label}</button>
                 ))}
+              </div>
+            </div>
+
+            {/* Batch size — controls SGD gradient-noise magnitude */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, opacity: optimizer === 'sgd' ? 1 : 0.4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={ctrlLbl}>Batch Size</span>
+                <span style={{ ...mono, fontSize: 11, color: 'var(--accent)' }}>{batchSize}</span>
+              </div>
+              <input type="range" min="1" max="64"
+                value={batchSize}
+                disabled={optimizer !== 'sgd'}
+                onChange={e => handleBatchSize(e.target.value)}
+                style={{ width: '100%' }}
+              />
+              <div style={{ fontSize: 9.5, color: '#666', fontStyle: 'italic', lineHeight: 1.4 }}>
+                Smaller batch → noisier gradient estimate (SGD only).
               </div>
             </div>
 

@@ -29,15 +29,22 @@ function numGrad(f, x, y) {
   return [(f(x+h,y)-f(x-h,y))/(2*h), (f(x,y+h)-f(x,y-h))/(2*h)];
 }
 
+function clamp(v) { return Math.max(0.01, Math.min(0.99, v)); }
+
 function runSGD(f, lr) {
   let x = 0.8, y = 0.2;
   for (let i = 0; i < N_STEPS; i++) {
     const [gx, gy] = numGrad(f, x, y);
-    x -= lr * gx;
-    y -= lr * gy;
+    x = clamp(x - lr * gx);
+    y = clamp(y - lr * gy);
   }
   const loss = f(x, y);
-  return isFinite(loss) ? Math.min(loss, LOSS_CAP) : LOSS_CAP;
+  // Belt-and-suspenders: even on the bounded domain, treat any loss whose
+  // magnitude exceeds the cap (not just +Infinity/NaN) as diverged, so a
+  // large-magnitude *negative* finite value (e.g. from an indefinite
+  // surface) can never be misread as a low ("good") loss.
+  if (!isFinite(loss) || Math.abs(loss) > LOSS_CAP) return LOSS_CAP;
+  return loss;
 }
 
 function computeSweep(surfaceKey) {
@@ -211,7 +218,7 @@ function drawChart(canvas, sweep, lrIdx) {
   ctx.fillText('Learning Rate (log scale)', PAD.left + PW / 2, CH - 4);
 }
 
-export default function LRFinder() {
+export default function LRFinder({ tryThis }) {
   const canvasRef = useRef(null);
   const [surface, setSurface] = useState('two-valleys');
   const [lrIdx,   setLrIdx]   = useState(40);
@@ -235,7 +242,7 @@ export default function LRFinder() {
   const ctrlLbl = { ...mono, fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '.08em' };
 
   return (
-    <WidgetCard title="Learning Rate Finder — find the sweet spot" number="3.3">
+    <WidgetCard title="Learning Rate Finder — find the sweet spot" number="4.3" tryThis={tryThis}>
       <div style={{ margin: '-20px -18px' }}>
 
         <div style={{ display: 'flex' }}>
