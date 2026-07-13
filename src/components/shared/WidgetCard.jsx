@@ -1,3 +1,21 @@
+import ErrorBoundary from "./ErrorBoundary";
+
+function WidgetErrorFallback() {
+  return (
+    <div
+      style={{
+        fontFamily: "'Inter', sans-serif",
+        fontSize: "13px",
+        color: "var(--text-muted)",
+        textAlign: "center",
+        padding: "24px 0",
+      }}
+    >
+      This interactive failed to render.
+    </div>
+  );
+}
+
 export default function WidgetCard({ title, number, children }) {
   return (
     <div
@@ -68,7 +86,9 @@ export default function WidgetCard({ title, number, children }) {
 
       {/* Body */}
       <div style={{ padding: 'var(--widget-card-padding, 20px 18px)', overflowX: 'auto' }}>
-        {children}
+        <ErrorBoundary fallback={<WidgetErrorFallback />}>
+          {children}
+        </ErrorBoundary>
       </div>
     </div>
   );

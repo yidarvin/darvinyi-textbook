@@ -2,6 +2,8 @@ import { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Layout from "./components/layout/Layout";
 import Home from "./pages/Home";
+import NotFound from "./pages/NotFound";
+import ErrorBoundary from "./components/shared/ErrorBoundary";
 
 // Lazy-load chapter routes so the initial bundle stays small —
 // each chapter (with all its widgets) becomes its own chunk and only
@@ -48,11 +50,55 @@ function ChapterFallback() {
   );
 }
 
+// Shown when a chapter's render throws, or its lazy chunk fails to fetch
+// (e.g. a stale tab navigating to a chapter after a redeploy changed the
+// chunk hashes) — a reload gets a fresh chunk manifest in the second case.
+function ChapterErrorFallback() {
+  return (
+    <div
+      style={{
+        maxWidth: "var(--chapter-max-width, 740px)",
+        margin: "0 auto",
+        padding: "var(--chapter-padding, 52px 44px 100px)",
+      }}
+    >
+      <div
+        style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: "15px",
+          color: "var(--text-mid)",
+          marginBottom: "16px",
+        }}
+      >
+        This chapter failed to load.
+      </div>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        style={{
+          fontFamily: "'Inter', sans-serif",
+          fontSize: "13px",
+          color: "var(--accent)",
+          background: "var(--accent-dim)",
+          border: "1px solid var(--accent)",
+          borderRadius: "6px",
+          padding: "8px 16px",
+          cursor: "pointer",
+        }}
+      >
+        Reload
+      </button>
+    </div>
+  );
+}
+
 function L(Element) {
   return (
-    <Suspense fallback={<ChapterFallback />}>
-      <Element />
-    </Suspense>
+    <ErrorBoundary fallback={<ChapterErrorFallback />}>
+      <Suspense fallback={<ChapterFallback />}>
+        <Element />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 
@@ -84,6 +130,7 @@ export default function App() {
           <Route path="ch/20" element={L(Datasets)} />
           <Route path="ch/21" element={L(AIAgents)} />
           <Route path="ch/22" element={L(AgentHarnesses)} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </BrowserRouter>

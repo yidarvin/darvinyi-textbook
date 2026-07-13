@@ -5,6 +5,9 @@ import Topbar from "./Topbar";
 import TocRail, { TocContext, TocProvider } from "./TocRail";
 import MobileNav from "./MobileNav";
 import { useIsMobile } from "../../hooks/useMediaQuery";
+import { findChapterByPath } from "../../data/chapters";
+
+const SITE_TITLE = "darvinyi-textbook";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 const rootStyle = {
@@ -201,6 +204,19 @@ export default function Layout() {
   useEffect(() => {
     scrollToHashOrTop(location.hash);
   }, [location.pathname, location.hash]);
+
+  // Per-route document.title — every chapter, tab, and bookmark otherwise
+  // shows the same static title.
+  useEffect(() => {
+    if (location.pathname === "/") {
+      document.title = SITE_TITLE;
+      return;
+    }
+    const chapter = findChapterByPath(location.pathname);
+    document.title = chapter
+      ? `Ch ${chapter.num} · ${chapter.title} — ${SITE_TITLE}`
+      : `Page not found — ${SITE_TITLE}`;
+  }, [location.pathname]);
 
   // Close drawer when switching to desktop
   useEffect(() => {
