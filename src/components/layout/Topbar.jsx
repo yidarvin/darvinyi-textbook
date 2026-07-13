@@ -1,29 +1,11 @@
 import { useNavigate } from "react-router-dom";
-
-// ─── Ordered chapter list for prev/next navigation ───────────────────────────
-const CHAPTERS = [
-  { num: "01", title: "Statistical Learning",    part: "Foundations",         path: "/ch/01", live: true },
-  { num: "02", title: "Neural Networks",          part: "Foundations",         path: "/ch/02", live: true },
-  { num: "03", title: "Optimization",             part: "Foundations",         path: "/ch/03", live: true },
-  { num: "04", title: "Training Techniques",      part: "Architectures",       path: "/ch/04", live: false },
-  { num: "05", title: "Convolutional Nets",       part: "Architectures",       path: "/ch/05", live: false },
-  { num: "06", title: "Recurrent Networks",       part: "Architectures",       path: "/ch/06", live: false },
-  { num: "07", title: "Attention",                part: "Architectures",       path: "/ch/07", live: false },
-  { num: "08", title: "Transformers",             part: "Architectures",       path: "/ch/08", live: false },
-  { num: "09", title: "Multimodal Networks",      part: "Architectures",       path: "/ch/09", live: false },
-  { num: "10", title: "Capsule Networks",         part: "Architectures",       path: "/ch/10", live: false },
-  { num: "11", title: "Variational Autoencoders", part: "Generative",          path: "/ch/11", live: false },
-  { num: "12", title: "GANs",                     part: "Generative",          path: "/ch/12", live: false },
-  { num: "13", title: "Diffusion Models",         part: "Generative",          path: "/ch/13", live: false },
-  { num: "14", title: "Graph Neural Nets",        part: "Advanced",            path: "/ch/14", live: false },
-  { num: "15", title: "Datasets & Benchmarks",    part: "Advanced",            path: "/ch/15", live: false },
-  { num: "16", title: "Reinforcement Learning",   part: "Reinforcement Learning", path: "/ch/16", live: false },
-  { num: "17", title: "AI Agents",                part: "AI Agents",           path: "/ch/17", live: false },
-];
+import { CHAPTERS } from "../../data/chapters";
 
 const HOME = { num: null, title: "Home", part: null, path: "/" };
 
 // ─── Derive breadcrumb + prev/next from current path ─────────────────────────
+// Chapter data (order, titles, parts) lives in src/data/chapters.js — the same
+// source Sidebar reads from, so the two can never drift again.
 function useChapterNav(pathname) {
   if (pathname === "/" || !pathname.startsWith("/ch/")) {
     return {
