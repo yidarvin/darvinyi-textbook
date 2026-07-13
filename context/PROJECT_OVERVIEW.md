@@ -2,20 +2,20 @@
 
 ## What This Is
 
-An interactive machine learning textbook deployed as a web application. Think Distill.pub but dark-mode, with live interactive widgets embedded inline with minimal prose explanations.
+An interactive machine learning textbook deployed as a web application. Think Distill.pub but dark-mode — real depth (derivations, worked examples, closing syntheses) with live interactive widgets embedded as first-class, directed figures throughout.
 
-**Philosophy:** Every concept gets ~3-5 sentences of explanation, then a live interactive widget that lets the reader feel the math rather than just read about it. Widgets > text.
+**Philosophy (V2):** Widgets remain the differentiator, but the book no longer treats them as the *only* teacher. Prose carries real depth; every widget gets a hand-off sentence telling the reader what to try and what to notice, and every widget must faithfully compute what it claims (no fabricated or hard-coded simulations — see [`context/V2_PLAN.md`](V2_PLAN.md) for the audit that drove this change). Full mechanical detail: [`context/STYLE_GUIDE.md`](STYLE_GUIDE.md).
 
-**Target audience:** General CS audience. Assumes programming literacy, linear algebra basics. Does not assume ML background.
+**Target audience:** General CS audience. Assumes programming literacy, linear algebra basics. Does not assume ML background — Chapter 1 (Probability & Information for ML) now exists specifically to teach the probability/information-theory vocabulary the rest of the book relies on.
 
 ## Tech Stack
 
 ```
 Frontend:  React + Vite
-Routing:   React Router v6 (one route per chapter)
+Routing:   React Router v7 (one route per chapter, code-split via React.lazy)
 Math:      KaTeX (render equations)
-Charts:    D3.js (custom interactive viz), Recharts (simple charts)
-Styling:   Tailwind CSS (utility classes only, no custom CSS framework)
+Charts:    Custom inline SVG + Canvas for interactive widgets (no D3/Recharts — unused, removed)
+Styling:   Inline styles + CSS custom properties (responsive tokens), Tailwind for utility classes
 Hosting:   Vercel (static frontend, no backend needed)
 No backend, no database, no auth.
 ```
@@ -26,102 +26,80 @@ No backend, no database, no auth.
 darvinyi-textbook/
 ├── public/
 ├── src/
-│   ├── App.jsx                  # Router setup
+│   ├── App.jsx                  # Router setup (lazy-loaded chapter routes)
 │   ├── main.jsx
-│   ├── index.css                # Global styles + CSS variables
+│   ├── index.css                # Global styles + CSS variables (incl. responsive tokens)
+│   ├── data/
+│   │   ├── chapters.js          # Single source of truth: parts, chapters, routes, titles
+│   │   └── citations.js         # Single source of truth: paper metadata, keyed by slug
+│   ├── hooks/
+│   │   └── useMediaQuery.js
 │   ├── components/
 │   │   ├── layout/
-│   │   │   ├── Sidebar.jsx      # Chapter navigation
-│   │   │   ├── Topbar.jsx       # Breadcrumb + prev/next
-│   │   │   └── TocRail.jsx      # Right-side table of contents
+│   │   │   ├── Sidebar.jsx      # Chapter navigation (reads chapters.js)
+│   │   │   ├── Topbar.jsx       # Breadcrumb + prev/next (reads chapters.js)
+│   │   │   ├── TocRail.jsx      # Right-side table of contents
+│   │   │   └── MobileNav.jsx    # Mobile "on this page" nav
 │   │   ├── shared/
-│   │   │   ├── WidgetCard.jsx   # Wrapper for all interactive widgets
+│   │   │   ├── WidgetCard.jsx   # Wrapper for all interactive widgets (tryThis prop, visibility gating)
 │   │   │   ├── MathBlock.jsx    # Block equation renderer
 │   │   │   ├── InlineMath.jsx   # Inline equation renderer
 │   │   │   ├── Citations.jsx    # Citation list at chapter bottom
 │   │   │   └── SectionTitle.jsx # H2 with decorative line
-│   │   └── widgets/             # One folder per chapter
-│   │       ├── ch01/
-│   │       ├── ch02/
-│   │       ├── ch03/
+│   │   ├── widgets/              # One folder per chapter
+│   │   │   ├── ch01/
+│   │   │   ├── ch02/
+│   │   │   └── ...
+│   │   └── diagrams/              # One folder per chapter (static SVG figures)
 │   │       └── ...
 │   └── pages/
 │       ├── Home.jsx             # Landing / table of contents
 │       ├── ch01/
-│       │   └── StatisticalLearning.jsx
-│       ├── ch02/
-│       │   └── NeuralNetworks.jsx
 │       └── ...
-├── context/                     # NOT deployed — OpenCode reference files
+├── context/                     # NOT deployed — reference/planning files
 │   ├── PROJECT_OVERVIEW.md      # This file
 │   ├── DESIGN_SYSTEM.md         # Colors, typography, components
-│   ├── CURRICULUM.md            # All 17 chapters, sections, widgets, citations
+│   ├── CURRICULUM.md            # Authoritative 25-chapter, 7-part curriculum
+│   ├── STYLE_GUIDE.md           # Editorial standard + notational conventions (V2)
+│   ├── V2_PLAN.md               # The full critique + overhaul plan driving current work
 │   ├── WIDGET_SPEC.md           # Widget interaction patterns
-│   └── REFERENCE_WIDGET.html   # The gradient descent widget (built, reference impl)
+│   └── REFERENCE_WIDGET.html    # The gradient descent widget (built, reference impl)
+├── prompts/
+│   └── queue.md                 # V2 build queue (drained by ./runqueue.sh)
 ├── vite.config.js
 ├── tailwind.config.js
 ├── package.json
 └── vercel.json
 ```
 
-## Curriculum Summary (22 chapters, 7 parts)
+## Curriculum Summary (25 chapters, 7 parts — V2 target)
 
 | Part | Chapters | Focus |
 |---|---|---|
-| I — Foundations | 1-5 | Statistical learning, neural nets, optimization, training techniques, word embeddings |
-| II — Sequence & Attention | 6-8 | RNNs/LSTMs, attention, transformers |
-| III — Large Language Models | 9-11 | LLM architectures, LLM training & alignment, multimodal networks |
-| IV — Other Architectures | 12-15 | ConvNets, GNNs, reinforcement learning, capsule networks |
-| V — Image Generative Models | 16-19 | VAEs, GANs, image-to-image, diffusion models |
-| VI — Evaluation | 20 | Datasets & benchmarks |
-| VII — AI Agents | 21-22 | AI agents, agent harnesses |
+| I — Foundations | 1-6 | Probability/information theory, statistical learning, neural nets, optimization, training techniques, convolutional networks |
+| II — Language & Sequence | 7-10 | Word embeddings & tokenization, RNNs/LSTMs, attention, transformers |
+| III — Large Language Models | 11-15 | LLM architectures, reinforcement learning, LLM training & alignment, efficient inference & deployment, multimodal networks |
+| IV — Beyond the Transformer | 16-17 | Graph neural networks, state-space models & attention alternatives |
+| V — Generative Models | 18-20 | VAEs, GANs & image-to-image, diffusion models |
+| VI — Evaluation & Understanding | 21-23 | Datasets & benchmarks, evaluating LLMs & agents, interpretability |
+| VII — AI Agents | 24-25 | AI agents, agent harnesses |
 
-The authoritative per-chapter list lives in [CURRICULUM.md](CURRICULUM.md).
+The authoritative per-chapter list lives in [CURRICULUM.md](CURRICULUM.md). The migration from the prior 22-chapter structure (reordering, merges, new chapters) is tracked as queue items S1/S2/N1/N14/N17/N22/N23 in [`prompts/queue.md`](../prompts/queue.md); see [`V2_PLAN.md`](V2_PLAN.md) for the full rationale and per-chapter findings driving the rewrite.
 
-## V1 Scope (build first)
+## Current Status (2026-07)
 
-1. Chapter 1 — Statistical Learning
-2. Chapter 2 — Neural Networks
-3. Chapter 3 — Optimization (gradient descent widget already built)
-
-Everything else is scaffolded (routes exist, pages are placeholder) but content comes later.
-
-## Widget Count by Chapter
-
-- Ch 1: 4 widgets
-- Ch 2: 4 widgets
-- Ch 3: 5 widgets
-- Ch 4: 6 widgets
-- Ch 5: 5 widgets
-- Ch 6: 4 widgets
-- Ch 7: 4 widgets
-- Ch 8: 4 widgets
-- Ch 9: 5 widgets
-- Ch 10: 6 widgets
-- Ch 11: 4 widgets
-- Ch 12: 5 widgets
-- Ch 13: 4 widgets
-- Ch 14: 6 widgets
-- Ch 15: 3 widgets
-- Ch 16: 4 widgets
-- Ch 17: 4 widgets
-- Ch 18: 6 widgets
-- Ch 19: 4 widgets
-- Ch 20: 3 widgets
-- Ch 21: 5 widgets
-- Ch 22: 6 widgets
-**Total: 101 widgets**
+V1 (22 chapters, all live) shipped and was fully critiqued. The repo is now mid-overhaul per `prompts/queue.md` — drained via `./runqueue.sh`, one queue item per run, gated on `npm run check`. Do not assume the chapter numbering/count in older commits or docs is current; `context/CURRICULUM.md` and `src/data/chapters.js` (once S1 lands) are the sources of truth.
 
 ## Routing
 
 ```jsx
-// App.jsx
+// App.jsx — each chapter route is React.lazy + Suspense; the route table is
+// generated from src/data/chapters.js rather than hand-written per chapter.
 <Routes>
   <Route path="/" element={<Home />} />
-  <Route path="/ch/01" element={<StatisticalLearning />} />
-  <Route path="/ch/02" element={<NeuralNetworks />} />
-  <Route path="/ch/03" element={<Optimization />} />
-  {/* ... etc */}
+  <Route path="/ch/01" element={L(ProbabilityAndInformation)} />
+  <Route path="/ch/02" element={L(StatisticalLearning)} />
+  {/* ... etc, plus a path="*" 404 route */}
 </Routes>
 ```
 
@@ -129,15 +107,15 @@ Everything else is scaffolded (routes exist, pages are placeholder) but content 
 
 - **Platform:** Vercel
 - **Deploy trigger:** Push to `main` branch
-- **Build command:** `npm run build`
+- **Build command:** `npm run build` (equivalently `npm run check`, the queue's gate)
 - **Output dir:** `dist`
 - **No env vars needed** (no backend, no API keys)
 
 ## Key Constraints
 
-1. **No real model inference** — widgets simulate behavior mathematically, they don't run actual neural networks. All visualizations are computed analytically or via simple JS math.
+1. **No real model inference** — widgets simulate behavior mathematically, they don't run actual neural networks. All visualizations are computed analytically or via simple JS math, and must faithfully implement the equations they claim to (see `STYLE_GUIDE.md` — widget fidelity is a hard requirement in V2, not a nice-to-have).
 2. **No external data fetching at runtime** — everything is self-contained in the bundle.
-3. **KaTeX for math** — not MathJax (too slow). Import KaTeX CSS in index.html.
-4. **D3 for custom interactive viz** — Recharts for simple charts only.
-5. **Mobile is NOT a priority** — desktop-first, minimum viewport 1024px.
+3. **KaTeX for math** — not MathJax (too slow). Imported in `index.css`; self-hosted alongside the other web fonts.
+4. **No D3/Recharts** — removed as unused dependencies; all interactive viz is custom inline SVG/Canvas.
+5. **Mobile is a supported target** — a responsive pass has shipped (design tokens, off-canvas nav, code-split routes); further refinement (per-widget mobile layout) is tracked in queue item Q3.
 6. **Dark mode only** — no light mode toggle.
