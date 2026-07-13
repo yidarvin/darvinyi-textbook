@@ -23,11 +23,11 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Long Short-Term Memory", authors: "Hochreiter & Schmidhuber", venue: "Neural Computation", year: "1997", tag: "seminal" },
-  { num: "[2]", title: "Learning Long-Term Dependencies with Gradient Descent is Difficult", authors: "Bengio, Simard, Frasconi", venue: "IEEE Transactions on Neural Networks", year: "1994", tag: "seminal" },
-  { num: "[3]", title: "Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling", authors: "Chung, Gulcehre, Cho, Bengio", venue: "NeurIPS Workshop", year: "2014", tag: "paper" },
-  { num: "[4]", title: "Sequence to Sequence Learning with Neural Networks", authors: "Sutskever, Vinyals, Le", venue: "NeurIPS", year: "2014", tag: "seminal" },
-  { num: "[5]", title: "On the Properties of Neural Machine Translation: Encoder-Decoder Approaches", authors: "Cho, van Merrienboer, Bahdanau, Bengio", venue: "EMNLP Workshop", year: "2014", tag: "paper" },
+  { num: 1, title: "Long Short-Term Memory", authors: "Hochreiter & Schmidhuber", venue: "Neural Computation", year: "1997", tag: "seminal" },
+  { num: 2, title: "Learning Long-Term Dependencies with Gradient Descent is Difficult", authors: "Bengio, Simard, Frasconi", venue: "IEEE Transactions on Neural Networks", year: "1994", tag: "seminal" },
+  { num: 3, title: "Empirical Evaluation of Gated Recurrent Neural Networks on Sequence Modeling", authors: "Chung, Gulcehre, Cho, Bengio", venue: "NeurIPS Workshop", year: "2014", tag: "paper" },
+  { num: 4, title: "Sequence to Sequence Learning with Neural Networks", authors: "Sutskever, Vinyals, Le", venue: "NeurIPS", year: "2014", tag: "seminal" },
+  { num: 5, title: "On the Properties of Neural Machine Translation: Encoder-Decoder Approaches", authors: "Cho, van Merrienboer, Bahdanau, Bengio", venue: "EMNLP Workshop", year: "2014", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

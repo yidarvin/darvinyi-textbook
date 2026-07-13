@@ -21,10 +21,10 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Dynamic Routing Between Capsules", authors: "Sabour, Frosst, Hinton", venue: "NeurIPS", year: "2017", tag: "seminal" },
-  { num: "[2]", title: "Matrix Capsules with EM Routing", authors: "Hinton, Sabour, Frosst", venue: "ICLR", year: "2018", tag: "paper" },
-  { num: "[3]", title: "Transforming Auto-encoders", authors: "Hinton, Krizhevsky, Wang", venue: "ICANN", year: "2011", tag: "paper" },
-  { num: "[4]", title: "A Survey of Capsule Networks", authors: "Gu", venue: "Applied Sciences", year: "2021", tag: "survey" },
+  { num: 1, title: "Dynamic Routing Between Capsules", authors: "Sabour, Frosst, Hinton", venue: "NeurIPS", year: "2017", tag: "seminal" },
+  { num: 2, title: "Matrix Capsules with EM Routing", authors: "Hinton, Sabour, Frosst", venue: "ICLR", year: "2018", tag: "paper" },
+  { num: 3, title: "Transforming Auto-encoders", authors: "Hinton, Krizhevsky, Wang", venue: "ICANN", year: "2011", tag: "paper" },
+  { num: 4, title: "A Survey of Capsule Networks", authors: "Gu", venue: "Applied Sciences", year: "2021", tag: "survey" },
 ];
 
 const TOC_SECTIONS = [

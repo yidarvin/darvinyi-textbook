@@ -25,11 +25,11 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Gradient-Based Learning Applied to Document Recognition", authors: "LeCun, Bottou, Bengio, Haffner", venue: "Proceedings of the IEEE", year: "1998", tag: "seminal" },
-  { num: "[2]", title: "ImageNet Classification with Deep Convolutional Neural Networks", authors: "Krizhevsky, Sutskever, Hinton", venue: "NeurIPS", year: "2012", tag: "seminal" },
-  { num: "[3]", title: "Very Deep Convolutional Networks for Large-Scale Image Recognition", authors: "Simonyan & Zisserman", venue: "ICLR", year: "2015", tag: "paper" },
-  { num: "[4]", title: "Deep Residual Learning for Image Recognition", authors: "He, Zhang, Ren, Sun", venue: "CVPR", year: "2016", tag: "seminal" },
-  { num: "[5]", title: "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks", authors: "Tan & Le", venue: "ICML", year: "2019", tag: "paper" },
+  { num: 1, title: "Gradient-Based Learning Applied to Document Recognition", authors: "LeCun, Bottou, Bengio, Haffner", venue: "Proceedings of the IEEE", year: "1998", tag: "seminal" },
+  { num: 2, title: "ImageNet Classification with Deep Convolutional Neural Networks", authors: "Krizhevsky, Sutskever, Hinton", venue: "NeurIPS", year: "2012", tag: "seminal" },
+  { num: 3, title: "Very Deep Convolutional Networks for Large-Scale Image Recognition", authors: "Simonyan & Zisserman", venue: "ICLR", year: "2015", tag: "paper" },
+  { num: 4, title: "Deep Residual Learning for Image Recognition", authors: "He, Zhang, Ren, Sun", venue: "CVPR", year: "2016", tag: "seminal" },
+  { num: 5, title: "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks", authors: "Tan & Le", venue: "ICML", year: "2019", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

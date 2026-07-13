@@ -24,13 +24,13 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Efficient Estimation of Word Representations in Vector Space (Word2Vec)", authors: "Mikolov, Chen, Corrado, Dean", venue: "ICLR", year: "2013", tag: "seminal" },
-  { num: "[2]", title: "Distributed Representations of Words and Phrases and their Compositionality (Negative Sampling)", authors: "Mikolov, Sutskever, Chen, Corrado, Dean", venue: "NeurIPS", year: "2013", tag: "seminal" },
-  { num: "[3]", title: "GloVe: Global Vectors for Word Representation", authors: "Pennington, Socher, Manning", venue: "EMNLP", year: "2014", tag: "seminal" },
-  { num: "[4]", title: "Enriching Word Vectors with Subword Information (fastText)", authors: "Bojanowski, Grave, Joulin, Mikolov", venue: "TACL", year: "2017", tag: "paper" },
-  { num: "[5]", title: "Deep contextualized word representations (ELMo)", authors: "Peters, Neumann, Iyyer, Gardner, Clark, Lee, Zettlemoyer", venue: "NAACL", year: "2018", tag: "seminal" },
-  { num: "[6]", title: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding", authors: "Devlin, Chang, Lee, Toutanova", venue: "NAACL", year: "2019", tag: "seminal" },
-  { num: "[7]", title: "Linguistic Regularities in Continuous Space Word Representations", authors: "Mikolov, Yih, Zweig", venue: "NAACL", year: "2013", tag: "paper" },
+  { num: 1, title: "Efficient Estimation of Word Representations in Vector Space (Word2Vec)", authors: "Mikolov, Chen, Corrado, Dean", venue: "ICLR", year: "2013", tag: "seminal" },
+  { num: 2, title: "Distributed Representations of Words and Phrases and their Compositionality (Negative Sampling)", authors: "Mikolov, Sutskever, Chen, Corrado, Dean", venue: "NeurIPS", year: "2013", tag: "seminal" },
+  { num: 3, title: "GloVe: Global Vectors for Word Representation", authors: "Pennington, Socher, Manning", venue: "EMNLP", year: "2014", tag: "seminal" },
+  { num: 4, title: "Enriching Word Vectors with Subword Information (fastText)", authors: "Bojanowski, Grave, Joulin, Mikolov", venue: "TACL", year: "2017", tag: "paper" },
+  { num: 5, title: "Deep contextualized word representations (ELMo)", authors: "Peters, Neumann, Iyyer, Gardner, Clark, Lee, Zettlemoyer", venue: "NAACL", year: "2018", tag: "seminal" },
+  { num: 6, title: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding", authors: "Devlin, Chang, Lee, Toutanova", venue: "NAACL", year: "2019", tag: "seminal" },
+  { num: 7, title: "Linguistic Regularities in Continuous Space Word Representations", authors: "Mikolov, Yih, Zweig", venue: "NAACL", year: "2013", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

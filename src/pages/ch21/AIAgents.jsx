@@ -24,13 +24,13 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "ReAct: Synergizing Reasoning and Acting in Language Models", authors: "Yao, Zhao, Yu, Du, Shafran, Narasimhan, Cao", venue: "ICLR", year: "2023", tag: "seminal" },
-  { num: "[2]", title: "Toolformer: Language Models Can Teach Themselves to Use Tools", authors: "Schick, Dwivedi-Yu, Dessi, Raileanu, Lomeli, Zettlemoyer, Cancedda, Scialom", venue: "NeurIPS", year: "2023", tag: "paper" },
-  { num: "[3]", title: "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models", authors: "Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le, Zhou", venue: "NeurIPS", year: "2022", tag: "seminal" },
-  { num: "[4]", title: "Generative Agents: Interactive Simulacra of Human Behavior", authors: "Park, O'Brien, Cai, Morris, Liang, Bernstein", venue: "UIST", year: "2023", tag: "paper" },
-  { num: "[5]", title: "AutoGPT: An Autonomous GPT-4 Experiment", authors: "Significant Gravitas", venue: "GitHub", year: "2023", tag: "paper" },
-  { num: "[6]", title: "LangChain: Building Applications with LLMs through Composability", authors: "Chase", venue: "GitHub", year: "2022", tag: "paper" },
-  { num: "[7]", title: "Constitutional AI: Harmlessness from AI Feedback", authors: "Bai, Jones, Ndousse, Askell, Chen, DasSarma, Drain, Fort, Ganguli, Henighan, Joseph, Kadavath, Kernion, Conerly, El-Showk, Elhage, Hatfield-Dodds, Hernandez, Hume, Johnston, Kravec, Lovitt, Nanda, Olsson, Amodei, Brown, Clark, McCandlish, Olah, Mann, Kaplan", venue: "arXiv", year: "2022", tag: "paper" },
+  { num: 1, title: "ReAct: Synergizing Reasoning and Acting in Language Models", authors: "Yao, Zhao, Yu, Du, Shafran, Narasimhan, Cao", venue: "ICLR", year: "2023", tag: "seminal" },
+  { num: 2, title: "Toolformer: Language Models Can Teach Themselves to Use Tools", authors: "Schick, Dwivedi-Yu, Dessi, Raileanu, Lomeli, Zettlemoyer, Cancedda, Scialom", venue: "NeurIPS", year: "2023", tag: "paper" },
+  { num: 3, title: "Chain-of-Thought Prompting Elicits Reasoning in Large Language Models", authors: "Wei, Wang, Schuurmans, Bosma, Ichter, Xia, Chi, Le, Zhou", venue: "NeurIPS", year: "2022", tag: "seminal" },
+  { num: 4, title: "Generative Agents: Interactive Simulacra of Human Behavior", authors: "Park, O'Brien, Cai, Morris, Liang, Bernstein", venue: "UIST", year: "2023", tag: "paper" },
+  { num: 5, title: "AutoGPT: An Autonomous GPT-4 Experiment", authors: "Significant Gravitas", venue: "GitHub", year: "2023", tag: "paper" },
+  { num: 6, title: "LangChain: Building Applications with LLMs through Composability", authors: "Chase", venue: "GitHub", year: "2022", tag: "paper" },
+  { num: 7, title: "Constitutional AI: Harmlessness from AI Feedback", authors: "Bai, Jones, Ndousse, Askell, Chen, DasSarma, Drain, Fort, Ganguli, Henighan, Joseph, Kadavath, Kernion, Conerly, El-Showk, Elhage, Hatfield-Dodds, Hernandez, Hume, Johnston, Kravec, Lovitt, Nanda, Olsson, Amodei, Brown, Clark, McCandlish, Olah, Mann, Kaplan", venue: "arXiv", year: "2022", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

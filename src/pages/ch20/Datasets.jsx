@@ -19,12 +19,12 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "ImageNet Large Scale Visual Recognition Challenge", authors: "Russakovsky, Deng, Su, Krause, Satheesh, Ma, Huang, Karpathy, Khosla, Bernstein, Berg, Fei-Fei", venue: "IJCV", year: "2015", tag: "seminal" },
-  { num: "[2]", title: "GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding", authors: "Wang, Singh, Michael, Hill, Levy, Bowman", venue: "EMNLP", year: "2018", tag: "seminal" },
-  { num: "[3]", title: "Measuring Massive Multitask Language Understanding (MMLU)", authors: "Hendrycks, Burns, Basart, Zou, Mazeika, Song, Steinhardt", venue: "ICLR", year: "2021", tag: "paper" },
-  { num: "[4]", title: "Evaluating Large Language Models Trained on Code (HumanEval)", authors: "Chen, Tworek, Jun, Yuan, de Oliveira Pinto et al.", venue: "arXiv", year: "2021", tag: "paper" },
-  { num: "[5]", title: "LAION-5B: An open large-scale dataset for training next generation image-text models", authors: "Schuhmann, Beaumont, Vencu, Gordon, Wightman, Cherti, Coombes, Katta, Mullis, Wortsman, Schramowski, Kundurthy, Crowson, Schmidt, Beaumont, Jitsev", venue: "NeurIPS", year: "2022", tag: "paper" },
-  { num: "[6]", title: "Datasheets for Datasets", authors: "Gebru, Morgenstern, Vecchione, Wortman Vaughan, Wallach, Daume, Crawford", venue: "Communications of the ACM", year: "2021", tag: "paper" },
+  { num: 1, title: "ImageNet Large Scale Visual Recognition Challenge", authors: "Russakovsky, Deng, Su, Krause, Satheesh, Ma, Huang, Karpathy, Khosla, Bernstein, Berg, Fei-Fei", venue: "IJCV", year: "2015", tag: "seminal" },
+  { num: 2, title: "GLUE: A Multi-Task Benchmark and Analysis Platform for Natural Language Understanding", authors: "Wang, Singh, Michael, Hill, Levy, Bowman", venue: "EMNLP", year: "2018", tag: "seminal" },
+  { num: 3, title: "Measuring Massive Multitask Language Understanding (MMLU)", authors: "Hendrycks, Burns, Basart, Zou, Mazeika, Song, Steinhardt", venue: "ICLR", year: "2021", tag: "paper" },
+  { num: 4, title: "Evaluating Large Language Models Trained on Code (HumanEval)", authors: "Chen, Tworek, Jun, Yuan, de Oliveira Pinto et al.", venue: "arXiv", year: "2021", tag: "paper" },
+  { num: 5, title: "LAION-5B: An open large-scale dataset for training next generation image-text models", authors: "Schuhmann, Beaumont, Vencu, Gordon, Wightman, Cherti, Coombes, Katta, Mullis, Wortsman, Schramowski, Kundurthy, Crowson, Schmidt, Beaumont, Jitsev", venue: "NeurIPS", year: "2022", tag: "paper" },
+  { num: 6, title: "Datasheets for Datasets", authors: "Gebru, Morgenstern, Vecchione, Wortman Vaughan, Wallach, Daume, Crawford", venue: "Communications of the ACM", year: "2021", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

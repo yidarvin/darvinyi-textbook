@@ -23,12 +23,12 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Generative Adversarial Networks", authors: "Goodfellow, Pouget-Abadie, Mirza, Xu, Warde-Farley, Ozair, Courville, Bengio", venue: "NeurIPS", year: "2014", tag: "seminal" },
-  { num: "[2]", title: "Wasserstein GAN", authors: "Arjovsky, Chintala, Bottou", venue: "ICML", year: "2017", tag: "seminal" },
-  { num: "[3]", title: "Improved Training of Wasserstein GANs (WGAN-GP)", authors: "Gulrajani, Ahmed, Arjovsky, Dumoulin, Courville", venue: "NeurIPS", year: "2017", tag: "paper" },
-  { num: "[4]", title: "Progressive Growing of GANs for Improved Quality, Stability, and Variation", authors: "Karras, Laine, Aila", venue: "ICLR", year: "2018", tag: "paper" },
-  { num: "[5]", title: "A Style-Based Generator Architecture for Generative Adversarial Networks (StyleGAN)", authors: "Karras, Laine, Aila", venue: "CVPR", year: "2019", tag: "paper" },
-  { num: "[6]", title: "Towards Principled Methods for Training Generative Adversarial Networks", authors: "Arjovsky & Bottou", venue: "ICLR", year: "2017", tag: "paper" },
+  { num: 1, title: "Generative Adversarial Networks", authors: "Goodfellow, Pouget-Abadie, Mirza, Xu, Warde-Farley, Ozair, Courville, Bengio", venue: "NeurIPS", year: "2014", tag: "seminal" },
+  { num: 2, title: "Wasserstein GAN", authors: "Arjovsky, Chintala, Bottou", venue: "ICML", year: "2017", tag: "seminal" },
+  { num: 3, title: "Improved Training of Wasserstein GANs (WGAN-GP)", authors: "Gulrajani, Ahmed, Arjovsky, Dumoulin, Courville", venue: "NeurIPS", year: "2017", tag: "paper" },
+  { num: 4, title: "Progressive Growing of GANs for Improved Quality, Stability, and Variation", authors: "Karras, Laine, Aila", venue: "ICLR", year: "2018", tag: "paper" },
+  { num: 5, title: "A Style-Based Generator Architecture for Generative Adversarial Networks (StyleGAN)", authors: "Karras, Laine, Aila", venue: "CVPR", year: "2019", tag: "paper" },
+  { num: 6, title: "Towards Principled Methods for Training Generative Adversarial Networks", authors: "Arjovsky & Bottou", venue: "ICLR", year: "2017", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

@@ -25,15 +25,15 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Language Models are Unsupervised Multitask Learners (GPT-2)", authors: "Radford, Wu, Child, Luan, Amodei, Sutskever", venue: "OpenAI Blog", year: "2019", tag: "seminal" },
-  { num: "[2]", title: "Language Models are Few-Shot Learners (GPT-3)", authors: "Brown et al.", venue: "NeurIPS", year: "2020", tag: "seminal" },
-  { num: "[3]", title: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding", authors: "Devlin, Chang, Lee, Toutanova", venue: "NAACL", year: "2019", tag: "seminal" },
-  { num: "[4]", title: "Exploring the Limits of Transfer Learning with T5", authors: "Raffel, Shazeer, Roberts, Lee, Narang, Matena, Zhou, Li, Liu", venue: "JMLR", year: "2020", tag: "seminal" },
-  { num: "[5]", title: "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints", authors: "Ainslie, Lee-Thorp, de Jong, Zelaski, Sanghai, Xu", venue: "EMNLP", year: "2023", tag: "paper" },
-  { num: "[6]", title: "RoFormer: Enhanced Transformer with Rotary Position Embedding", authors: "Su, Lu, Pan, Murtadha, Wen, Liu", venue: "Neurocomputing", year: "2024", tag: "paper" },
-  { num: "[7]", title: "Mixtral of Experts", authors: "Jiang, Sablayrolles, Roux, Mensch, Savary, Bamford, Chaplot, de las Casas, Hanna, Bressand, Lengyel, Bour, Lample, Lavaud, Saulnier, Lachaux, Stock, Subramanian, Yang, Antoniak, Scao, Gervet, Muennighoff, Villanova, Naval, Bach, Lacroix", venue: "arXiv", year: "2024", tag: "paper" },
-  { num: "[8]", title: "LLaMA: Open and Efficient Foundation Language Models", authors: "Touvron, Lavril, Izacard, Martinet, Lachaux, Lacroix, Rozière, Goyal, Hambro, Azhar, Rodriguez, Joulin, Grave, Lample", venue: "arXiv", year: "2023", tag: "paper" },
-  { num: "[9]", title: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness", authors: "Dao, Fu, Ermon, Rudra, Ré", venue: "NeurIPS", year: "2022", tag: "paper" },
+  { num: 1, title: "Language Models are Unsupervised Multitask Learners (GPT-2)", authors: "Radford, Wu, Child, Luan, Amodei, Sutskever", venue: "OpenAI Blog", year: "2019", tag: "seminal" },
+  { num: 2, title: "Language Models are Few-Shot Learners (GPT-3)", authors: "Brown et al.", venue: "NeurIPS", year: "2020", tag: "seminal" },
+  { num: 3, title: "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding", authors: "Devlin, Chang, Lee, Toutanova", venue: "NAACL", year: "2019", tag: "seminal" },
+  { num: 4, title: "Exploring the Limits of Transfer Learning with T5", authors: "Raffel, Shazeer, Roberts, Lee, Narang, Matena, Zhou, Li, Liu", venue: "JMLR", year: "2020", tag: "seminal" },
+  { num: 5, title: "GQA: Training Generalized Multi-Query Transformer Models from Multi-Head Checkpoints", authors: "Ainslie, Lee-Thorp, de Jong, Zelaski, Sanghai, Xu", venue: "EMNLP", year: "2023", tag: "paper" },
+  { num: 6, title: "RoFormer: Enhanced Transformer with Rotary Position Embedding", authors: "Su, Lu, Pan, Murtadha, Wen, Liu", venue: "Neurocomputing", year: "2024", tag: "paper" },
+  { num: 7, title: "Mixtral of Experts", authors: "Jiang, Sablayrolles, Roux, Mensch, Savary, Bamford, Chaplot, de las Casas, Hanna, Bressand, Lengyel, Bour, Lample, Lavaud, Saulnier, Lachaux, Stock, Subramanian, Yang, Antoniak, Scao, Gervet, Muennighoff, Villanova, Naval, Bach, Lacroix", venue: "arXiv", year: "2024", tag: "paper" },
+  { num: 8, title: "LLaMA: Open and Efficient Foundation Language Models", authors: "Touvron, Lavril, Izacard, Martinet, Lachaux, Lacroix, Rozière, Goyal, Hambro, Azhar, Rodriguez, Joulin, Grave, Lample", venue: "arXiv", year: "2023", tag: "paper" },
+  { num: 9, title: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness", authors: "Dao, Fu, Ermon, Rudra, Ré", venue: "NeurIPS", year: "2022", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

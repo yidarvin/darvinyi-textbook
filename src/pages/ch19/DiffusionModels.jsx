@@ -23,12 +23,12 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Denoising Diffusion Probabilistic Models (DDPM)", authors: "Ho, Jain, Abbeel", venue: "NeurIPS", year: "2020", tag: "seminal" },
-  { num: "[2]", title: "Denoising Diffusion Implicit Models (DDIM)", authors: "Song, Meng, Ermon", venue: "ICLR", year: "2021", tag: "paper" },
-  { num: "[3]", title: "Score-Based Generative Modeling through Stochastic Differential Equations", authors: "Song, Sohl-Dickstein, Kingma, Kumar, Ermon, Poole", venue: "ICLR", year: "2021", tag: "paper" },
-  { num: "[4]", title: "High-Resolution Image Synthesis with Latent Diffusion Models", authors: "Rombach, Blattmann, Lorenz, Esser, Ommer", venue: "CVPR", year: "2022", tag: "paper" },
-  { num: "[5]", title: "Classifier-Free Diffusion Guidance", authors: "Ho & Salimans", venue: "NeurIPS Workshop", year: "2021", tag: "paper" },
-  { num: "[6]", title: "Improved Denoising Diffusion Probabilistic Models", authors: "Nichol & Dhariwal", venue: "ICML", year: "2021", tag: "paper" },
+  { num: 1, title: "Denoising Diffusion Probabilistic Models (DDPM)", authors: "Ho, Jain, Abbeel", venue: "NeurIPS", year: "2020", tag: "seminal" },
+  { num: 2, title: "Denoising Diffusion Implicit Models (DDIM)", authors: "Song, Meng, Ermon", venue: "ICLR", year: "2021", tag: "paper" },
+  { num: 3, title: "Score-Based Generative Modeling through Stochastic Differential Equations", authors: "Song, Sohl-Dickstein, Kingma, Kumar, Ermon, Poole", venue: "ICLR", year: "2021", tag: "paper" },
+  { num: 4, title: "High-Resolution Image Synthesis with Latent Diffusion Models", authors: "Rombach, Blattmann, Lorenz, Esser, Ommer", venue: "CVPR", year: "2022", tag: "paper" },
+  { num: 5, title: "Classifier-Free Diffusion Guidance", authors: "Ho & Salimans", venue: "NeurIPS Workshop", year: "2021", tag: "paper" },
+  { num: 6, title: "Improved Denoising Diffusion Probabilistic Models", authors: "Nichol & Dhariwal", venue: "ICML", year: "2021", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

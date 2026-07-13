@@ -23,11 +23,11 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Neural Machine Translation by Jointly Learning to Align and Translate", authors: "Bahdanau, Cho, Bengio", venue: "ICLR", year: "2015", tag: "seminal" },
-  { num: "[2]", title: "Attention Is All You Need", authors: "Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, Polosukhin", venue: "NeurIPS", year: "2017", tag: "seminal" },
-  { num: "[3]", title: "Effective Approaches to Attention-based Neural Machine Translation", authors: "Luong, Pham, Manning", venue: "EMNLP", year: "2015", tag: "paper" },
-  { num: "[4]", title: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness", authors: "Dao, Fu, Ermon, Rudra", venue: "NeurIPS", year: "2022", tag: "paper" },
-  { num: "[5]", title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale", authors: "Dosovitskiy et al.", venue: "ICLR", year: "2021", tag: "paper" },
+  { num: 1, title: "Neural Machine Translation by Jointly Learning to Align and Translate", authors: "Bahdanau, Cho, Bengio", venue: "ICLR", year: "2015", tag: "seminal" },
+  { num: 2, title: "Attention Is All You Need", authors: "Vaswani, Shazeer, Parmar, Uszkoreit, Jones, Gomez, Kaiser, Polosukhin", venue: "NeurIPS", year: "2017", tag: "seminal" },
+  { num: 3, title: "Effective Approaches to Attention-based Neural Machine Translation", authors: "Luong, Pham, Manning", venue: "EMNLP", year: "2015", tag: "paper" },
+  { num: 4, title: "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness", authors: "Dao, Fu, Ermon, Rudra", venue: "NeurIPS", year: "2022", tag: "paper" },
+  { num: 5, title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale", authors: "Dosovitskiy et al.", venue: "ICLR", year: "2021", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

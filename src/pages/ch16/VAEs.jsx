@@ -23,11 +23,11 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Auto-Encoding Variational Bayes", authors: "Kingma & Welling", venue: "ICLR", year: "2014", tag: "seminal" },
-  { num: "[2]", title: "Stochastic Backpropagation and Approximate Inference in Deep Generative Models", authors: "Rezende, Mohamed, Wierstra", venue: "ICML", year: "2014", tag: "paper" },
-  { num: "[3]", title: "beta-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework", authors: "Higgins, Matthey, Pal, Burgess, Glorot, Botvinick, Mohamed, Lerchner", venue: "ICLR", year: "2017", tag: "paper" },
-  { num: "[4]", title: "An Introduction to Variational Autoencoders", authors: "Kingma & Welling", venue: "Foundations and Trends in Machine Learning", year: "2019", tag: "survey" },
-  { num: "[5]", title: "Understanding disentangling in beta-VAE", authors: "Burgess, Higgins, Pal, Matthey, Watters, Desjardins, Lerchner", venue: "NeurIPS Workshop", year: "2018", tag: "paper" },
+  { num: 1, title: "Auto-Encoding Variational Bayes", authors: "Kingma & Welling", venue: "ICLR", year: "2014", tag: "seminal" },
+  { num: 2, title: "Stochastic Backpropagation and Approximate Inference in Deep Generative Models", authors: "Rezende, Mohamed, Wierstra", venue: "ICML", year: "2014", tag: "paper" },
+  { num: 3, title: "beta-VAE: Learning Basic Visual Concepts with a Constrained Variational Framework", authors: "Higgins, Matthey, Pal, Burgess, Glorot, Botvinick, Mohamed, Lerchner", venue: "ICLR", year: "2017", tag: "paper" },
+  { num: 4, title: "An Introduction to Variational Autoencoders", authors: "Kingma & Welling", venue: "Foundations and Trends in Machine Learning", year: "2019", tag: "survey" },
+  { num: 5, title: "Understanding disentangling in beta-VAE", authors: "Burgess, Higgins, Pal, Matthey, Watters, Desjardins, Lerchner", venue: "NeurIPS Workshop", year: "2018", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

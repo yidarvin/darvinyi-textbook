@@ -25,14 +25,14 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Image-to-Image Translation with Conditional Adversarial Networks (pix2pix)", authors: "Isola, Zhu, Zhou, Efros", venue: "CVPR", year: "2017", tag: "seminal" },
-  { num: "[2]", title: "Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks (CycleGAN)", authors: "Zhu, Park, Isola, Efros", venue: "ICCV", year: "2017", tag: "seminal" },
-  { num: "[3]", title: "Semantic Image Synthesis with Spatially-Adaptive Normalization (SPADE / GauGAN)", authors: "Park, Liu, Wang, Zhu", venue: "CVPR", year: "2019", tag: "seminal" },
-  { num: "[4]", title: "Conditional Generative Adversarial Nets", authors: "Mirza, Osindero", venue: "arXiv", year: "2014", tag: "seminal" },
-  { num: "[5]", title: "U-Net: Convolutional Networks for Biomedical Image Segmentation", authors: "Ronneberger, Fischer, Brox", venue: "MICCAI", year: "2015", tag: "seminal" },
-  { num: "[6]", title: "High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs (pix2pixHD)", authors: "Wang, Liu, Zhu, Tao, Kautz, Catanzaro", venue: "CVPR", year: "2018", tag: "paper" },
-  { num: "[7]", title: "StarGAN: Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation", authors: "Choi, Choi, Kim, Ha, Kim, Choo", venue: "CVPR", year: "2018", tag: "paper" },
-  { num: "[8]", title: "DualGAN: Unsupervised Dual Learning for Image-to-Image Translation", authors: "Yi, Zhang, Tan, Gong", venue: "ICCV", year: "2017", tag: "paper" },
+  { num: 1, title: "Image-to-Image Translation with Conditional Adversarial Networks (pix2pix)", authors: "Isola, Zhu, Zhou, Efros", venue: "CVPR", year: "2017", tag: "seminal" },
+  { num: 2, title: "Unpaired Image-to-Image Translation using Cycle-Consistent Adversarial Networks (CycleGAN)", authors: "Zhu, Park, Isola, Efros", venue: "ICCV", year: "2017", tag: "seminal" },
+  { num: 3, title: "Semantic Image Synthesis with Spatially-Adaptive Normalization (SPADE / GauGAN)", authors: "Park, Liu, Wang, Zhu", venue: "CVPR", year: "2019", tag: "seminal" },
+  { num: 4, title: "Conditional Generative Adversarial Nets", authors: "Mirza, Osindero", venue: "arXiv", year: "2014", tag: "seminal" },
+  { num: 5, title: "U-Net: Convolutional Networks for Biomedical Image Segmentation", authors: "Ronneberger, Fischer, Brox", venue: "MICCAI", year: "2015", tag: "seminal" },
+  { num: 6, title: "High-Resolution Image Synthesis and Semantic Manipulation with Conditional GANs (pix2pixHD)", authors: "Wang, Liu, Zhu, Tao, Kautz, Catanzaro", venue: "CVPR", year: "2018", tag: "paper" },
+  { num: 7, title: "StarGAN: Unified Generative Adversarial Networks for Multi-Domain Image-to-Image Translation", authors: "Choi, Choi, Kim, Ha, Kim, Choo", venue: "CVPR", year: "2018", tag: "paper" },
+  { num: 8, title: "DualGAN: Unsupervised Dual Learning for Image-to-Image Translation", authors: "Yi, Zhang, Tan, Gong", venue: "ICCV", year: "2017", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

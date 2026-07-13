@@ -23,11 +23,11 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Semi-Supervised Classification with Graph Convolutional Networks", authors: "Kipf & Welling", venue: "ICLR", year: "2017", tag: "seminal" },
-  { num: "[2]", title: "Graph Attention Networks", authors: "Velickovic, Cucurull, Casanova, Romero, Lio, Bengio", venue: "ICLR", year: "2018", tag: "paper" },
-  { num: "[3]", title: "Inductive Representation Learning on Large Graphs (GraphSAGE)", authors: "Hamilton, Ying, Leskovec", venue: "NeurIPS", year: "2017", tag: "paper" },
-  { num: "[4]", title: "Neural Message Passing for Quantum Chemistry", authors: "Gilmer, Schütt, Riley, Vinyals, Dahl, Ghahramani", venue: "ICML", year: "2017", tag: "paper" },
-  { num: "[5]", title: "How Powerful are Graph Neural Networks?", authors: "Xu, Hu, Leskovec, Jegelka", venue: "ICLR", year: "2019", tag: "paper" },
+  { num: 1, title: "Semi-Supervised Classification with Graph Convolutional Networks", authors: "Kipf & Welling", venue: "ICLR", year: "2017", tag: "seminal" },
+  { num: 2, title: "Graph Attention Networks", authors: "Velickovic, Cucurull, Casanova, Romero, Lio, Bengio", venue: "ICLR", year: "2018", tag: "paper" },
+  { num: 3, title: "Inductive Representation Learning on Large Graphs (GraphSAGE)", authors: "Hamilton, Ying, Leskovec", venue: "NeurIPS", year: "2017", tag: "paper" },
+  { num: 4, title: "Neural Message Passing for Quantum Chemistry", authors: "Gilmer, Schütt, Riley, Vinyals, Dahl, Ghahramani", venue: "ICML", year: "2017", tag: "paper" },
+  { num: 5, title: "How Powerful are Graph Neural Networks?", authors: "Xu, Hu, Leskovec, Jegelka", venue: "ICLR", year: "2019", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [

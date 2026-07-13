@@ -65,10 +65,12 @@ export default function Citations({ citations = [] }) {
         {citations.map((c) => (
           <div
             key={c.num}
+            id={`ref-${c.num}`}
             style={{
               display: 'flex',
               alignItems: 'flex-start',
               gap: '12px',
+              scrollMarginTop: '80px',
             }}
           >
             {/* Citation number */}

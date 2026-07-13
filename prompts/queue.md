@@ -17,7 +17,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | ID | Title | Status |
 |---|---|---|
 | E1 | Navigation data + Topbar fix (`src/data/chapters.js`, rewire Sidebar/Topbar, fix stale 17-chapter list) | DONE |
-| E2 | Citations render fix (`[[1]]` bug) + data normalize + linked inline markers | PENDING |
+| E2 | Citations render fix (`[[1]]` bug) + data normalize + linked inline markers | DONE |
 | E3 | Scroll correctness — TOC/MobileNav offset math, scroll-reset on route change, hash deep-links | PENDING |
 | E4 | ch01 TOC sections + eyebrow part-label fixes (ch01, ch06, ch07, ch08) | PENDING |
 | E5 | Resilience + metadata — ErrorBoundary (routes + WidgetCard), 404 route, per-route title/meta | PENDING |

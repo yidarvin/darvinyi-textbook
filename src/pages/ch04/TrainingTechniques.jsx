@@ -26,15 +26,15 @@ const prose = {
 };
 
 const CITATIONS = [
-  { num: "[1]", title: "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift", authors: "Ioffe & Szegedy", venue: "ICML", year: "2015", tag: "seminal" },
-  { num: "[2]", title: "Layer Normalization", authors: "Ba, Kiros, Hinton", venue: "arXiv", year: "2016", tag: "paper" },
-  { num: "[3]", title: "Dropout: A Simple Way to Prevent Neural Networks from Overfitting", authors: "Srivastava, Hinton, Krizhevsky, Sutskever, Salakhutdinov", venue: "JMLR", year: "2014", tag: "seminal" },
-  { num: "[4]", title: "Understanding the Difficulty of Training Deep Feedforward Neural Networks", authors: "Glorot & Bengio", venue: "AISTATS", year: "2010", tag: "seminal" },
-  { num: "[5]", title: "Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet", authors: "He, Zhang, Ren, Sun", venue: "ICCV", year: "2015", tag: "paper" },
-  { num: "[6]", title: "Distilling the Knowledge in a Neural Network", authors: "Hinton, Vinyals, Dean", venue: "NeurIPS Workshop", year: "2015", tag: "seminal" },
-  { num: "[7]", title: "LoRA: Low-Rank Adaptation of Large Language Models", authors: "Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Chen", venue: "ICLR", year: "2022", tag: "seminal" },
-  { num: "[8]", title: "QLoRA: Efficient Finetuning of Quantized LLMs", authors: "Dettmers, Pagnoni, Holtzman, Zettlemoyer", venue: "NeurIPS", year: "2023", tag: "paper" },
-  { num: "[9]", title: "MixUp: Beyond Empirical Risk Minimization", authors: "Zhang, Cisse, Dauphin, Lopez-Paz", venue: "ICLR", year: "2018", tag: "paper" },
+  { num: 1, title: "Batch Normalization: Accelerating Deep Network Training by Reducing Internal Covariate Shift", authors: "Ioffe & Szegedy", venue: "ICML", year: "2015", tag: "seminal" },
+  { num: 2, title: "Layer Normalization", authors: "Ba, Kiros, Hinton", venue: "arXiv", year: "2016", tag: "paper" },
+  { num: 3, title: "Dropout: A Simple Way to Prevent Neural Networks from Overfitting", authors: "Srivastava, Hinton, Krizhevsky, Sutskever, Salakhutdinov", venue: "JMLR", year: "2014", tag: "seminal" },
+  { num: 4, title: "Understanding the Difficulty of Training Deep Feedforward Neural Networks", authors: "Glorot & Bengio", venue: "AISTATS", year: "2010", tag: "seminal" },
+  { num: 5, title: "Delving Deep into Rectifiers: Surpassing Human-Level Performance on ImageNet", authors: "He, Zhang, Ren, Sun", venue: "ICCV", year: "2015", tag: "paper" },
+  { num: 6, title: "Distilling the Knowledge in a Neural Network", authors: "Hinton, Vinyals, Dean", venue: "NeurIPS Workshop", year: "2015", tag: "seminal" },
+  { num: 7, title: "LoRA: Low-Rank Adaptation of Large Language Models", authors: "Hu, Shen, Wallis, Allen-Zhu, Li, Wang, Chen", venue: "ICLR", year: "2022", tag: "seminal" },
+  { num: 8, title: "QLoRA: Efficient Finetuning of Quantized LLMs", authors: "Dettmers, Pagnoni, Holtzman, Zettlemoyer", venue: "NeurIPS", year: "2023", tag: "paper" },
+  { num: 9, title: "MixUp: Beyond Empirical Risk Minimization", authors: "Zhang, Cisse, Dauphin, Lopez-Paz", venue: "ICLR", year: "2018", tag: "paper" },
 ];
 
 const TOC_SECTIONS = [
