@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── Constants ────────────────────────────────────────────────────────────────
 const CLASSES  = ['cat', 'dog', 'tiger', 'car', 'airplane'];
@@ -28,6 +30,13 @@ function softmax(logits, T) {
   return exps.map(e => e / sum);
 }
 
+// KL(p‖q). Both p and q are expected to be softmax outputs (strictly positive in
+// every coordinate), so the 1e-7 floor below is purely a numerical safety net —
+// it is not what determines the result. (It used to be load-bearing: an earlier
+// version of this widget called this with a one-hot vector as q, which makes
+// KL(p‖q) infinite in theory, and the floor was silently substituting for that
+// infinity. Comparing two softmax distributions instead, as done throughout this
+// file now, avoids that failure mode entirely.)
 function klDiv(p, q) {
   return p.reduce((acc, pi, i) => {
     if (pi < 1e-10) return acc;
@@ -35,8 +44,65 @@ function klDiv(p, q) {
   }, 0);
 }
 
-// CE loss of the teacher's hard prediction at T=1 — fixed reference
-const CE_HARD = -Math.log(softmax(LOGITS, 1)[0]);
+// ── Student simulation ────────────────────────────────────────────────────────
+// The widget used to have no student at all: its "KL divergence" / "total student
+// loss" stats were KL(teacher-at-T ‖ one-hot-label) — the teacher compared to the
+// ground-truth label, not to any student. That KL is undefined (infinite) in
+// theory whenever the teacher assigns nonzero probability to a non-target class,
+// which is every T > 1; the widget's large finite numbers were an artifact of the
+// 1e-7 floor in klDiv above, not a real information-theoretic or training quantity.
+//
+// Fix: give the student its own logit vector and actually train it with gradient
+// descent on the exact loss from the MathBlock above this widget in the chapter:
+//   L = alpha * CE(softmax(z_s), y_hard) + (1-alpha) * T^2 * KL(softmax(z_t/T) ‖ softmax(z_s/T))
+// The teacher's logits (LOGITS) are fixed; the student starts from zero logits
+// (a maximally uncertain, untrained model) and every value shown by the widget —
+// probabilities, KL, and total loss — is read directly off that student's state.
+//
+// Gradient derivation (standard result, w.r.t. the student's logits z_s):
+//   d/dz_s CE(softmax(z_s), y_hard)                     =  softmax(z_s) - y_hard
+//   d/dz_s [ T^2 * KL(softmax(z_t/T) ‖ softmax(z_s/T)) ] = T * (softmax(z_s/T) - softmax(z_t/T))
+// The second line is exactly why distillation needs the T^2 factor: the raw
+// soft-target gradient carries a 1/T, so scaling the KL term by T^2 leaves a
+// residual T, matching the hard-label gradient's order of magnitude instead of
+// vanishing as T grows (the same point the chapter's prose makes about T^2).
+function studentGradient(zStudent, teacherT, temperature, alpha) {
+  const studentHard = softmax(zStudent, 1);
+  const studentSoft = softmax(zStudent, temperature);
+  return zStudent.map((_, i) =>
+    alpha * (studentHard[i] - HARD_LBL[i]) +
+    (1 - alpha) * temperature * (studentSoft[i] - teacherT[i])
+  );
+}
+
+const TRAIN_STEPS    = 60;
+const LEARNING_RATE  = 2.0;
+const GRAD_CLIP_NORM = 3.0; // bounds the update so training stays stable up to T=10
+
+// Precompute the student's full training trajectory for the current (T, alpha).
+// trajectory[0] is the untrained student (zero logits, uniform distribution);
+// trajectory[k] is the student's exact state after k real gradient-descent steps
+// against the fixed teacher. Nothing here is hand-authored — every probability
+// and loss value is computed from that step's logits.
+function trainStudentTrajectory(temperature, alpha) {
+  const teacherT = softmax(LOGITS, temperature);
+  let z = [0, 0, 0, 0, 0];
+  const traj = [];
+  for (let s = 0; s < TRAIN_STEPS; s++) {
+    const studentT1 = softmax(z, 1);
+    const studentT  = softmax(z, temperature);
+    const ce        = -Math.log(Math.max(studentT1[0], 1e-12));
+    const kl        = klDiv(teacherT, studentT);
+    const totalLoss = alpha * ce + (1 - alpha) * temperature * temperature * kl;
+    traj.push({ studentT1, studentT, ce, kl, totalLoss });
+
+    let grad = studentGradient(z, teacherT, temperature, alpha);
+    const gNorm = Math.sqrt(grad.reduce((a, g) => a + g * g, 0));
+    if (gNorm > GRAD_CLIP_NORM) grad = grad.map(g => g * GRAD_CLIP_NORM / gNorm);
+    z = z.map((zi, i) => zi - LEARNING_RATE * grad[i]);
+  }
+  return traj;
+}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -118,32 +184,38 @@ function TeacherChart({ probs, temperature }) {
   );
 }
 
-// Right chart: hard one-hot label vs teacher soft target side-by-side
-function SoftTargetChart({ animProbs }) {
+// Right chart: hard label, teacher soft target, and the student's CURRENT
+// (actually trained) output at temperature T, side by side per class — this is
+// the real KL(teacher‖student) comparison, not a comparison against a one-hot.
+function StudentVsTeacherChart({ teacherProbs, studentProbs }) {
   const W = 280, H = 240;
   const PL = 30, PR = 8, PT = 38, PB = 30;
   const plotW = W - PL - PR;
   const plotH = H - PT - PB;
   const step  = plotW / CLASSES.length;
-  const hardW = 7, softW = 18, gap = 3;
-  const groupW = hardW + gap + softW;
+  const hardW = 5, teacherW = 13, studentW = 13, gap = 2;
+  const groupW = hardW + gap + teacherW + gap + studentW;
   const gOff   = (step - groupW) / 2;
 
   return (
     <svg viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', width: '100%' }}>
       <text x={W / 2} y={15} textAnchor="middle"
         fontFamily={MONO} fontSize="9.5" fill={C.textMid}>
-        What the student learns from
+        Student (training) vs. teacher target
       </text>
 
       {/* Legend */}
-      <rect x={PL} y={24} width={7} height={7} fill="#4a4a4a" rx={1} />
-      <text x={PL + 10} y={30.5} fontFamily={MONO} fontSize="7.5" fill={C.textMuted}>
-        ← hard label
+      <rect x={PL} y={24} width={6} height={6} fill="#4a4a4a" rx={1} />
+      <text x={PL + 9} y={30} fontFamily={MONO} fontSize="7" fill={C.textMuted}>
+        hard label
       </text>
-      <rect x={PL + 84} y={24} width={7} height={7} fill={C.orange} rx={1} />
-      <text x={PL + 94} y={30.5} fontFamily={MONO} fontSize="7.5" fill={C.textMuted}>
-        soft target →
+      <rect x={PL + 58} y={24} width={6} height={6} fill={C.orange} rx={1} />
+      <text x={PL + 67} y={30} fontFamily={MONO} fontSize="7" fill={C.textMuted}>
+        teacher
+      </text>
+      <rect x={PL + 108} y={24} width={6} height={6} fill={C.accent} rx={1} />
+      <text x={PL + 117} y={30} fontFamily={MONO} fontSize="7" fill={C.textMuted}>
+        student
       </text>
 
       <rect x={PL} y={PT} width={plotW} height={plotH}
@@ -164,19 +236,24 @@ function SoftTargetChart({ animProbs }) {
       })}
 
       {CLASSES.map((cls, i) => {
-        const gx    = PL + i * step + gOff;
-        const hardH = HARD_LBL[i] * plotH;
-        const softH = animProbs[i] * plotH;
-        const hardY = PT + plotH - Math.max(hardH, 2);
-        const softY = PT + plotH - Math.max(softH, 1);
-        const cx    = gx + groupW / 2;
+        const gx       = PL + i * step + gOff;
+        const hardH    = HARD_LBL[i] * plotH;
+        const teacherH = teacherProbs[i] * plotH;
+        const studentH = studentProbs[i] * plotH;
+        const hardY    = PT + plotH - Math.max(hardH, 2);
+        const teacherY = PT + plotH - Math.max(teacherH, 1);
+        const studentY = PT + plotH - Math.max(studentH, 1);
+        const cx       = gx + groupW / 2;
         return (
           <g key={cls}>
             <rect x={gx} y={hardY} width={hardW} height={Math.max(hardH, 2)}
               fill={hardH > 0 ? '#4a4a4a' : C.borderLt} rx={1} />
-            <rect x={gx + hardW + gap} y={softY}
-              width={softW} height={Math.max(softH, 1)}
+            <rect x={gx + hardW + gap} y={teacherY}
+              width={teacherW} height={Math.max(teacherH, 1)}
               fill={C.orange} rx={1} opacity={0.85} />
+            <rect x={gx + hardW + gap + teacherW + gap} y={studentY}
+              width={studentW} height={Math.max(studentH, 1)}
+              fill={C.accent} rx={1} opacity={0.85} />
             <text x={cx} y={PT + plotH + 17} textAnchor="middle"
               fontFamily={MONO} fontSize="8.5" fill={C.textMuted}>
               {cls}
@@ -188,7 +265,7 @@ function SoftTargetChart({ animProbs }) {
   );
 }
 
-function StatsPanel({ probs, kl, totalLoss, temperature }) {
+function StatsPanel({ probs, kl, totalLoss, temperature, step, totalSteps }) {
   return (
     <div style={{
       width: '170px', flexShrink: 0,
@@ -199,7 +276,8 @@ function StatsPanel({ probs, kl, totalLoss, temperature }) {
       <StatRow label='P("dog") at T' value={`${(probs[1] * 100).toFixed(1)}%`} color={C.textMid} />
       <StatRow label='P("car") at T' value={`${(probs[3] * 100).toFixed(1)}%`} color={C.textMuted} />
       <div style={{ borderTop: `1px solid ${C.border}`, margin: '10px 0' }} />
-      <StatRow label="KL divergence" value={kl.toFixed(4)} color={C.math} />
+      <StatRow label="Student training step" value={`${step + 1} / ${totalSteps}`} color={C.textMid} />
+      <StatRow label="KL(teacher ‖ student)" value={kl.toFixed(4)} color={C.math} />
       <div style={{ borderTop: `1px solid ${C.border}`, margin: '10px 0' }} />
       <div>
         <div style={{
@@ -237,8 +315,19 @@ function PresetBtn({ label, active, onClick }) {
   );
 }
 
+function trainBtnStyle(primary) {
+  return {
+    fontFamily: MONO, fontSize: '11px',
+    fontWeight: primary ? 600 : 400,
+    color: primary ? C.accent : C.textMuted,
+    background: primary ? 'var(--accent-dim)' : 'transparent',
+    border: `1px solid ${primary ? C.accent : C.border}`,
+    borderRadius: '4px', padding: '5px 14px', cursor: 'pointer',
+  };
+}
+
 // ── Main widget ───────────────────────────────────────────────────────────────
-export default function KnowledgeDistillation() {
+export default function KnowledgeDistillation({ tryThis }) {
   const [temperature, setTemperature] = useState(1.0);
   const [alpha, setAlpha]             = useState(0.5);
   const [displayProbs, setDisplayProbs] = useState(() => softmax(LOGITS, 1.0));
@@ -246,6 +335,8 @@ export default function KnowledgeDistillation() {
   const animRef    = useRef(null);
   const currentRef = useRef(softmax(LOGITS, 1.0));
 
+  // Cosmetic tween of the teacher's own (deterministic) softmax curve when T
+  // changes — purely visual smoothing, not a claim about training dynamics.
   useEffect(() => {
     const target = softmax(LOGITS, temperature);
     const start  = [...currentRef.current];
@@ -268,8 +359,99 @@ export default function KnowledgeDistillation() {
   }, [temperature]);
 
   const targetProbs = useMemo(() => softmax(LOGITS, temperature), [temperature]);
-  const kl          = useMemo(() => klDiv(targetProbs, HARD_LBL), [targetProbs]);
-  const totalLoss   = alpha * CE_HARD + (1 - alpha) * temperature * temperature * kl;
+
+  // ── Student: real gradient descent on the exact Hinton distillation loss ──
+  const trajectory = useMemo(
+    () => trainStudentTrajectory(temperature, alpha),
+    [temperature, alpha]
+  );
+
+  // Pause the training playback when scrolled off-screen; never auto-run for
+  // reduced motion (mirrors the convention already used by GradientClipping.jsx
+  // in this chapter).
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisibleRef         = useRef(true);
+  isVisibleRef.current = isVisible;
+
+  const trainRafRef = useRef(null);
+  const playingRef  = useRef(false);
+  const stepRef     = useRef(TRAIN_STEPS - 1);
+
+  const [animStep, setAnimStep]   = useState(TRAIN_STEPS - 1);
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Whenever T or alpha changes while idle, snap straight to the newly converged
+  // student rather than reusing an old step index against a different training run.
+  useEffect(() => {
+    if (!playingRef.current) {
+      stepRef.current = TRAIN_STEPS - 1;
+      setAnimStep(TRAIN_STEPS - 1);
+    }
+  }, [temperature, alpha]);
+
+  // Resume the playback loop if it scrolls back into view mid-play.
+  useEffect(() => {
+    if (isVisible && playingRef.current && !trainRafRef.current) startTrainingLoop();
+  }, [isVisible]);
+
+  // Cleanup on unmount.
+  useEffect(() => () => {
+    playingRef.current = false;
+    if (trainRafRef.current) cancelAnimationFrame(trainRafRef.current);
+  }, []);
+
+  function startTrainingLoop() {
+    if (trainRafRef.current) cancelAnimationFrame(trainRafRef.current);
+    playingRef.current = true;
+    function frame() {
+      if (!playingRef.current) return;
+      const next = Math.min(stepRef.current + 1, TRAIN_STEPS - 1);
+      stepRef.current = next;
+      setAnimStep(next);
+      if (next < TRAIN_STEPS - 1 && isVisibleRef.current) {
+        trainRafRef.current = requestAnimationFrame(frame);
+      } else if (next < TRAIN_STEPS - 1) {
+        trainRafRef.current = null; // off-screen: the visibility effect resumes this
+      } else {
+        playingRef.current = false;
+        setIsPlaying(false);
+      }
+    }
+    trainRafRef.current = requestAnimationFrame(frame);
+  }
+
+  function handleAnimate() {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
+    if (playingRef.current) {
+      playingRef.current = false;
+      if (trainRafRef.current) cancelAnimationFrame(trainRafRef.current);
+      setIsPlaying(false);
+    } else {
+      stepRef.current = 0;
+      setAnimStep(0);
+      setIsPlaying(true);
+      startTrainingLoop();
+    }
+  }
+
+  function handleResetStudent() {
+    playingRef.current = false;
+    if (trainRafRef.current) cancelAnimationFrame(trainRafRef.current);
+    stepRef.current = TRAIN_STEPS - 1;
+    setIsPlaying(false);
+    setAnimStep(TRAIN_STEPS - 1);
+  }
+
+  const current   = trajectory[animStep];
+  // KL divergence is mathematically never negative; klDiv can return a tiny
+  // negative value (e.g. -1e-9) from floating-point cancellation once the
+  // student has converged onto the teacher's distribution (reachable via the
+  // T=10 preset with alpha dragged to 0, as tryThis invites). Clamp the
+  // *displayed* value only — totalLoss below is left untouched since it's
+  // computed from the real (unclamped) kl inside trainStudentTrajectory.
+  const kl        = Math.max(current.kl, 0);
+  const totalLoss = current.totalLoss;
 
   const PRESETS = [
     { label: 'T=1', val: 1.0 },
@@ -278,7 +460,7 @@ export default function KnowledgeDistillation() {
   ];
 
   return (
-    <WidgetCard title="Knowledge Distillation — temperature and soft targets" number="4.4">
+    <WidgetCard ref={cardRef} title="Knowledge Distillation — temperature and soft targets" number="5.4" tryThis={tryThis}>
 
       {/* Charts + stats */}
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
@@ -294,17 +476,25 @@ export default function KnowledgeDistillation() {
           background: C.codeBg, border: `1px solid ${C.border}`,
           borderRadius: '6px', overflow: 'hidden',
         }}>
-          <SoftTargetChart animProbs={displayProbs} />
+          <StudentVsTeacherChart teacherProbs={displayProbs} studentProbs={current.studentT} />
         </div>
-        <StatsPanel probs={targetProbs} kl={kl} totalLoss={totalLoss} temperature={temperature} />
+        <StatsPanel
+          probs={targetProbs}
+          kl={kl}
+          totalLoss={totalLoss}
+          temperature={temperature}
+          step={animStep}
+          totalSteps={TRAIN_STEPS}
+        />
       </div>
 
-      {/* KL info */}
+      {/* Training status */}
       <div style={{
         marginTop: '12px', textAlign: 'center',
         fontFamily: MONO, fontSize: '11px', color: C.accent,
       }}>
-        Information in soft targets:&nbsp; KL = {kl.toFixed(3)} nats
+        Student training step {animStep + 1} / {TRAIN_STEPS}&nbsp;·&nbsp;
+        KL(teacher ‖ student) = {kl.toFixed(3)} nats
       </div>
 
       {/* Controls */}
@@ -348,6 +538,25 @@ export default function KnowledgeDistillation() {
             onChange={e => setAlpha(Number(e.target.value))}
             style={{ flex: 1 }}
           />
+        </div>
+
+        {/* Train the student */}
+        <div style={{ display: 'flex', gap: '8px', paddingLeft: '160px' }}>
+          <button
+            onClick={handleAnimate}
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+            style={{
+              ...trainBtnStyle(true),
+              cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+              opacity: prefersReducedMotion ? 0.5 : 1,
+            }}
+          >
+            {isPlaying ? 'Pause' : 'Train student'}
+          </button>
+          <button onClick={handleResetStudent} style={trainBtnStyle(false)}>
+            Reset student
+          </button>
         </div>
 
       </div>

@@ -38,9 +38,11 @@ const RAW_NORMS = (() => {
     const g  = Math.sqrt(-2 * Math.log(u1 + 1e-12)) * Math.cos(2 * Math.PI * u2);
     return spikes[t] !== undefined
       ? spikes[t]
-      : Math.max(0.01, 0.3 + 1.7 * Math.exp(-t / 60) + g * 0.06);
+      : Math.max(0.01, 0.3 + 1.5 * Math.exp(-t / 60) + g * 0.06);
   });
 })();
+
+const MAX_RAW_NORM = Math.max(...RAW_NORMS);
 
 function drawCanvas(canvas, { dpr, canvasW, threshold, showUnclipped, drawUpTo, showIndicator }) {
   const ctx = canvas.getContext('2d');
@@ -229,7 +231,7 @@ function btnStyle(primary) {
   };
 }
 
-export default function GradientClipping() {
+export default function GradientClipping({ tryThis }) {
   const canvasRef    = useRef(null);
   const containerRef = useRef(null);
   const animRef      = useRef(null);
@@ -354,7 +356,7 @@ export default function GradientClipping() {
   const clippingActive = rawNow > threshold;
 
   return (
-    <WidgetCard ref={cardRef} title="Gradient Clipping — taming gradient explosions" number="4.6">
+    <WidgetCard ref={cardRef} title="Gradient Clipping — taming gradient explosions" number="5.5" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Canvas */}
         <div ref={containerRef} style={{ flex: 1, minWidth: 0 }}>
@@ -376,8 +378,8 @@ export default function GradientClipping() {
           flexDirection: 'column',
           gap: '8px',
         }}>
-          <StatRow label="Max unclipped" value="18.0"              color={C.red}    />
-          <StatRow label="Max clipped"   value={threshold.toFixed(1)} color={C.accent} />
+          <StatRow label="Max unclipped" value={MAX_RAW_NORM.toFixed(1)}                      color={C.red}    />
+          <StatRow label="Max clipped"   value={Math.min(MAX_RAW_NORM, threshold).toFixed(1)} color={C.accent} />
           <StatRow label="Threshold"     value={threshold.toFixed(1)} color={C.mid}    />
           <StatRow label="Steps clipped" value={stepsClipped}      color={C.mid}    />
           <StatRow label="Clipping rate" value={`${clippingRate}%`}  color={C.mid}    />

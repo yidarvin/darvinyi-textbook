@@ -30,13 +30,18 @@ function yOf(log10v) {
 // Synthetic variance trajectories (in log10), tuned to match the
 // qualitative behavior described in the prose.
 function naiveLog10(layer) {
-  // Naive Gaussian: explodes; reaches 10⁴ by layer 20, then off-chart
-  if (layer >= 20) return LOG_MAX;
-  return ((layer - 1) / 19) * LOG_MAX;
+  // Naive Gaussian (σ=1, not scaled by fan-in): explodes fast, reaching the
+  // chart's 10⁴ ceiling by layer 10 — matches the prose's "explode ... within
+  // roughly ten layers" claim.
+  if (layer >= 10) return LOG_MAX;
+  return ((layer - 1) / 9) * LOG_MAX;
 }
 function xavierLog10(layer) {
-  // Xavier on ReLU under-scales: slowly decays toward 10⁻²
-  return -((layer - 1) / (N_LAYERS - 1)) * 2;
+  // Xavier under ReLU under-scales, halving activation variance each layer —
+  // the same var[l] = var[l-1] * 0.5 recursion used by the InitializationExplorer
+  // widget. Crosses into the "gradients vanish" band by ~layer 8, consistent
+  // with the prose's "vanish ... within roughly ten layers" claim.
+  return (layer - 1) * Math.log10(0.5);
 }
 function heLog10(layer) {
   // Stays near 0 with deterministic tiny jitter
@@ -236,9 +241,9 @@ export default function InitVariancePropagation() {
         />
 
         {/* End-of-curve labels */}
-        {/* Naive: clipped at layer 20 */}
+        {/* Naive: clipped at layer 10 */}
         <text
-          x={xOf(20) + 6}
+          x={xOf(10) + 6}
           y={yOf(4) + 4}
           fontFamily={mono}
           fontSize="10.5"
@@ -246,11 +251,10 @@ export default function InitVariancePropagation() {
         >
           Naive Gaussian (σ=1)
         </text>
-        {/* Xavier: ends near (50, -2) */}
+        {/* Xavier: clipped at layer 15 (off the bottom of the chart) */}
         <text
-          x={xOf(50) - 4}
-          y={yOf(-2) - 6}
-          textAnchor="end"
+          x={xOf(15) + 6}
+          y={yOf(-4) - 6}
           fontFamily={mono}
           fontSize="10.5"
           fill={C.muted2}

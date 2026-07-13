@@ -229,7 +229,7 @@ function formatVar(v) {
   return v.toFixed(3);
 }
 
-export default function InitializationExplorer() {
+export default function InitializationExplorer({ tryThis }) {
   const canvasContainerRef = useRef(null);
   const canvasRef          = useRef(null);
   const dprRef             = useRef(window.devicePixelRatio || 1);
@@ -286,7 +286,11 @@ export default function InitializationExplorer() {
   const isHealthy  = v => v >= 0.1 && v <= 10;
   const isExploded = v => v > 1e4;
 
-  const recommendation = activation === 'relu' ? 'Use He initialization' : 'Use Xavier initialization';
+  const recommendation = activation === 'relu'
+    ? 'Use He initialization'
+    : isHealthy(finalVars.xavier)
+      ? 'Use Xavier initialization'
+      : `Xavier keeps deep tanh nets closer to stable than naive init, but variance still decays over depth (currently ${formatVar(finalVars.xavier)} at layer 10) — very deep tanh stacks typically need normalization or residual connections too.`;
 
   const statRows = [
     { key: 'zero',   label: 'Zero',      lineColor: '#555555' },
@@ -296,7 +300,7 @@ export default function InitializationExplorer() {
   ];
 
   return (
-    <WidgetCard title="Initialization — activation variance through 10 layers" number="4.3">
+    <WidgetCard title="Initialization — activation variance through 10 layers" number="5.3" tryThis={tryThis}>
       {/* Canvas + Stats side by side */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Canvas fills remaining width */}
@@ -443,6 +447,16 @@ export default function InitializationExplorer() {
             onChange={e => setN(Number(e.target.value))}
             style={{ width: '140px' }}
           />
+        </div>
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '10px',
+          color: C.muted,
+          lineHeight: 1.5,
+        }}>
+          Notice the Xavier and He curves don't move as you drag n — that's the point
+          of 1/n and 2/n scaling: only badly-scaled (fixed-variance) init depends on
+          layer width.
         </div>
 
         {/* Healthy zone toggle */}

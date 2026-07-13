@@ -73,13 +73,28 @@ function StatEntry({ label, value, color, children }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function DropoutVisualizer() {
+export default function DropoutVisualizer({ tryThis }) {
   const [mask, setMask]                 = useState(() => randomMask(0.5));
   const [p, setP]                       = useState(0.5);
   const [inferenceMode, setInferenceMode] = useState(false);
+  // Which inference-time convention the widget is illustrating:
+  //  'classic'  — full activation during training, scaled by (1-p) at inference
+  //               (the textbook description in Srivastava et al. 2014)
+  //  'inverted' — surviving activations scaled by 1/(1-p) during training,
+  //               no rescaling at inference (what PyTorch/TF actually implement)
+  const [convention, setConvention] = useState('classic');
 
   // In inference mode, display all neurons active regardless of stored mask
   const displayMask = inferenceMode ? ALL_ACTIVE : mask;
+
+  // The activation-scaling multiplier actually in effect for the phase being
+  // displayed, derived from p and the selected convention (no hard-coded numbers).
+  const scaleFactor = useMemo(() => {
+    if (convention === 'classic') {
+      return inferenceMode ? (1 - p) : 1;
+    }
+    return inferenceMode ? 1 : 1 / (1 - p);
+  }, [convention, inferenceMode, p]);
 
   const applyDropout = () => {
     if (!inferenceMode) setMask(randomMask(p));
@@ -100,7 +115,7 @@ export default function DropoutVisualizer() {
   const activePct    = Math.round((activeCount / 16) * 100);
 
   return (
-    <WidgetCard title="Dropout — stochastic sub-network ensembling" number="4.2">
+    <WidgetCard title="Dropout — stochastic sub-network ensembling" number="5.2" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 
         {/* ── SVG Network ────────────────────────────────────────────────── */}
@@ -195,6 +210,18 @@ export default function DropoutVisualizer() {
 
           <div style={{ borderTop: '1px solid var(--border)', margin: '10px 0' }} />
 
+          <StatEntry
+            label={
+              convention === 'classic'
+                ? (inferenceMode ? 'Inference scale × (1−p)' : 'Training scale (unscaled)')
+                : (inferenceMode ? 'Inference scale (unscaled)' : 'Training scale × 1/(1−p)')
+            }
+            value={`× ${scaleFactor.toFixed(2)}`}
+            color={scaleFactor === 1 ? 'var(--text-mid)' : 'var(--accent)'}
+          />
+
+          <div style={{ borderTop: '1px solid var(--border)', margin: '10px 0' }} />
+
           {/* Fixed informational stat */}
           <div style={{ marginBottom: '12px' }}>
             <div style={{
@@ -228,6 +255,42 @@ export default function DropoutVisualizer() {
             onChange={e => setP(Number(e.target.value))}
             style={{ flex: 1 }}
           />
+        </div>
+
+        {/* Convention selector: classic (Srivastava et al. 2014) vs inverted (PyTorch/TF default) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+          <span style={{
+            fontFamily: MONO, fontSize: '11px', color: 'var(--text-muted)',
+            minWidth: '130px',
+          }}>
+            convention
+          </span>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {[
+              { key: 'classic',  label: 'Classic',  hint: 'Full activation in training; scale × (1−p) at inference' },
+              { key: 'inverted', label: 'Inverted',  hint: 'Scale surviving activations × 1/(1−p) in training; no rescaling at inference' },
+            ].map(opt => (
+              <button
+                key={opt.key}
+                onClick={() => setConvention(opt.key)}
+                title={opt.hint}
+                style={{
+                  fontFamily: MONO, fontSize: '10.5px', fontWeight: 600,
+                  color: convention === opt.key ? 'var(--accent)' : 'var(--text-muted)',
+                  background: convention === opt.key ? 'var(--accent-dim)' : 'transparent',
+                  border: `1px solid ${convention === opt.key ? 'var(--accent)' : 'var(--border)'}`,
+                  borderRadius: '4px', padding: '5px 10px', cursor: 'pointer',
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+          <span style={{ fontFamily: MONO, fontSize: '10px', color: 'var(--text-muted)' }}>
+            {convention === 'classic'
+              ? '(Srivastava et al. 2014 — textbook description)'
+              : '(PyTorch / TensorFlow default)'}
+          </span>
         </div>
 
         {/* Action buttons + inference toggle */}
@@ -275,7 +338,9 @@ export default function DropoutVisualizer() {
               style={{ accentColor: 'var(--accent)', cursor: 'pointer', width: '13px', height: '13px' }}
             />
             {inferenceMode
-              ? `Inference — all neurons on (activations × ${(1 - p).toFixed(2)})`
+              ? (convention === 'classic'
+                  ? `Inference — all neurons on (activations × ${(1 - p).toFixed(2)})`
+                  : `Inference — all neurons on (unscaled; × ${(1 / (1 - p)).toFixed(2)} already applied in training)`)
               : 'Inference Mode'
             }
           </label>

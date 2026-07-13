@@ -4,6 +4,13 @@ import WidgetCard from '../../shared/WidgetCard';
 // ── Fixed grid dimensions ─────────────────────────────────────────────────────
 const ROWS = 8, COLS = 8, GAP = 2;
 
+// Hidden per-cell spatial (H,W) sample count. Each displayed (sample, feature)
+// cell secretly carries HW values standing in for its spatial extent, so
+// InstanceNorm has a genuine (H,W) population to normalize over — distinct
+// from LayerNorm's per-sample, all-features population — matching the
+// (N, C, H, W) volume depicted in NormalizationRegions above this widget.
+const HW = 4;
+
 // ── Color tokens ──────────────────────────────────────────────────────────────
 const C = {
   accent:   '#2dd4bf',
@@ -38,7 +45,7 @@ const NORM_DESC = {
   batch:    'Normalizes across 8 samples, independently per feature.',
   layer:    'Normalizes across 8 features, independently per sample.',
   group:    'Normalizes within groups of 4 features, per sample.',
-  instance: "Normalizes each sample's features independently. No batch dependency.",
+  instance: 'Normalizes each sample-feature cell across its own hidden spatial (H,W) extent — independent of every other feature and every other sample.',
 };
 
 // ── Derive canvas layout from measured container width ────────────────────────
@@ -65,13 +72,24 @@ function mulberry32(seed) {
 
 function generateGrid(seed) {
   const rng = mulberry32(seed);
-  return Array.from({ length: ROWS }, () =>
-    Array.from({ length: COLS }, () => {
-      const u1 = Math.max(1e-10, rng());
-      const u2 = rng();
-      return 2.0 + 1.5 * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-    })
+  const gaussian = () => {
+    const u1 = Math.max(1e-10, rng());
+    const u2 = rng();
+    return 2.0 + 1.5 * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  };
+  const grid = Array.from({ length: ROWS }, () =>
+    Array.from({ length: COLS }, () => gaussian())
   );
+  // Hidden per-cell spatial (H,W) samples. Index 0 is fixed to the cell's own
+  // visible value (so InstanceNorm's computation is grounded in real displayed
+  // data, not disconnected fake numbers); indices 1..HW-1 are additional
+  // spatial draws from the same generator stream, giving each (sample,
+  // feature) instance a genuine population to normalize over.
+  const spatial = grid.map(row => row.map(v => {
+    const extra = Array.from({ length: HW - 1 }, () => gaussian());
+    return [v, ...extra];
+  }));
+  return { grid, spatial };
 }
 
 // ── Normalization helpers ──────────────────────────────────────────────────────
@@ -84,7 +102,7 @@ function groupStats(vals, eps = 0) {
   return { mu, sigma, normalized };
 }
 
-function computeNormed(grid, normType, eps) {
+function computeNormed(grid, spatial, normType, eps) {
   const out = grid.map(r => [...r]);
   if (normType === 'none') return out;
   if (normType === 'batch') {
@@ -92,10 +110,20 @@ function computeNormed(grid, normType, eps) {
       const { normalized } = groupStats(grid.map(r => r[j]), eps);
       normalized.forEach((v, i) => { out[i][j] = v; });
     }
-  } else if (normType === 'layer' || normType === 'instance') {
+  } else if (normType === 'layer') {
     for (let i = 0; i < ROWS; i++) {
       const { normalized } = groupStats(grid[i], eps);
       normalized.forEach((v, j) => { out[i][j] = v; });
+    }
+  } else if (normType === 'instance') {
+    // Each (sample, feature) cell normalizes independently over its own
+    // hidden (H,W) spatial extent — never pooling with other features or
+    // other samples, unlike LayerNorm which pools across the whole row.
+    for (let i = 0; i < ROWS; i++) {
+      for (let j = 0; j < COLS; j++) {
+        const { normalized } = groupStats(spatial[i][j], eps);
+        out[i][j] = normalized[0]; // the cell's own visible value, post-norm
+      }
     }
   } else if (normType === 'group') {
     for (let i = 0; i < ROWS; i++) {
@@ -110,17 +138,19 @@ function computeNormed(grid, normType, eps) {
 }
 
 function getGroupForCell(normType, row, col) {
-  if (normType === 'none')                             return null;
-  if (normType === 'batch')                            return { type: 'col', col };
-  if (normType === 'layer' || normType === 'instance') return { type: 'row', row };
-  if (normType === 'group')                            return { type: 'group', row, group: Math.floor(col / 4) };
+  if (normType === 'none')     return null;
+  if (normType === 'batch')    return { type: 'col', col };
+  if (normType === 'layer')    return { type: 'row', row };
+  if (normType === 'instance') return { type: 'cell', row, col };
+  if (normType === 'group')    return { type: 'group', row, group: Math.floor(col / 4) };
   return null;
 }
 
-function getGroupVals(grid, group) {
+function getGroupVals(grid, spatial, group) {
   if (!group) return [];
   if (group.type === 'col')   return grid.map(r => r[group.col]);
   if (group.type === 'row')   return [...grid[group.row]];
+  if (group.type === 'cell')  return [...spatial[group.row][group.col]];
   if (group.type === 'group') return grid[group.row].slice(group.group * 4, group.group * 4 + 4);
   return [];
 }
@@ -129,6 +159,7 @@ function isCellInGroup(group, row, col) {
   if (!group) return false;
   if (group.type === 'col')   return col === group.col;
   if (group.type === 'row')   return row === group.row;
+  if (group.type === 'cell')  return row === group.row && col === group.col;
   if (group.type === 'group') return row === group.row && Math.floor(col / 4) === group.group;
   return false;
 }
@@ -137,6 +168,7 @@ function groupSizeLabel(group) {
   if (!group) return '';
   if (group.type === 'col')   return '8 samples × 1 feature';
   if (group.type === 'row')   return '1 sample × 8 features';
+  if (group.type === 'cell')  return `1 sample × 1 feature × ${HW} spatial (H×W)`;
   if (group.type === 'group') return '1 sample × 4 features';
   return '';
 }
@@ -212,12 +244,24 @@ function drawCanvas(ctx, dpr, { grid, normed, normType, eps, hovered, layout }) 
         ctx.strokeStyle = isHov ? oc : oc + '60';
         ctx.strokeRect(cx(j) - 1, cy(0) - 1, CELL_W + 2, ROWS * CELL_H + (ROWS - 1) * GAP + 2);
       }
-    } else if (normType === 'layer' || normType === 'instance') {
+    } else if (normType === 'layer') {
       for (let i = 0; i < ROWS; i++) {
         const isHov = hovGroup?.type === 'row' && hovGroup.row === i;
         ctx.strokeStyle = isHov ? oc : oc + '60';
         ctx.strokeRect(cx(0) - 1, cy(i) - 1, COLS * CELL_W + (COLS - 1) * GAP + 2, CELL_H + 2);
       }
+    } else if (normType === 'instance') {
+      // Each cell is its own independent normalization group (over hidden
+      // H,W), so every cell gets its own outline rather than a shared row.
+      for (let i = 0; i < ROWS; i++) {
+        for (let j = 0; j < COLS; j++) {
+          const isHov = hovGroup?.type === 'cell' && hovGroup.row === i && hovGroup.col === j;
+          ctx.strokeStyle = isHov ? oc : oc + '40';
+          ctx.lineWidth = isHov ? 2 : 1;
+          ctx.strokeRect(cx(j) - 1, cy(i) - 1, CELL_W + 2, CELL_H + 2);
+        }
+      }
+      ctx.lineWidth = 1.5;
     } else if (normType === 'group') {
       for (let i = 0; i < ROWS; i++) {
         for (let g = 0; g < 2; g++) {
@@ -405,7 +449,7 @@ function NormedRow({ normedRow, normType, cellW }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function NormalizationComparison() {
+export default function NormalizationComparison({ tryThis }) {
   const containerRef = useRef(null);
   const canvasRef    = useRef(null);
   const dprRef       = useRef(1);
@@ -436,16 +480,16 @@ export default function NormalizationComparison() {
     return Math.exp(LO + epsLog * (HI - LO));
   }, [epsLog]);
 
-  const grid   = useMemo(() => generateGrid(seed), [seed]);
-  const normed = useMemo(() => computeNormed(grid, normType, eps), [grid, normType, eps]);
+  const { grid, spatial } = useMemo(() => generateGrid(seed), [seed]);
+  const normed = useMemo(() => computeNormed(grid, spatial, normType, eps), [grid, spatial, normType, eps]);
 
   const hovGroup = useMemo(() =>
     hovered && normType !== 'none' ? getGroupForCell(normType, hovered.row, hovered.col) : null,
     [hovered, normType]
   );
   const hovVals = useMemo(() =>
-    hovGroup ? getGroupVals(grid, hovGroup) : null,
-    [grid, hovGroup]
+    hovGroup ? getGroupVals(grid, spatial, hovGroup) : null,
+    [grid, spatial, hovGroup]
   );
   const hovStats = useMemo(() =>
     hovVals ? groupStats(hovVals, eps) : null,
@@ -501,7 +545,7 @@ export default function NormalizationComparison() {
   const randomize = useCallback(() => setSeed(s => s + 1), []);
 
   return (
-    <WidgetCard title="Normalization — which dimensions are normalized" number="4.1">
+    <WidgetCard title="Normalization — which dimensions are normalized" number="5.1" tryThis={tryThis}>
       {/* Measure container — canvas fills this exactly */}
       <div ref={containerRef} style={{ width: '100%' }}>
         <canvas
