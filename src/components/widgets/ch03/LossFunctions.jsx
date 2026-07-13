@@ -228,7 +228,7 @@ export default function LossFunctions() {
   });
 
   return (
-    <WidgetCard title="Loss Functions — MSE, cross-entropy, focal" number="2.4">
+    <WidgetCard title="Loss Functions — MSE, cross-entropy, focal" number="3.4">
 
       {/* ── Canvas + Stats ─────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>

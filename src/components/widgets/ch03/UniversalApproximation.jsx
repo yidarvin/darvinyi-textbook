@@ -306,7 +306,7 @@ export default function UniversalApproximation() {
   }, [funcIdx, actIdx, units]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <WidgetCard title="Universal Approximation — hidden units vs fit quality" number="2.1">
+    <WidgetCard title="Universal Approximation — hidden units vs fit quality" number="3.1">
 
       {/* ── Canvas + Stats ── */}
       <div style={{ display: 'flex', gap: '14px', marginBottom: '18px' }}>

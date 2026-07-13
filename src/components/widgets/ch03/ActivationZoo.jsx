@@ -248,7 +248,7 @@ export default function ActivationZoo() {
   const leakyOn = active.has('leakyRelu');
 
   return (
-    <WidgetCard title="Activation Functions — compare all 8" number="2.3">
+    <WidgetCard title="Activation Functions — compare all 8" number="3.3">
 
       {/* Canvas + Stats */}
       <div style={{ display: 'flex', gap: '14px', marginBottom: '16px' }}>

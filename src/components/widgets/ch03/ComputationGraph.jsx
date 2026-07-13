@@ -114,7 +114,7 @@ export default function ComputationGraph() {
   }
 
   return (
-    <WidgetCard title="Computation Graph — hover to trace gradients" number="2.2">
+    <WidgetCard title="Computation Graph — hover to trace gradients" number="3.2">
 
       {/* ── SVG graph ── */}
       <div style={{
