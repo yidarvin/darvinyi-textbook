@@ -241,8 +241,8 @@ export default function ReinforcementLearning() {
         <InlineMath>{"b(s)"}</InlineMath> from the return leaves the gradient
         unbiased but can dramatically reduce variance — the value function{" "}
         <InlineMath>{"V(s)"}</InlineMath> is the standard choice, producing the
-        advantage <InlineMath>{"A(s, a) = Q(s, a) - V(s)"}</InlineMath> already
-        in the section's MathBlock. <em>Actor-critic methods</em>: a separate
+        advantage <InlineMath>{"A(s, a) = Q(s, a) - V(s)"}</InlineMath>.{" "}
+        <em>Actor-critic methods</em>: a separate
         "critic" network learns <InlineMath>{"V(s)"}</InlineMath> while the "actor"
         updates the policy, allowing the advantage to be estimated online rather
         than from full Monte Carlo rollouts.
@@ -351,7 +351,7 @@ export default function ReinforcementLearning() {
         <InlineMath>{"1"}</InlineMath>, code that fails gets{" "}
         <InlineMath>{"0"}</InlineMath>. The reward is mechanical, cheap to
         compute, and exactly aligned with the task. RLVR generalizes RLEF to any
-        task with a ground-truth checker. DPO [5] (covered in Ch 13) deserves a
+        task with a ground-truth checker. DPO [5] (covered in Chapter 13) deserves a
         separate mention here as the <em>learned-reward-free</em> alternative to
         RLHF: by reformulating the optimization, DPO uses preference pairs
         directly as a classification target with no explicit reward model and no

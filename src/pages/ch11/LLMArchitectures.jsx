@@ -167,7 +167,7 @@ export default function LLMArchitectures() {
         <InlineMath>{"\\mathcal{O}(T^2 d)"}</InlineMath> to{" "}
         <InlineMath>{"\\mathcal{O}(T d)"}</InlineMath> but introduces a new
         constraint: the KV cache grows linearly with sequence length and consumes
-        significant GPU memory — a 70B parameter model at 128K context requires
+        significant GPU memory — a 70B parameter model with a 128K context window requires
         tens of gigabytes for the cache alone.
       </p>
 
@@ -180,8 +180,8 @@ export default function LLMArchitectures() {
       <KVCacheReuse />
 
       <p style={prose}>
-        The memory hierarchy makes this worse than it looks. A 70B-parameter LLM at
-        128K context with FP16 keys and values runs to roughly 40 GB of KV cache
+        The memory hierarchy makes this worse than it looks. A 70B-parameter LLM with a 128K context window,
+        using FP16 keys and values, runs to roughly 40 GB of KV cache
         <em> per inference request</em>. Multiply by batch size and you saturate HBM
         (high-bandwidth memory) on even an 80 GB H100. This is why the bottleneck
         for serving LLMs is rarely compute — it's memory bandwidth and capacity.
@@ -223,7 +223,7 @@ export default function LLMArchitectures() {
         shared head while keeping separate Q projections per head: identical
         computation graphs, dramatically smaller KV cache. Grouped-query attention
         (GQA) is the middle ground — K and V are shared within groups of{" "}
-        <InlineMath>{"h/G"}</InlineMath> heads. LLaMA 2 and 3, Mistral, and
+        <InlineMath>{"h/G"}</InlineMath> heads. Llama 2 and 3, Mistral, and
         Gemini all adopted GQA: it retains most of MHA's representational capacity
         while cutting KV cache size by a factor of{" "}
         <InlineMath>{"h/G"}</InlineMath>. Quality at inference is nearly
@@ -250,8 +250,8 @@ export default function LLMArchitectures() {
         (MQA), use <InlineMath>{"G"}</InlineMath> groups where{" "}
         <InlineMath>{"h/G"}</InlineMath> Q-heads share each K/V projection.
         The original GQA paper showed quality almost matching MHA at the cost of
-        MQA. LLaMA 2 <em>[8]</em> adopted GQA with 8 K/V groups for 32 Q-heads;
-        LLaMA 3, Mistral, and Gemini all followed.
+        MQA. Llama 2 <em>[8]</em> adopted GQA with 8 K/V groups for 32 Q-heads;
+        Llama 3, Mistral, and Gemini all followed.
       </p>
 
       <p style={prose}>
@@ -284,7 +284,7 @@ export default function LLMArchitectures() {
         <InlineMath>{"m"}</InlineMath> and a key at position{" "}
         <InlineMath>{"n"}</InlineMath> then depends only on their relative
         offset <InlineMath>{"(m - n)"}</InlineMath>, not their absolute positions.
-        RoPE is now the default choice in LLaMA, Mistral, Qwen, and most
+        RoPE is now the default choice in Llama, Mistral, Qwen, and most
         open-weight frontier models.
       </p>
 
@@ -305,14 +305,14 @@ export default function LLMArchitectures() {
       <p style={prose}>
         The frequency spectrum directly controls how far the model can reliably
         "see." If the longest wavelength is shorter than the training context
-        length, RoPE generalizes poorly beyond it. LLaMA 1 used{" "}
-        <InlineMath>{"\\text{base} = 10000"}</InlineMath> for 2K context.
-        LLaMA 3 extended to 128K context by raising{" "}
+        window, RoPE generalizes poorly beyond it. Llama 1 used{" "}
+        <InlineMath>{"\\text{base} = 10000"}</InlineMath> for a 2K context window.
+        Llama 3 extended to a 128K context window by raising{" "}
         <InlineMath>{"\\text{base} = 500000"}</InlineMath>, which slows down
         every frequency proportionally — longer wavelengths cover more positions.
         More sophisticated schemes (Position Interpolation, NTK-aware scaling,
         YaRN) interpolate or extrapolate the frequencies more selectively, often
-        allowing a model trained at 8K context to extend to 128K with minimal
+        allowing a model trained with an 8K context window to extend to a 128K one with minimal
         fine-tuning. RoPE's elegance is that all these tricks operate on a single
         hyperparameter — the base frequency — rather than requiring architecture
         changes.
@@ -371,7 +371,7 @@ export default function LLMArchitectures() {
         Mixtral and the open-source MoE wave <em>[7]</em>. Mixtral 8×7B (Jiang et
         al. 2024) was the first widely-deployed open-weight sparse model: 8 expert
         FFNs per layer, top-2 routing, ~47B total parameters with ~13B active per
-        token. It matched LLaMA-2-70B quality at a fraction of the inference cost
+        token. It matched Llama 2 70B quality at a fraction of the inference cost
         — and could be served on hardware that wouldn't fit a 70B dense model.
         The architectural cost is real: MoE training requires expert-parallel
         distributed setups, suffers from communication overhead, and needs

@@ -121,7 +121,7 @@ export default function TrainingTechniques() {
         across the feature dimension, removing the batch-size dependency that makes
         BN problematic for variable-length sequences and small batches. Every
         transformer since the original 2017 paper uses LayerNorm or a variant. The
-        newer twist: starting with LLaMA in 2023, most modern LLMs — LLaMA, Mistral,
+        newer twist: starting with LLaMA in 2023, most modern LLMs — Llama, Mistral,
         Gemma, Qwen, T5, DeepSeek — have switched to RMSNorm (Zhang & Sennrich 2019),
         which drops LayerNorm's mean-centering step and keeps only the RMS-based
         magnitude rescaling. Empirically, mean-centering contributes nothing

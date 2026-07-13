@@ -191,7 +191,7 @@ export default function DiffusionModels() {
 
       <p style={prose}>
         Almost every diffusion model uses a <strong>U-Net</strong> as the noise
-        predictor — the same architecture introduced in Ch 19 for pix2pix. The
+        predictor — the same architecture introduced in Chapter 19 for pix2pix. The
         reasons are similar: predicting noise at every pixel requires both global
         semantic understanding (what's in this image?) and pixel-precise
         localization (which pixels look slightly wrong?). The skip connections

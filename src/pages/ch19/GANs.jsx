@@ -301,7 +301,7 @@ export default function GANs() {
 
       <p style={prose}>
         As the default for high-fidelity unconditional image generation, GANs
-        were eclipsed by diffusion models (Ch 20) starting around 2021–2022.
+        were eclipsed by diffusion models (Chapter 20) starting around 2021–2022.
         Diffusion produces cleaner samples, has more stable training, supports
         better text conditioning, and scales more straightforwardly — and most
         large image generators released since 2022 (Stable Diffusion, DALL-E 3,
@@ -318,7 +318,7 @@ export default function GANs() {
         CycleGAN (Zhu et al. 2017) introduced paired and unpaired translation
         architectures that are still widely used for domain transfer (photo →
         painting, day → night, sketch → image) and are the focus of the next
-        chapter. GANs occupy the role VAEs do (Ch 18): not the dominant
+        chapter. GANs occupy the role VAEs do (Chapter 18): not the dominant
         generative method anymore, but embedded in production pipelines
         wherever their specific tradeoffs win.
       </p>

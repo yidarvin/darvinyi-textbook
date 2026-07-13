@@ -120,7 +120,7 @@ export default function WordEmbeddings() {
       <p style={prose}>
         Modern systems do not embed words. They embed <i>subword tokens</i> produced
         by tokenizers like Byte Pair Encoding (BPE, used by GPT), WordPiece (BERT),
-        and SentencePiece (T5, LLaMA). A subword tokenizer splits "unconscionable"
+        and SentencePiece (T5, Llama). A subword tokenizer splits "unconscionable"
         into chunks like <code>un / con / scion / able</code>, allowing the model to
         recognize morphological components and handle out-of-vocabulary words
         gracefully — "tweetable", a word the tokenizer has never seen, decomposes

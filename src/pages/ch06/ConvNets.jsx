@@ -173,7 +173,7 @@ export default function ConvNets() {
         around the center — most of the connection has near-zero effective
         weight. The "effective receptive field" is typically much smaller than
         the theoretical one, often by a factor of 2 or more. This is one of
-        several reasons attention-based models (Chs 9, 10) eventually outcompeted
+        several reasons attention-based models (Chapters 9 and 10) eventually outcompeted
         CNNs at long-range tasks: every position in a transformer can attend to
         every other position from layer 1, with no effective-radius decay.
       </p>
@@ -215,7 +215,7 @@ export default function ConvNets() {
       </p>
 
       <p style={prose}>
-        From 2021 onward, ViT (covered in Ch 15) increasingly displaced CNNs on
+        From 2021 onward, ViT (covered in Chapter 15) increasingly displaced CNNs on
         large-scale vision benchmarks. By 2022, the conventional wisdom was that
         CNNs were obsolete on anything but small-data tasks. Liu, Mao, Wu,
         Feichtenhofer, Darrell & Xie (2022) pushed back with ConvNeXt: a CNN
@@ -279,7 +279,7 @@ export default function ConvNets() {
         gradient never vanishes regardless of what{" "}
         <InlineMath>{"\\partial F/\\partial x"}</InlineMath> does. This is the
         same mechanism that makes the residual stream work in transformers
-        (Ch 10). Skip connections are now nearly universal: every transformer
+        (Chapter 10). Skip connections are now nearly universal: every transformer
         block uses them, every modern CNN uses them, U-Nets use them, even GANs
         and diffusion models use them. The 2016 ResNet paper was the moment
         "skip connection" became a permanent part of the deep learning

@@ -37,7 +37,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | ID | Title | Status |
 |---|---|---|
 | V1 | Math notation sweep (𝔼, 𝓛, matrix-orientation convention, d_k, W_i^Q, τ/T, ch01 pseudo-LaTeX) | DONE |
-| V2 | Terminology sweep (Llama naming, "transformer" casing, "context window", "Chapter N" style, no component names in prose) | PENDING |
+| V2 | Terminology sweep (Llama naming, "transformer" casing, "context window", "Chapter N" style, no component names in prose) | DONE |
 | V3 | Dedup + cross-link sweep (RoPE/Toolformer/distillation-temp/RLHF-pipeline/Constitutional-AI ownership; ch06 LSTM gate-count fix; ch09 KV-cache fix) | PENDING |
 | V4 | Citations infrastructure — `src/data/citations.js` keyed by slug, one inline marker style | PENDING |
 | V5 | WidgetCard upgrade — `tryThis` prop, `useIsVisible` + `prefers-reduced-motion` gating hook | PENDING |

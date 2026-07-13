@@ -120,7 +120,7 @@ export default function Transformers() {
         transformer's parameters live: roughly two-thirds of the parameter count
         in a typical block is in the FFN, not the attention. The original
         transformer used ReLU; modern LLMs use GELU (BERT, GPT-2/3) or SwiGLU
-        (LLaMA, PaLM, Mistral). The exact nonlinearity matters less than getting
+        (Llama, PaLM, Mistral). The exact nonlinearity matters less than getting
         the dimensions right.
       </p>
 
@@ -130,7 +130,7 @@ export default function Transformers() {
         that handle attention differently. <strong>Encoder-only</strong> models
         [2] (BERT, RoBERTa, ELECTRA) use bidirectional attention, every token
         sees every other token, trained with masked language modeling.{" "}
-        <strong>Decoder-only</strong> models [3] (GPT family, LLaMA, Claude) use
+        <strong>Decoder-only</strong> models [3] (GPT family, Llama, Claude) use
         causal masking — each token attends only to itself and earlier positions
         — and are trained with next-token prediction.{" "}
         <strong>Encoder-decoder</strong> models [1] (original transformer, T5,
@@ -191,7 +191,7 @@ export default function Transformers() {
         <InlineMath>{"p_q - p_k"}</InlineMath>, not the absolute positions. RoPE
         generalizes naturally to longer sequences than seen at training
         (especially with simple position-interpolation tricks) and is now used
-        in LLaMA, Mistral, Qwen, Gemma, and Phi — essentially every major
+        in Llama, Mistral, Qwen, Gemma, and Phi — essentially every major
         open-source LLM since 2023. ALiBi (Press, Smith & Lewis 2022) is the
         other widely-used relative-position scheme, used in BLOOM and MPT.
       </p>
@@ -222,7 +222,7 @@ export default function Transformers() {
         The residual stream is a vector of dimension{" "}
         <InlineMath>{"d_{\\text{model}}"}</InlineMath> that flows from the input embedding
         all the way to the output unembedding, accumulating contributions at
-        every block. Concrete numbers: 512 in the original Transformer, 768 in
+        every block. Concrete numbers: 512 in the original transformer, 768 in
         BERT-base, 1600 in GPT-2-XL, 4096 in LLaMA-7B, 12288 in GPT-3-175B. The
         entire computational power of the model funnels through this single
         shared vector — every attention head, every FFN, every layer reads from
@@ -297,7 +297,7 @@ export default function Transformers() {
         a 70B-parameter model trained on 1.4T tokens that outperformed GPT-3
         despite being less than half the size. Every major LLM trained after
         2022 takes the Chinchilla finding seriously, and many — including
-        LLaMA-3 — train on far more tokens than even Chinchilla-optimal, because
+        Llama 3 — train on far more tokens than even Chinchilla-optimal, because
         inference cost favors smaller models trained longer.
       </p>
 

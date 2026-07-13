@@ -159,7 +159,7 @@ export default function RNNs() {
 
       <p style={prose}>
         Three practical mitigations pre-date the LSTM solution and are still used today.
-        <em> Gradient clipping</em> (Pascanu, Mikolov & Bengio 2013, covered in Ch 5)
+        <em> Gradient clipping</em> (Pascanu, Mikolov & Bengio 2013, covered in Chapter 5)
         bounds gradient norms to prevent explosion. <em>Truncated BPTT</em> limits how
         far back gradients are propagated — typically 20–50 steps — accepting a biased
         estimator in exchange for tractability and bounded memory.
