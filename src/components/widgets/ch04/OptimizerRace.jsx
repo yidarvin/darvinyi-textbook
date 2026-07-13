@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 const W = 620, H = 340;
 
@@ -68,6 +70,12 @@ export default function OptimizerRace() {
   const playingRef    = useRef(false);
   const stepRef       = useRef(0);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible]   = useIsVisible();
+  const prefersReducedMotion   = usePrefersReducedMotion();
+  const isVisibleRef           = useRef(true);
+  isVisibleRef.current = isVisible;
+
   const [playing, setPlaying] = useState(false);
   const [surface, setSurface] = useState('two-valleys');
   const [lr, setLr]           = useState(0.05);
@@ -75,6 +83,13 @@ export default function OptimizerRace() {
   const [dispLoss, setDispLoss] = useState(
     Object.fromEntries(OPTS.map(o => [o.key, null]))
   );
+
+  // ── Resume the loop if it scrolls back into view mid-play ─────
+  useEffect(() => {
+    if (isVisible && playingRef.current && !animRef.current) {
+      animRef.current = requestAnimationFrame(doAnimate);
+    }
+  }, [isVisible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Canvas setup ──────────────────────────────────────────────
   useEffect(() => {
@@ -273,7 +288,11 @@ export default function OptimizerRace() {
     for (let i = 0; i < 3; i++) doStep();
     drawFrame();
     syncStats();
-    if (playingRef.current) animRef.current = requestAnimationFrame(doAnimate);
+    if (playingRef.current && isVisibleRef.current) {
+      animRef.current = requestAnimationFrame(doAnimate);
+    } else {
+      animRef.current = null; // off-screen: the visibility effect resumes this when it scrolls back in
+    }
   }
 
   function doStopPlay() {
@@ -283,6 +302,7 @@ export default function OptimizerRace() {
   }
 
   function doStartPlay() {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     if (!optsRef.current) initAll(...SURFACES[surfaceRef.current].start);
     playingRef.current = true;
     setPlaying(true);
@@ -311,7 +331,7 @@ export default function OptimizerRace() {
   const ctrlLbl = { ...mono, fontSize: 10, color: '#666', textTransform: 'uppercase', letterSpacing: '.08em' };
 
   return (
-    <WidgetCard title="Optimizer Race — four algorithms, one landscape" number="3.2">
+    <WidgetCard ref={cardRef} title="Optimizer Race — four algorithms, one landscape" number="3.2">
       <div style={{ margin: '-20px -18px' }}>
         <div style={{ display: 'flex' }}>
 
@@ -418,9 +438,13 @@ export default function OptimizerRace() {
               <div style={{ display: 'flex', gap: 6 }}>
                 <button
                   onClick={() => playingRef.current ? doStopPlay() : doStartPlay()}
+                  disabled={prefersReducedMotion}
+                  title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
                   style={{
                     flex: 1, ...mono, fontSize: 11,
-                    padding: '7px 14px', borderRadius: 5, cursor: 'pointer',
+                    padding: '7px 14px', borderRadius: 5,
+                    cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+                    opacity: prefersReducedMotion ? 0.5 : 1,
                     background: 'var(--accent-dim)', color: 'var(--accent)',
                     border: '1px solid var(--accent)', transition: 'all .12s',
                     whiteSpace: 'nowrap',

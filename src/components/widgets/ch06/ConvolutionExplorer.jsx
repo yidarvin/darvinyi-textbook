@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── Input image (12×12, fixed synthetic pattern) ────────────────────
 const INPUT_IMG = (() => {
@@ -239,6 +241,12 @@ export default function ConvolutionExplorer() {
   const speedRef     = useRef(1);
   const totalRef     = useRef(100);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible]   = useIsVisible();
+  const prefersReducedMotion   = usePrefersReducedMotion();
+  const isVisibleRef           = useRef(true);
+  isVisibleRef.current = isVisible;
+
   const [cw,       setCw]       = useState(0);
   const [filter,   setFilter]   = useState('Edge Detect');
   const [stride,   setStride]   = useState(1);
@@ -298,8 +306,19 @@ export default function ConvolutionExplorer() {
         return next;
       });
     }
-    if (playingRef.current) animRef.current = requestAnimationFrame(animate);
+    if (playingRef.current && isVisibleRef.current) {
+      animRef.current = requestAnimationFrame(animate);
+    } else {
+      animRef.current = null; // off-screen: the visibility effect resumes this when it scrolls back in
+    }
   }, []);
+
+  // ── Resume the loop if it scrolls back into view mid-play ─────
+  useEffect(() => {
+    if (isVisible && playingRef.current && !animRef.current) {
+      animRef.current = requestAnimationFrame(animate);
+    }
+  }, [isVisible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const pause = useCallback(() => {
     playingRef.current = false;
@@ -308,6 +327,7 @@ export default function ConvolutionExplorer() {
   }, []);
 
   const play = () => {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     if (position >= total - 1) return;
     playingRef.current = true;
     setPlaying(true);
@@ -348,7 +368,7 @@ export default function ConvolutionExplorer() {
   ];
 
   return (
-    <WidgetCard title="Convolution Explorer — watch the kernel slide" number="5.1">
+    <WidgetCard ref={cardRef} title="Convolution Explorer — watch the kernel slide" number="5.1">
 
       {/* Canvas — fills full widget width */}
       <div ref={containerRef} style={{ width: '100%' }}>
@@ -427,7 +447,16 @@ export default function ConvolutionExplorer() {
 
         {/* Play controls + position slider + speed */}
         <div style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={playing ? pause : play} style={primaryBtn}>{playing ? '⏸ Pause' : '▶ Play'}</button>
+          <button
+            onClick={playing ? pause : play}
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+            style={{
+              ...primaryBtn,
+              cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+              opacity: prefersReducedMotion ? 0.5 : 1,
+            }}
+          >{playing ? '⏸ Pause' : '▶ Play'}</button>
           <button onClick={() => { pause(); setPosition(p => Math.min(p + 1, total - 1)); }} style={secBtn}>Step →</button>
           <button onClick={() => reset()} style={secBtn}>↺ Reset</button>
 

@@ -1,3 +1,4 @@
+import { forwardRef } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 
 function WidgetErrorFallback() {
@@ -16,9 +17,10 @@ function WidgetErrorFallback() {
   );
 }
 
-export default function WidgetCard({ title, number, children }) {
+const WidgetCard = forwardRef(function WidgetCard({ title, number, tryThis, children }, ref) {
   return (
     <div
+      ref={ref}
       style={{
         background: 'var(--widget-bg, #111111)',
         border: '1px solid var(--border)',
@@ -84,6 +86,37 @@ export default function WidgetCard({ title, number, children }) {
         </span>
       </div>
 
+      {/* Try this */}
+      {tryThis && (
+        <div
+          style={{
+            padding: '10px 18px',
+            background: 'var(--accent-dim)',
+            borderBottom: '1px solid var(--border)',
+            fontFamily: "'Inter', sans-serif",
+            fontSize: '12.5px',
+            lineHeight: 1.5,
+            color: 'var(--text)',
+          }}
+        >
+          {typeof tryThis === 'string' ? (
+            tryThis
+          ) : (
+            <>
+              <strong>Try: </strong>
+              {tryThis.do}
+              {tryThis.notice && (
+                <>
+                  {' '}
+                  <strong>Notice: </strong>
+                  {tryThis.notice}
+                </>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
       {/* Body */}
       <div style={{ padding: 'var(--widget-card-padding, 20px 18px)', overflowX: 'auto' }}>
         <ErrorBoundary fallback={<WidgetErrorFallback />}>
@@ -92,4 +125,6 @@ export default function WidgetCard({ title, number, children }) {
       </div>
     </div>
   );
-}
+});
+
+export default WidgetCard;

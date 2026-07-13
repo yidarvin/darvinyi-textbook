@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect, useCallback } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── PRNG ──────────────────────────────────────────────────────────────────────
 function mulberry32(seed) {
@@ -144,6 +146,12 @@ export default function ForwardDiffusion() {
   const canvasRef = useRef(null);
   const animRef   = useRef(null);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisibleRef         = useRef(true);
+  isVisibleRef.current = isVisible;
+
   const [t, setT]           = useState(0);
   const [schedule, setSched] = useState('linear');
   const [playing, setPlaying] = useState(false);
@@ -250,7 +258,7 @@ export default function ForwardDiffusion() {
 
   // ── Animation ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!playing) {
+    if (!playing || !isVisibleRef.current) {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       return;
     }
@@ -270,16 +278,21 @@ export default function ForwardDiffusion() {
         return;
       }
       setT(current);
-      animRef.current = requestAnimationFrame(step);
+      if (isVisibleRef.current) {
+        animRef.current = requestAnimationFrame(step);
+      } else {
+        animRef.current = null; // off-screen: this effect resumes the loop when it scrolls back in
+      }
     };
     animRef.current = requestAnimationFrame(step);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [playing, reverse]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [playing, reverse, isVisible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Cleanup on unmount
   useEffect(() => () => { if (animRef.current) cancelAnimationFrame(animRef.current); }, []);
 
   const handlePlay = () => {
+    if (prefersReducedMotion) return;
     if (playing) { setPlaying(false); return; }
     if (t >= 1000) setT(0);
     setReverse(false);
@@ -287,6 +300,7 @@ export default function ForwardDiffusion() {
   };
 
   const handleReverse = () => {
+    if (prefersReducedMotion) return;
     if (playing) { setPlaying(false); return; }
     if (t <= 0) setT(1000);
     setReverse(true);
@@ -330,7 +344,7 @@ export default function ForwardDiffusion() {
   };
 
   return (
-    <WidgetCard title="Forward Diffusion — data dissolves into noise" number="13.1">
+    <WidgetCard ref={cardRef} title="Forward Diffusion — data dissolves into noise" number="13.1">
       {/* Main layout: canvas + stats side-by-side */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Canvas */}
@@ -426,10 +440,26 @@ export default function ForwardDiffusion() {
 
           <div style={{ flex: 1 }} />
 
-          <button style={btnBase} onClick={handlePlay}>
+          <button
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+            style={{
+              ...btnBase,
+              cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+              opacity: prefersReducedMotion ? 0.5 : 1,
+            }}
+            onClick={handlePlay}>
             {playing && !reverse ? '⏸ Pause' : '▶ Play'}
           </button>
-          <button style={btnBase} onClick={handleReverse}>
+          <button
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+            style={{
+              ...btnBase,
+              cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+              opacity: prefersReducedMotion ? 0.5 : 1,
+            }}
+            onClick={handleReverse}>
             {playing && reverse ? '⏸ Pause' : '↩ Reverse'}
           </button>
           <button style={btnBase} onClick={handleReset}>↺ Reset</button>

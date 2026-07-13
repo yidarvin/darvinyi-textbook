@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 const CANVAS_H = 240;
 const STATS_W  = 180;
@@ -234,12 +236,25 @@ export default function GradientClipping() {
   const playingRef   = useRef(false);
   const stepRef      = useRef(0);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible]   = useIsVisible();
+  const prefersReducedMotion   = usePrefersReducedMotion();
+  const isVisibleRef           = useRef(true);
+  isVisibleRef.current = isVisible;
+
   const [canvasW,       setCanvasW]       = useState(460);
   const [threshold,     setThreshold]     = useState(1.0);
   const [showUnclipped, setShowUnclipped] = useState(true);
   const [isPlaying,     setIsPlaying]     = useState(false);
   const [animStep,      setAnimStep]      = useState(TOTAL - 1);
   const [animMode,      setAnimMode]      = useState(false);
+
+  // ── Resume the loop if it scrolls back into view mid-play ─────
+  useEffect(() => {
+    if (isVisible && playingRef.current && !animRef.current) {
+      startLoop();
+    }
+  }, [isVisible]);
 
   // Measure container
   useEffect(() => {
@@ -294,8 +309,10 @@ export default function GradientClipping() {
       const next = Math.min(stepRef.current + 2, TOTAL - 1);
       stepRef.current = next;
       setAnimStep(next);
-      if (next < TOTAL - 1) {
+      if (next < TOTAL - 1 && isVisibleRef.current) {
         animRef.current = requestAnimationFrame(frame);
+      } else if (next < TOTAL - 1) {
+        animRef.current = null; // off-screen: the visibility effect resumes this when it scrolls back in
       } else {
         playingRef.current = false;
         setIsPlaying(false);
@@ -305,6 +322,7 @@ export default function GradientClipping() {
   }
 
   function handleAnimate() {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     if (playingRef.current) {
       playingRef.current = false;
       if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -336,7 +354,7 @@ export default function GradientClipping() {
   const clippingActive = rawNow > threshold;
 
   return (
-    <WidgetCard title="Gradient Clipping — taming gradient explosions" number="4.6">
+    <WidgetCard ref={cardRef} title="Gradient Clipping — taming gradient explosions" number="4.6">
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Canvas */}
         <div ref={containerRef} style={{ flex: 1, minWidth: 0 }}>
@@ -439,7 +457,16 @@ export default function GradientClipping() {
         </label>
 
         <div style={{ display: 'flex', gap: '8px' }}>
-          <button onClick={handleAnimate} style={btnStyle(true)}>
+          <button
+            onClick={handleAnimate}
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+            style={{
+              ...btnStyle(true),
+              cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+              opacity: prefersReducedMotion ? 0.5 : 1,
+            }}
+          >
             {isPlaying ? 'Pause' : 'Animate'}
           </button>
           <button onClick={handleReset} style={btnStyle(false)}>

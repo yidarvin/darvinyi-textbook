@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 const W = 620, H = 340, LH = 90, STEPS = 200;
 
@@ -42,6 +44,12 @@ export default function GradientDescentNavigator() {
   const losscurveRef = useRef(null);
   const animRef      = useRef(null);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible]   = useIsVisible();
+  const prefersReducedMotion   = usePrefersReducedMotion();
+  const isVisibleRef           = useRef(true);
+  isVisibleRef.current = isVisible;
+
   // Simulation refs (read inside animation loop — avoids stale closures)
   const bxRef      = useRef(undefined);
   const byRef      = useRef(undefined);
@@ -74,6 +82,13 @@ export default function GradientDescentNavigator() {
   const [dispLoss,  setDispLoss]  = useState(null);
   const [dispGrad,  setDispGrad]  = useState(null);
   const [status,    setStatus]    = useState('ready');
+
+  // ── Resume the loop if it scrolls back into view mid-play ─────
+  useEffect(() => {
+    if (isVisible && playingRef.current && !animRef.current) {
+      animRef.current = requestAnimationFrame(doAnimate);
+    }
+  }, [isVisible]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Canvas setup ──────────────────────────────────────────────
   useEffect(() => {
@@ -324,7 +339,11 @@ export default function GradientDescentNavigator() {
       }
     }
     drawFrame(); drawLossCurve(); syncDispStats();
-    if (playingRef.current) animRef.current = requestAnimationFrame(doAnimate);
+    if (playingRef.current && isVisibleRef.current) {
+      animRef.current = requestAnimationFrame(doAnimate);
+    } else {
+      animRef.current = null; // off-screen: the visibility effect resumes this when it scrolls back in
+    }
   }
 
   function doStopPlay() {
@@ -350,6 +369,7 @@ export default function GradientDescentNavigator() {
 
   // ── Handlers ──────────────────────────────────────────────────
   function handleTogglePlay() {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     playingRef.current ? doStopPlay() : doStartPlay();
   }
 
@@ -398,7 +418,7 @@ export default function GradientDescentNavigator() {
 
   // ── Render ────────────────────────────────────────────────────
   return (
-    <WidgetCard title="Gradient Descent — navigate a loss landscape" number="3.1">
+    <WidgetCard ref={cardRef} title="Gradient Descent — navigate a loss landscape" number="3.1">
       {/* Negate WidgetCard body padding so canvas is edge-to-edge */}
       <div style={{ margin: '-20px -18px' }}>
         <div style={{ display: 'flex' }}>
@@ -549,13 +569,19 @@ export default function GradientDescentNavigator() {
             {/* Play controls */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={handleTogglePlay} style={{
-                  flex: 1, ...mono, fontSize: 11,
-                  padding: '7px 14px', borderRadius: 5, cursor: 'pointer',
-                  background: 'var(--accent-dim)', color: 'var(--accent)',
-                  border: '1px solid var(--accent)', transition: 'all .12s',
-                  whiteSpace: 'nowrap',
-                }}>
+                <button
+                  onClick={handleTogglePlay}
+                  disabled={prefersReducedMotion}
+                  title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+                  style={{
+                    flex: 1, ...mono, fontSize: 11,
+                    padding: '7px 14px', borderRadius: 5,
+                    cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+                    opacity: prefersReducedMotion ? 0.5 : 1,
+                    background: 'var(--accent-dim)', color: 'var(--accent)',
+                    border: '1px solid var(--accent)', transition: 'all .12s',
+                    whiteSpace: 'nowrap',
+                  }}>
                   {playing ? '⏸ Pause' : '▶ Play'}
                 </button>
                 <button onClick={doReset} style={{

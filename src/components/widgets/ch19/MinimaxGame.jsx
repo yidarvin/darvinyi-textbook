@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 const C = {
   accent:    '#2dd4bf',
@@ -120,6 +122,12 @@ export default function MinimaxGame() {
   const playRef        = useRef(null);
   const displayStepRef = useRef(0);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisibleRef         = useRef(true);
+  isVisibleRef.current = isVisible;
+
   // Stop playing at step 20
   useEffect(() => {
     if (step >= 20 && playing) setPlaying(false);
@@ -146,9 +154,9 @@ export default function MinimaxGame() {
     animRef.current = requestAnimationFrame(tick);
   }, [step]);
 
-  // Auto-play interval: one step per 700ms
+  // Auto-play interval: one step per 700ms (pauses off-screen, resumes back in view)
   useEffect(() => {
-    if (!playing) {
+    if (!playing || !isVisibleRef.current) {
       if (playRef.current) clearInterval(playRef.current);
       return;
     }
@@ -156,7 +164,7 @@ export default function MinimaxGame() {
       setStep(s => (s >= 20 ? s : s + 1));
     }, 700);
     return () => clearInterval(playRef.current);
-  }, [playing]);
+  }, [playing, isVisible]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -437,6 +445,7 @@ export default function MinimaxGame() {
   }
 
   function handlePlay() {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     if (!playing && step >= 20) {
       // Reset and start fresh
       if (animRef.current) cancelAnimationFrame(animRef.current);
@@ -465,7 +474,7 @@ export default function MinimaxGame() {
   };
 
   return (
-    <WidgetCard title="GAN Minimax — generator chases the real distribution" number="12.1">
+    <WidgetCard ref={cardRef} title="GAN Minimax — generator chases the real distribution" number="12.1">
 
       {/* Canvas + Stats panel */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -548,7 +557,16 @@ export default function MinimaxGame() {
             Step {step} / 20
           </span>
           <div style={{ flex: 1 }} />
-          <button onClick={handlePlay} style={btnSecondary}>
+          <button
+            onClick={handlePlay}
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+            style={{
+              ...btnSecondary,
+              cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+              opacity: prefersReducedMotion ? 0.5 : 1,
+            }}
+          >
             {playing ? 'Pause' : '▶ Play'}
           </button>
           <button onClick={handleReset} style={btnSecondary}>

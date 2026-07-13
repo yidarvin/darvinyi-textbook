@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const CW = 500, CH = 500, PAD = 24;
@@ -146,6 +148,12 @@ export default function ScoreFunction() {
   const trailRef    = useRef([]);
   const particleRef = useRef([...INITIAL_POS]);
   const stepsRef    = useRef(0);
+
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisibleRef         = useRef(true);
+  isVisibleRef.current = isVisible;
 
   const [sigmaSmooth, setSigmaSmooth] = useState(1.0);
   const [playing, setPlaying]         = useState(false);
@@ -315,7 +323,7 @@ export default function ScoreFunction() {
 
   // ── Animation ─────────────────────────────────────────────────────────────
   useEffect(() => {
-    if (!playing) {
+    if (!playing || !isVisibleRef.current) {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       return;
     }
@@ -325,11 +333,15 @@ export default function ScoreFunction() {
       trailRef.current = [...trailRef.current, newPos].slice(-MAX_TRAIL);
       stepsRef.current += 1;
       setTick(t => t + 1);
-      animRef.current = requestAnimationFrame(step);
+      if (isVisibleRef.current) {
+        animRef.current = requestAnimationFrame(step);
+      } else {
+        animRef.current = null; // off-screen: this effect resumes the loop when it scrolls back in
+      }
     };
     animRef.current = requestAnimationFrame(step);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [playing, sigmaSmooth]);
+  }, [playing, sigmaSmooth, isVisible]);
 
   // Cleanup
   useEffect(() => () => { if (animRef.current) cancelAnimationFrame(animRef.current); }, []);
@@ -416,7 +428,7 @@ export default function ScoreFunction() {
   });
 
   return (
-    <WidgetCard title="Score Function — the gradient field that guides denoising" number="13.4">
+    <WidgetCard ref={cardRef} title="Score Function — the gradient field that guides denoising" number="13.4">
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Canvas */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -493,8 +505,16 @@ export default function ScoreFunction() {
           style={{ flex: 1, minWidth: 80, accentColor: '#2dd4bf', cursor: 'pointer' }}
         />
         <button
-          style={{ ...btnBase, background: playing ? '#1a2e1a' : '#161616', color: playing ? '#34d399' : '#e8eaed' }}
-          onClick={() => setPlaying(p => !p)}>
+          disabled={prefersReducedMotion}
+          title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+          style={{
+            ...btnBase,
+            background: playing ? '#1a2e1a' : '#161616',
+            color: playing ? '#34d399' : '#e8eaed',
+            cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+            opacity: prefersReducedMotion ? 0.5 : 1,
+          }}
+          onClick={() => { if (prefersReducedMotion) return; setPlaying(p => !p); }}>
           {playing ? '⏸' : '▶'}
         </button>
         <button style={btnBase} onClick={handleNewParticle}>New</button>

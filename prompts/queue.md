@@ -40,7 +40,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | V2 | Terminology sweep (Llama naming, "transformer" casing, "context window", "Chapter N" style, no component names in prose) | DONE |
 | V3 | Dedup + cross-link sweep (RoPE/Toolformer/distillation-temp/RLHF-pipeline/Constitutional-AI ownership; ch06 LSTM gate-count fix; ch09 KV-cache fix) | DONE (partial — see commit; remaining cross-links deferred to Phase C) |
 | V4 | Citations infrastructure — `src/data/citations.js` keyed by slug, one inline marker style | DONE |
-| V5 | WidgetCard upgrade — `tryThis` prop, `useIsVisible` + `prefers-reduced-motion` gating hook | PENDING |
+| V5 | WidgetCard upgrade — `tryThis` prop, `useIsVisible` + `prefers-reduced-motion` gating hook | DONE (partial — see commit; `tryThis` populated per-chapter in Phase C) |
 
 ### Phase C — Per-chapter deep passes (new reading order; skips new-chapter slots 1/14/17/22/23)
 

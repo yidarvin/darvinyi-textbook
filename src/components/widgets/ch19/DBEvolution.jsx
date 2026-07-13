@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── Color palette ──────────────────────────────────────────────────────────
 const C = {
@@ -378,6 +380,12 @@ export default function DBEvolution() {
   const playRef       = useRef(null);
   const dispEpochRef  = useRef(0); // float, updated by RAF
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisibleRef         = useRef(true);
+  isVisibleRef.current = isVisible;
+
   // Animate displayEpoch toward epoch when epoch changes
   useEffect(() => {
     const from = dispEpochRef.current;
@@ -404,9 +412,9 @@ export default function DBEvolution() {
     drawEverything(canvasRef.current, { displayEpoch, showBoundary, showBackground, hoveredPoint });
   }, [displayEpoch, showBoundary, showBackground, hoveredPoint]);
 
-  // Play animation: advance 1 epoch every 600ms
+  // Play animation: advance 1 epoch every 600ms (pauses off-screen, resumes back in view)
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || !isVisibleRef.current) return;
     playRef.current = setInterval(() => {
       setEpoch(e => {
         if (e >= 20) { setPlaying(false); return 20; }
@@ -414,7 +422,7 @@ export default function DBEvolution() {
       });
     }, 600);
     return () => clearInterval(playRef.current);
-  }, [playing]);
+  }, [playing, isVisible]);
 
   // Cleanup on unmount
   useEffect(() => () => {
@@ -476,7 +484,7 @@ export default function DBEvolution() {
   const dAtFake = discriminatorD(cFakeX, cFakeY, w);
 
   return (
-    <WidgetCard title="Decision Boundary Evolution — 20 epochs of adversarial training" number="12.4">
+    <WidgetCard ref={cardRef} title="Decision Boundary Evolution — 20 epochs of adversarial training" number="12.4">
 
       {/* ── Canvas + Stats panel ────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
@@ -568,7 +576,12 @@ export default function DBEvolution() {
 
         {/* Button row */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <Btn primary onClick={() => setPlaying(p => !p)}>
+          <Btn
+            primary
+            onClick={() => { if (!prefersReducedMotion) setPlaying(p => !p); }}
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+          >
             {playing ? '⏸ Pause' : '▶ Play'}
           </Btn>
           <Btn onClick={handleReset}>↺ Reset</Btn>
@@ -601,15 +614,17 @@ function Divider() {
 function SLabel({ children }) {
   return <div style={{ fontFamily: mono, fontSize: '9px', color: C.textMuted, marginBottom: '3px' }}>{children}</div>;
 }
-function Btn({ children, onClick, primary }) {
+function Btn({ children, onClick, primary, disabled, title }) {
   return (
-    <button onClick={onClick} style={{
+    <button onClick={onClick} disabled={disabled} title={title} style={{
       fontFamily: mono, fontSize: '10px', fontWeight: 500,
       padding: '5px 14px', borderRadius: '4px',
       border: `1px solid ${primary ? C.accent : C.border}`,
       background: primary ? '#0b2422' : C.bg4,
       color: primary ? C.accent : C.textMid,
-      cursor: 'pointer', flexShrink: 0,
+      cursor: disabled ? 'not-allowed' : 'pointer',
+      opacity: disabled ? 0.5 : 1,
+      flexShrink: 0,
       transition: 'border-color 0.15s, color 0.15s',
     }}>
       {children}

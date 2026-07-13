@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -170,11 +172,12 @@ const btnBase = {
   whiteSpace: 'nowrap',
 };
 
-function Btn({ onClick, disabled, primary, children }) {
+function Btn({ onClick, disabled, primary, title, children }) {
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      title={title}
       style={{
         ...btnBase,
         ...(primary ? { background: C.accent, color: '#000', border: `1px solid ${C.accent}` } : {}),
@@ -201,6 +204,12 @@ export default function ContrastiveLearning() {
   const dispRef = useRef(0);
   const rafRef  = useRef(null);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisibleRef         = useRef(true);
+  isVisibleRef.current = isVisible;
+
   // Animate dispProg toward step/MAX_STEPS on every step change
   useEffect(() => {
     const target = step / MAX_STEPS;
@@ -226,9 +235,9 @@ export default function ContrastiveLearning() {
     return () => cancelAnimationFrame(rafRef.current);
   }, [step]);
 
-  // Play mode: advance step every 350ms
+  // Play mode: advance step every 350ms (pauses off-screen, resumes back in view)
   useEffect(() => {
-    if (!playing) return;
+    if (!playing || !isVisibleRef.current) return;
     const id = setInterval(() => {
       setStep(s => {
         const next = Math.min(s + 1, MAX_STEPS);
@@ -237,7 +246,7 @@ export default function ContrastiveLearning() {
       });
     }, 350);
     return () => clearInterval(id);
-  }, [playing]);
+  }, [playing, isVisible]);
 
   // Cleanup on unmount
   useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
@@ -255,6 +264,7 @@ export default function ContrastiveLearning() {
   }
   function reset()     { setPlaying(false); setStep(0); }
   function playPause() {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     if (playing) { setPlaying(false); return; }
     if (step >= MAX_STEPS) setStep(0);
     setPlaying(true);
@@ -262,6 +272,7 @@ export default function ContrastiveLearning() {
 
   return (
     <WidgetCard
+      ref={cardRef}
       title="Contrastive Learning — image-text pairs converge during training"
       number="9.1"
     >
@@ -455,7 +466,11 @@ export default function ContrastiveLearning() {
           <Btn onClick={trainStep} disabled={step >= MAX_STEPS || playing} primary>
             Train step
           </Btn>
-          <Btn onClick={playPause}>
+          <Btn
+            onClick={playPause}
+            disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+          >
             {playing ? '⏸ Pause' : '▶ Play'}
           </Btn>
           <Btn onClick={reset}>

@@ -1,5 +1,7 @@
 import { useRef, useState, useEffect } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── PRNG (identical seed to ForwardDiffusion) ─────────────────────────────────
 function mulberry32(seed) {
@@ -124,6 +126,12 @@ export default function ReverseDenoising() {
   const animRef  = useRef(null);
   const speedRef = useRef(1);
 
+  // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
+  const isVisibleRef         = useRef(true);
+  isVisibleRef.current = isVisible;
+
   const [progress,  setProgress]  = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed,     setSpeed]     = useState(1);
@@ -146,7 +154,7 @@ export default function ReverseDenoising() {
 
   // Animation loop
   useEffect(() => {
-    if (!isPlaying) {
+    if (!isPlaying || !isVisibleRef.current) {
       if (animRef.current) cancelAnimationFrame(animRef.current);
       return;
     }
@@ -156,15 +164,20 @@ export default function ReverseDenoising() {
         if (next >= 1) { setIsPlaying(false); return 1; }
         return next;
       });
-      animRef.current = requestAnimationFrame(animate);
+      if (isVisibleRef.current) {
+        animRef.current = requestAnimationFrame(animate);
+      } else {
+        animRef.current = null; // off-screen: this effect resumes the loop when it scrolls back in
+      }
     };
     animRef.current = requestAnimationFrame(animate);
     return () => { if (animRef.current) cancelAnimationFrame(animRef.current); };
-  }, [isPlaying, speed]);
+  }, [isPlaying, speed, isVisible]);
 
   useEffect(() => () => { if (animRef.current) cancelAnimationFrame(animRef.current); }, []);
 
   const handlePlay = () => {
+    if (prefersReducedMotion) return;
     if (isPlaying) { setIsPlaying(false); return; }
     if (progress >= 1) setProgress(0);
     setIsPlaying(true);
@@ -183,7 +196,7 @@ export default function ReverseDenoising() {
   const tabAct  = { ...tabBase, background: '#0b2422', color: '#2dd4bf', borderColor: '#2dd4bf' };
 
   return (
-    <WidgetCard title="Reverse Denoising — DDPM vs DDIM" number="13.2">
+    <WidgetCard ref={cardRef} title="Reverse Denoising — DDPM vs DDIM" number="13.2">
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* ── Left: two panels + NFE + scrubber + controls ─────────────── */}
@@ -270,7 +283,15 @@ export default function ReverseDenoising() {
 
           {/* Controls */}
           <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <button style={btnBase} onClick={handlePlay}>
+            <button
+              disabled={prefersReducedMotion}
+              title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}
+              style={{
+                ...btnBase,
+                cursor: prefersReducedMotion ? 'not-allowed' : 'pointer',
+                opacity: prefersReducedMotion ? 0.5 : 1,
+              }}
+              onClick={handlePlay}>
               {isPlaying ? '⏸ Pause' : '▶ Play'}
             </button>
             <button style={btnBase} onClick={handleReset}>↺ Reset</button>
