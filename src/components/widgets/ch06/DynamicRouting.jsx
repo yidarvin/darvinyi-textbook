@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from 'react';
+import { useState, useEffect, useRef, useMemo, Fragment } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
 
 const C = {
@@ -10,25 +10,67 @@ const C = {
 };
 const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
-const COUPLINGS = {
-  0: [[0.50, 0.50], [0.50, 0.50], [0.50, 0.50]],
-  1: [[0.68, 0.32], [0.65, 0.35], [0.34, 0.66]],
-  2: [[0.82, 0.18], [0.79, 0.21], [0.195, 0.805]],
-  3: [[0.904, 0.096], [0.878, 0.122], [0.112, 0.888]],
-};
-
-const MAGNITUDES = {
-  0: [0.41, 0.39],
-  1: [0.62, 0.55],
-  2: [0.78, 0.71],
-  3: [0.87, 0.83],
-};
-
-// VOTES[lower_i][upper_j] = 2D prediction vector
+// VOTES[lower_i][upper_j] = 2D prediction vector û_{j|i} = W_ij u_i.
+// These are the ONLY hard-coded numbers in this widget — everything else
+// (couplings, output magnitudes) is computed live by runRouting() below,
+// which is the actual Sabour et al. (2017) routing-by-agreement algorithm.
+// L1 and L2's votes for U1 point in nearly the same direction (~14°
+// apart) — they agree. L3's vote for U1 points in a very different
+// direction (~140° away) — it disagrees. Symmetric story for U2.
 const VOTES = [
-  [[0.82, 0.18], [-0.31, 0.88]],
-  [[0.75, 0.28], [0.14, 0.82]],
-  [[-0.38, 0.72], [0.79, 0.12]],
+  [[0.94, 0.13], [-0.13, 0.48]],
+  [[0.92, -0.10], [0.21, -0.45]],
+  [[-0.60, 0.50], [0.13, 0.94]],
+];
+
+const ITERS = 3;
+
+function squash(v) {
+  const mag2 = v[0] * v[0] + v[1] * v[1];
+  const mag = Math.sqrt(mag2);
+  if (mag < 1e-9) return [0, 0];
+  const scale = mag2 / (1 + mag2);
+  return [(v[0] / mag) * scale, (v[1] / mag) * scale];
+}
+function dot(a, b) { return a[0] * b[0] + a[1] * b[1]; }
+function vmag(v) { return Math.sqrt(v[0] * v[0] + v[1] * v[1]); }
+
+// Real dynamic routing: c = softmax(b) per lower capsule row, s_j = sum_i
+// c_ij·vote_ij, v_j = squash(s_j), then b_ij += vote_ij·v_j (agreement).
+// Returns one {couplings, mags} snapshot per iteration, index 0 = before
+// any routing update (uniform couplings).
+function runRouting(votes, iters) {
+  const nI = votes.length, nJ = votes[0].length;
+  let b = votes.map((row) => row.map(() => 0));
+  const history = [];
+  for (let it = 0; it <= iters; it++) {
+    const c = b.map((row) => {
+      const exps = row.map((x) => Math.exp(x));
+      const sum = exps.reduce((a, x) => a + x, 0);
+      return exps.map((e) => e / sum);
+    });
+    const s = [];
+    for (let j = 0; j < nJ; j++) {
+      let sx = 0, sy = 0;
+      for (let i = 0; i < nI; i++) { sx += c[i][j] * votes[i][j][0]; sy += c[i][j] * votes[i][j][1]; }
+      s.push([sx, sy]);
+    }
+    const v = s.map(squash);
+    history.push({ couplings: c, mags: v.map(vmag) });
+    if (it < iters) {
+      for (let i = 0; i < nI; i++) {
+        for (let j = 0; j < nJ; j++) b[i][j] += dot(votes[i][j], v[j]);
+      }
+    }
+  }
+  return history;
+}
+
+const ITER_NOTES = [
+  'Uniform — no agreement information yet',
+  'Agreement emerging',
+  'Routing consolidating',
+  'L1, L2 lean toward U1 · L3 leans toward U2',
 ];
 
 const LOWER_POS = [{ x: 130, y: 80 }, { x: 130, y: 150 }, { x: 130, y: 220 }];
@@ -39,13 +81,6 @@ const U_LABELS = ['U1', 'U2'];
 const L_COLORS = [C.accent, C.orange, C.purple];
 const U_FILL = [C.accentDim, '#1a1a2e'];
 const U_STROKE = [C.accent, C.purple];
-
-const ITER_NOTES = [
-  'Uniform — no information',
-  'Agreement emerging',
-  'Routing consolidating',
-  'Converged — L1,L2 → U1, L3 → U2',
-];
 
 function edgeColor(c) {
   if (c >= 0.6) return C.accent;
@@ -97,16 +132,18 @@ function Toggle({ active, onToggle, label }) {
   );
 }
 
-export default function DynamicRouting() {
+export default function DynamicRouting({ tryThis }) {
   const [iteration, setIteration] = useState(0);
   const [animating, setAnimating] = useState(false);
   const [showCouplings, setShowCouplings] = useState(true);
   const [showVotes, setShowVotes] = useState(true);
   const animTimers = useRef([]);
 
-  const couplings = COUPLINGS[iteration];
-  const mags = MAGNITUDES[iteration];
-  const upperRadii = mags.map(m => 20 + m * 16);
+  const history = useMemo(() => runRouting(VOTES, ITERS), []);
+
+  const couplings = history[iteration].couplings;
+  const mags = history[iteration].mags;
+  const upperRadii = mags.map((m) => 20 + m * 16);
 
   useEffect(() => {
     return () => { animTimers.current.forEach(clearTimeout); };
@@ -132,11 +169,11 @@ export default function DynamicRouting() {
   }
 
   // Stats
-  const routingToU = [0, 1].map(j => couplings.reduce((s, r) => s + r[j], 0));
-  const primarySrc = [0, 1].map(j =>
-    L_LABELS[couplings.reduce((best, r, i) => r[j] > couplings[best][j] ? i : best, 0)]
+  const routingToU = [0, 1].map((j) => couplings.reduce((s, r) => s + r[j], 0));
+  const primarySrc = [0, 1].map((j) =>
+    L_LABELS[couplings.reduce((best, r, i) => (r[j] > couplings[best][j] ? i : best), 0)]
   );
-  const lowerDom = couplings.map(r => ({
+  const lowerDom = couplings.map((r) => ({
     label: r[0] >= r[1] ? 'U1' : 'U2',
     val: r[0] >= r[1] ? r[0] : r[1],
   }));
@@ -179,7 +216,8 @@ export default function DynamicRouting() {
   return (
     <WidgetCard
       title="Dynamic Routing — agreement drives capsule connections"
-      number="10.3"
+      number="6.7"
+      tryThis={tryThis}
     >
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
@@ -289,7 +327,7 @@ export default function DynamicRouting() {
             }}>
               {/* Header row */}
               <div />
-              {U_LABELS.map(ul => (
+              {U_LABELS.map((ul) => (
                 <div key={ul} style={{ ...mono, fontSize: '10px', color: C.mid, textAlign: 'center', padding: '4px 0' }}>
                   {ul}
                 </div>
@@ -328,7 +366,7 @@ export default function DynamicRouting() {
           {/* Controls */}
           <div style={{ marginTop: '14px', display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
             <button
-              onClick={() => setIteration(n => Math.min(n + 1, 3))}
+              onClick={() => setIteration((n) => Math.min(n + 1, 3))}
               disabled={iteration >= 3 || animating}
               style={{
                 ...mono, fontSize: '11px',
@@ -377,12 +415,12 @@ export default function DynamicRouting() {
 
             <Toggle
               active={showCouplings}
-              onToggle={() => setShowCouplings(v => !v)}
+              onToggle={() => setShowCouplings((v) => !v)}
               label="Show coupling values"
             />
             <Toggle
               active={showVotes}
-              onToggle={() => setShowVotes(v => !v)}
+              onToggle={() => setShowVotes((v) => !v)}
               label="Show vote arrows"
             />
           </div>

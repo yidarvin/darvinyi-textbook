@@ -1,8 +1,13 @@
 // SCAFFOLD — not yet wired into any route (see App.jsx and src/data/chapters.js,
 // where this chapter is marked `live: false`). Built out fully in queue item
 // N17 (context/V2_PLAN.md, Appendix C). Replaces the old standalone Capsule
-// Networks chapter, which is demoted to a historical sidebar in Chapter 6
-// (see src/pages/ch06/_parked-capsules/).
+// Networks chapter, which queue item C6 folded into Chapter 6 as the
+// "Going Deeper: Capsule Networks" historical-sidebar section (see
+// src/pages/ch06/ConvNets.jsx). Its DynamicRouting/CnnVsCapsnet widgets and
+// RoutingByAgreement/InvarianceVsEquivariance diagrams were fixed and moved
+// into src/components/{widgets,diagrams}/ch06/; CapsuleVector and
+// CapsuleAnatomy remain parked (sound but left out to keep the sidebar
+// short) at src/components/{widgets,diagrams}/ch06/_parked-capsules/.
 import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";

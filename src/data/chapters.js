@@ -19,7 +19,7 @@ export const PARTS = [
       { num: "03", title: "Neural Networks", widgets: 4, live: true },
       { num: "04", title: "Optimization", widgets: 5, live: true },
       { num: "05", title: "Training Techniques", widgets: 6, live: true },
-      { num: "06", title: "Convolutional Networks", widgets: 5, live: true },
+      { num: "06", title: "Convolutional Networks", widgets: 7, live: true },
     ],
   },
   {

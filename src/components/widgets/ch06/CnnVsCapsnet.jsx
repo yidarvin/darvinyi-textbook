@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
 
 const C = {
@@ -11,15 +11,76 @@ const C = {
 };
 const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
-// ── Coupling + magnitude tables ───────────────────────────────────────────────
-const COUPLINGS = {
-  valid:     { 0: [0.50,0.50,0.50], 1: [0.72,0.68,0.65], 2: [0.84,0.80,0.76], 3: [0.88,0.84,0.79] },
-  scrambled: { 0: [0.50,0.50,0.50], 1: [0.32,0.29,0.34], 2: [0.24,0.20,0.26], 3: [0.21,0.18,0.23] },
-};
-const MAGNITUDES = {
-  valid:     { 0: 0.50, 1: 0.71, 2: 0.86, 3: 0.93 },
-  scrambled: { 0: 0.50, 1: 0.32, 2: 0.19, 3: 0.11 },
-};
+// ── Real routing math ─────────────────────────────────────────────────────
+// A single drawn "Face" capsule can't have a softmax-normalized coupling
+// below 1.0 on its own — softmax over one option is always 1. Real capsule
+// nets route each lower capsule's mass across ALL higher-level capsules
+// (e.g. 10 digit capsules in Sabour et al.'s MNIST model); this toy models
+// that with a second, undrawn "everything else" capsule whose vote is
+// pinned at the zero vector, so it never accumulates agreement. That makes
+// c_i,Face = softmax([b_i,Face, 0])_0 — a real per-row softmax over two
+// options, one of which is a fixed reference — instead of a fabricated
+// number. Eyes/Nose/Mouth votes below are the only hard-coded inputs;
+// every coupling and magnitude shown is computed from them.
+function squash(v) {
+  const mag2 = v[0] * v[0] + v[1] * v[1];
+  const mag = Math.sqrt(mag2);
+  if (mag < 1e-9) return [0, 0];
+  const scale = mag2 / (1 + mag2);
+  return [(v[0] / mag) * scale, (v[1] / mag) * scale];
+}
+function dot(a, b) { return a[0] * b[0] + a[1] * b[1]; }
+function vmag(v) { return Math.sqrt(v[0] * v[0] + v[1] * v[1]); }
+
+function runRouting(votes, iters) {
+  const nI = votes.length, nJ = votes[0].length;
+  let b = votes.map((row) => row.map(() => 0));
+  const history = [];
+  for (let it = 0; it <= iters; it++) {
+    const c = b.map((row) => {
+      const exps = row.map((x) => Math.exp(x));
+      const sum = exps.reduce((a, x) => a + x, 0);
+      return exps.map((e) => e / sum);
+    });
+    const s = [];
+    for (let j = 0; j < nJ; j++) {
+      let sx = 0, sy = 0;
+      for (let i = 0; i < nI; i++) { sx += c[i][j] * votes[i][j][0]; sy += c[i][j] * votes[i][j][1]; }
+      s.push([sx, sy]);
+    }
+    const v = s.map(squash);
+    history.push({ couplingsFace: c.map((r) => r[0]), faceMag: vmag(v[0]) });
+    if (it < iters) {
+      for (let i = 0; i < nI; i++) {
+        for (let j = 0; j < nJ; j++) b[i][j] += dot(votes[i][j], v[j]);
+      }
+    }
+  }
+  return history;
+}
+
+function fromAngle(deg, m) {
+  const r = (deg * Math.PI) / 180;
+  return [Math.cos(r) * m, Math.sin(r) * m];
+}
+
+// Eyes/Nose/Mouth votes for the Face capsule's pose, plus the fixed
+// zero-vote "everything else" capsule (second column, always [0,0]).
+// Valid arrangement: three part capsules predict nearly the same pose
+// (~10-18° apart) — they agree. Scrambled arrangement: predictions
+// scatter across ~140° and ~217° gaps — they disagree.
+const VOTES_VALID = [
+  [fromAngle(10, 0.85), [0, 0]],
+  [fromAngle(18, 0.80), [0, 0]],
+  [fromAngle(14, 0.78), [0, 0]],
+];
+const VOTES_SCRAMBLED = [
+  [fromAngle(14, 0.80), [0, 0]],
+  [fromAngle(133, 0.60), [0, 0]],
+  [fromAngle(-83, 0.75), [0, 0]],
+];
+
+const ITERS = 3;
 
 // ── Face positions (160×180 viewBox) ─────────────────────────────────────────
 const VALID_FACE = {
@@ -76,7 +137,7 @@ function FaceCanvas({ positions, showPooling }) {
 }
 
 // ── CNN feature-bar panel ─────────────────────────────────────────────────────
-function CnnPanel({ scores, isValid }) {
+function CnnPanel({ scores }) {
   const avg = ((scores.eyes + scores.nose + scores.mouth) / 3).toFixed(2);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -208,7 +269,7 @@ function CapsnetPanel({ couplings, magnitude, isValid }) {
         </div>
         {!isValid && (
           <div style={{ ...mono, fontSize: '8px', color: C.accent, lineHeight: 1.35 }}>
-            Spatial disagreement → low routing
+            Spatial disagreement → routing stays near 50/50
           </div>
         )}
       </div>
@@ -217,13 +278,14 @@ function CapsnetPanel({ couplings, magnitude, isValid }) {
 }
 
 // ── Bottom stats strip ────────────────────────────────────────────────────────
-function StatsStrip({ iteration, animating }) {
+function StatsStrip({ iteration, animating, finalValidMag, finalScrambledMag }) {
+  const delta = (finalValidMag - finalScrambledMag).toFixed(2);
   const cells = [
     { label: 'Valid · CNN',         val: '0.91', color: C.green,  note: '✓' },
-    { label: 'Valid · CapsNet ‖v‖', val: '0.93', color: C.green,  note: '✓' },
+    { label: 'Valid · CapsNet ‖v‖', val: finalValidMag.toFixed(2),      color: C.green,  note: '✓' },
     { label: 'Scrambled · CNN',     val: '0.89', color: C.orange, note: '✓ wrong!' },
-    { label: 'Scrambled · ‖v‖',    val: '0.11', color: C.red,    note: '✗ correct!' },
-    { label: 'CapsNet Δ',           val: '0.82', color: C.accent, note: 'separation' },
+    { label: 'Scrambled · ‖v‖',    val: finalScrambledMag.toFixed(2), color: C.red,    note: '✗ correct!' },
+    { label: 'CapsNet Δ',           val: delta, color: C.accent, note: 'separation' },
     { label: 'Routing iter',        val: `${iteration}/3`, color: animating ? C.accent : C.textMid, note: '' },
   ];
   return (
@@ -250,21 +312,32 @@ function StatsStrip({ iteration, animating }) {
 }
 
 // ── Shared column label ───────────────────────────────────────────────────────
-function ColLabel({ children }) {
+function ColLabel({ children, note }) {
   return (
-    <div style={{ ...mono, fontSize: '8px', color: C.accent, textTransform: 'uppercase',
-      letterSpacing: '0.09em', marginBottom: '5px', textAlign: 'center' }}>
-      {children}
+    <div style={{ textAlign: 'center', marginBottom: '5px' }}>
+      <div style={{ ...mono, fontSize: '8px', color: C.accent, textTransform: 'uppercase',
+        letterSpacing: '0.09em' }}>
+        {children}
+      </div>
+      {note && (
+        <div style={{ ...mono, fontSize: '6.5px', color: C.muted, fontStyle: 'italic',
+          marginTop: '1px' }}>
+          {note}
+        </div>
+      )}
     </div>
   );
 }
 
 // ── Main widget ───────────────────────────────────────────────────────────────
-export default function CnnVsCapsnet() {
+export default function CnnVsCapsnet({ tryThis }) {
   const [iteration,   setIteration]   = useState(3);
   const [animating,   setAnimating]   = useState(false);
   const [showPooling, setShowPooling] = useState(false);
   const timers = useRef([]);
+
+  const validHistory = useMemo(() => runRouting(VOTES_VALID, ITERS), []);
+  const scrambledHistory = useMemo(() => runRouting(VOTES_SCRAMBLED, ITERS), []);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
@@ -274,7 +347,7 @@ export default function CnnVsCapsnet() {
     timers.current = [];
     setIteration(0);
     setAnimating(true);
-    [1, 2, 3].forEach(iter => {
+    [1, 2, 3].forEach((iter) => {
       const t = setTimeout(() => {
         setIteration(iter);
         if (iter === 3) setAnimating(false);
@@ -290,11 +363,14 @@ export default function CnnVsCapsnet() {
     setIteration(3);
   }
 
-  const vc  = COUPLINGS.valid[iteration];
-  const sc  = COUPLINGS.scrambled[iteration];
-  const vm  = MAGNITUDES.valid[iteration];
-  const sm  = MAGNITUDES.scrambled[iteration];
+  const vc = validHistory[iteration].couplingsFace;
+  const sc = scrambledHistory[iteration].couplingsFace;
+  const vm = validHistory[iteration].faceMag;
+  const sm = scrambledHistory[iteration].faceMag;
 
+  // Fixed illustrative baseline, not computed from any input (unlike the
+  // CapsNet column's runRouting() above) — disclosed to the reader via the
+  // "fixed illustrative scores" note under the CNN column header below.
   const CNN_V = { eyes: 0.94, nose: 0.91, mouth: 0.88 };
   const CNN_S = { eyes: 0.92, nose: 0.89, mouth: 0.87 };
 
@@ -303,13 +379,17 @@ export default function CnnVsCapsnet() {
   const FACE_W = 110;
 
   return (
-    <WidgetCard title="CNN vs CapsNet — spatial arrangement matters" number="10.1">
+    <WidgetCard
+      title="CNN vs CapsNet — spatial arrangement matters"
+      number="6.6"
+      tryThis={tryThis}
+    >
 
       {/* Column headers */}
       <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
         <div style={{ width: FACE_W, flexShrink: 0 }} />
-        <div style={{ flex: 1 }}><ColLabel>CNN + Max Pooling</ColLabel></div>
-        <div style={{ flex: 1 }}><ColLabel>CapsNet + Routing</ColLabel></div>
+        <div style={{ flex: 1 }}><ColLabel note="fixed illustrative scores">CNN + Max Pooling</ColLabel></div>
+        <div style={{ flex: 1 }}><ColLabel note="computed live via routing">CapsNet + Routing</ColLabel></div>
       </div>
 
       {/* ROW 1 — Valid face */}
@@ -321,7 +401,7 @@ export default function CnnVsCapsnet() {
         </div>
         <div style={{ flex: 1, padding: '9px', background: C.bg4,
           borderRadius: '6px', border: `1px solid ${C.border}` }}>
-          <CnnPanel scores={CNN_V} isValid={true} />
+          <CnnPanel scores={CNN_V} />
         </div>
         <div style={{ flex: 1, padding: '9px', background: C.bg4,
           borderRadius: '6px', border: `1px solid ${C.border}` }}>
@@ -341,7 +421,7 @@ export default function CnnVsCapsnet() {
         </div>
         <div style={{ flex: 1, padding: '9px', background: C.bg4,
           borderRadius: '6px', border: `1px solid ${C.border}` }}>
-          <CnnPanel scores={CNN_S} isValid={false} />
+          <CnnPanel scores={CNN_S} />
         </div>
         <div style={{ flex: 1, padding: '9px', background: C.bg4,
           borderRadius: '6px', border: `1px solid ${C.border}` }}>
@@ -368,14 +448,19 @@ export default function CnnVsCapsnet() {
         </button>
         <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
           <input type="checkbox" checked={showPooling}
-            onChange={e => setShowPooling(e.target.checked)}
+            onChange={(e) => setShowPooling(e.target.checked)}
             style={{ accentColor: C.accent, width: 12, height: 12, cursor: 'pointer' }} />
           <span style={{ ...mono, fontSize: '10px', color: C.muted }}>Show pooling regions</span>
         </label>
       </div>
 
       {/* Stats strip */}
-      <StatsStrip iteration={iteration} animating={animating} />
+      <StatsStrip
+        iteration={iteration}
+        animating={animating}
+        finalValidMag={validHistory[3].faceMag}
+        finalScrambledMag={scrambledHistory[3].faceMag}
+      />
     </WidgetCard>
   );
 }

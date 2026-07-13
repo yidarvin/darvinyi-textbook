@@ -232,7 +232,7 @@ const secBtn = {
 const lbl = { fontFamily: mono, fontSize: '11px', color: '#555555' };
 
 // ── Component ─────────────────────────────────────────────────────────
-export default function ConvolutionExplorer() {
+export default function ConvolutionExplorer({ tryThis }) {
   const containerRef = useRef(null);
   const canvasRef    = useRef(null);
   const animRef      = useRef(null);
@@ -368,7 +368,7 @@ export default function ConvolutionExplorer() {
   ];
 
   return (
-    <WidgetCard ref={cardRef} title="Convolution Explorer — watch the kernel slide" number="5.1">
+    <WidgetCard ref={cardRef} title="Convolution Explorer — watch the kernel slide" number="6.1" tryThis={tryThis}>
 
       {/* Canvas — fills full widget width */}
       <div ref={containerRef} style={{ width: '100%' }}>

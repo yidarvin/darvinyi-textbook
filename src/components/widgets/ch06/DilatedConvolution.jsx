@@ -171,7 +171,7 @@ function drawGrid(ctx, cw, ch, dilation, kernelSize, showGaps, showLines) {
 }
 
 // ── Component ─────────────────────────────────────────────────────────
-export default function DilatedConvolution() {
+export default function DilatedConvolution({ tryThis }) {
   const containerRef = useRef(null);
   const canvasRef    = useRef(null);
   const fadeTimers   = useRef([]);
@@ -250,7 +250,8 @@ export default function DilatedConvolution() {
   return (
     <WidgetCard
       title="Dilated Convolution — large receptive field, same parameters"
-      number="5.5"
+      number="6.5"
+      tryThis={tryThis}
     >
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 

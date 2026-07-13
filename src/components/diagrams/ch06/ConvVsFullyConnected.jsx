@@ -257,7 +257,7 @@ export default function ConvVsFullyConnected() {
               stroke={C.border} strokeWidth="0.8" />
         <text x="320" y="333" textAnchor="middle"
               fontFamily={mono} fontSize="10.5" fill={C.text}>
-          224×224 input: ~50M FC weights per neuron vs 9 conv weights total
+          224×224 input: ~50K FC weights per neuron vs 9 conv weights total
         </text>
       </svg>
 

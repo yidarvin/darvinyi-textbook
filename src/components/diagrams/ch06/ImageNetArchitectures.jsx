@@ -245,7 +245,7 @@ export default function ImageNetArchitectures() {
         </text>
         <text x={STACK_CX[3]} y={STACK_BOT + 36} textAnchor="middle"
               fontFamily={mono} fontSize="10" fill={C.muted}>
-          96% top-5
+          97% top-5
         </text>
 
         {/* Teal callout label for the skip-connection innovation */}

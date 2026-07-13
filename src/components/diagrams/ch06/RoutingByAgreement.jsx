@@ -201,17 +201,19 @@ export default function RoutingByAgreement() {
         </text>
         <text x={LEFT_CX} y="298" textAnchor="middle"
               fontFamily={mono} fontSize="10" fill={C.accent}>
-          → c_ij increase
+          → c_i,j increases
         </text>
 
-        {/* Coupling coefficients */}
+        {/* Coupling coefficients — each c_i,j is i's own softmax over j
+            (this capsule vs. the rest), so rows are independent and do
+            NOT need to sum to 1 across i=1,2,3. */}
         <text x={LEFT_CX} y="324" textAnchor="middle"
               fontFamily={mono} fontSize="10" fill={C.text}>
-          c_1j = 0.42  ·  c_2j = 0.39
+          c_1,j = 0.85  ·  c_2,j = 0.84
         </text>
         <text x={LEFT_CX} y="340" textAnchor="middle"
               fontFamily={mono} fontSize="10" fill={C.text}>
-          c_3j = 0.19
+          c_3,j = 0.83
         </text>
         <text x={LEFT_CX} y="356" textAnchor="middle"
               fontFamily={sans} fontSize="9.5" fill={C.muted}
@@ -262,17 +264,19 @@ export default function RoutingByAgreement() {
         </text>
         <text x={RIGHT_CX} y="298" textAnchor="middle"
               fontFamily={mono} fontSize="10" fill={C.muted}>
-          → c_ij stay low
+          → c_i,j stays near 0.5
         </text>
 
-        {/* Coupling coefficients */}
+        {/* Coupling coefficients — same independent-row convention as the
+            left panel; with no agreement, each c_i,j hovers near the
+            uninformative 50/50 split rather than collapsing to 0. */}
         <text x={RIGHT_CX} y="324" textAnchor="middle"
               fontFamily={mono} fontSize="10" fill={C.text}>
-          c_1j = 0.34  ·  c_2j = 0.33
+          c_1,j = 0.53  ·  c_2,j = 0.48
         </text>
         <text x={RIGHT_CX} y="340" textAnchor="middle"
               fontFamily={mono} fontSize="10" fill={C.text}>
-          c_3j = 0.33
+          c_3,j = 0.51
         </text>
         <text x={RIGHT_CX} y="356" textAnchor="middle"
               fontFamily={sans} fontSize="9.5" fill={C.muted}
@@ -293,7 +297,9 @@ export default function RoutingByAgreement() {
       >
         Lower-level capsules predict where higher-level capsules' outputs should
         sit. When predictions agree, routing concentrates; when they disagree,
-        routing stays diffuse.
+        routing stays diffuse. Each c_i,j is softmax-normalized over the
+        capsules a single lower capsule i could route to, not across the three
+        lower capsules shown — so the three values in a panel need not sum to 1.
       </figcaption>
     </figure>
   );

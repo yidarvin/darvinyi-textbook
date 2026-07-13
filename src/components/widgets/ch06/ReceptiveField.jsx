@@ -156,7 +156,7 @@ function btn(active) {
 const lbl = { fontFamily: mono, fontSize: '11px', color: TEXT_MUTED };
 
 // ── Component ─────────────────────────────────────────────────────────
-export default function ReceptiveField() {
+export default function ReceptiveField({ tryThis }) {
   const [numLayers,    setNumLayers]    = useState(3);
   const [kernelSize,   setKernelSize]   = useState(3);
   const [stride,       setStride]       = useState(2);
@@ -191,7 +191,7 @@ export default function ReceptiveField() {
   const SH       = svgH(numLayers);
 
   return (
-    <WidgetCard title="Receptive Field — what each neuron sees" number="5.2">
+    <WidgetCard title="Receptive Field — what each neuron sees" number="6.2" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 
         {/* SVG — 2-column snake grid, height scales with numLayers */}

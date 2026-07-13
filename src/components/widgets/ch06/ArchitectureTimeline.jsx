@@ -24,7 +24,7 @@ const architectures = [
     top1Num: 63.3,
     task: "ImageNet",
     layers: 8,
-    innovation: "Shocked the vision community with a 10-point gap over the competition. Introduced ReLU activations, dropout regularization, and multi-GPU training at scale.",
+    innovation: "Shocked the vision community with a 10-point gap over the competition. Popularized ReLU activations and dropout regularization (both introduced in earlier work) alongside multi-GPU training at scale.",
     paper: "ImageNet Classification with Deep Convolutional Neural Networks",
     color: "var(--orange)",
   },
@@ -76,20 +76,34 @@ const architectures = [
     top1Num: 84.4,
     task: "ImageNet",
     layers: 813,
+    layersNote: "counts total low-level ops (Keras full-layer count), not named-architecture depth like the other entries",
     innovation: "Compound scaling: simultaneously scale network depth, width, and input resolution by a fixed ratio derived from a grid search. Achieved SOTA with fewer parameters than prior models.",
     paper: "EfficientNet: Rethinking Model Scaling for Convolutional Neural Networks",
     color: "var(--green)",
   },
+  {
+    name: "ConvNeXt-B",
+    year: 2022,
+    params: "89M",
+    paramsNum: 89000000,
+    top1: "83.8%",
+    top1Num: 83.8,
+    task: "ImageNet",
+    layers: 36,
+    innovation: "Modernized a plain CNN with the design choices that made Vision Transformers work — 7×7 depthwise kernels, LayerNorm, GELU, inverted bottlenecks — matching ViT accuracy at comparable parameter counts with no attention mechanism at all.",
+    paper: "A ConvNet for the 2020s",
+    color: "var(--red)",
+  },
 ];
 
-const BAR_LABELS = ["LeNet", "AlexNet", "VGG", "Inc", "Res", "Eff"];
+const BAR_LABELS = ["LeNet*", "Alex", "VGG", "Inc", "Res", "Eff", "CvNeXt"];
 
 const SVG_H = 160;
 const LINE_X1 = 40;
 const LINE_X2 = 540;
 const LINE_Y = 80;
 const YEAR_MIN = 1998;
-const YEAR_MAX = 2019;
+const YEAR_MAX = 2022;
 
 // Dot sizing ranges
 const LOG_VALS = architectures.map(a => Math.log10(a.paramsNum));
@@ -97,8 +111,13 @@ const LOG_MIN = Math.min(...LOG_VALS);
 const LOG_MAX = Math.max(...LOG_VALS);
 const LAYER_MIN = Math.min(...architectures.map(a => a.layers));
 const LAYER_MAX = Math.max(...architectures.map(a => a.layers));
-const ACC_MIN = Math.min(...architectures.map(a => a.top1Num));
-const ACC_MAX = Math.max(...architectures.map(a => a.top1Num));
+// LeNet's 99.2% is MNIST accuracy (10-class), not the ImageNet top-1 (1000-class)
+// every other entry reports — excluded from the shared accuracy scale so it
+// can't distort everyone else's dot size, and sized as a fixed neutral dot below.
+const ACC_ENTRIES = architectures.filter(a => a.task === 'ImageNet');
+const ACC_MIN = Math.min(...ACC_ENTRIES.map(a => a.top1Num));
+const ACC_MAX = Math.max(...ACC_ENTRIES.map(a => a.top1Num));
+const NEUTRAL_R = 7;
 
 function yearToX(year) {
   return LINE_X1 + ((year - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * (LINE_X2 - LINE_X1);
@@ -111,20 +130,23 @@ function getDotRadius(arch, sizeBy) {
   } else if (sizeBy === 'Layers') {
     t = (arch.layers - LAYER_MIN) / (LAYER_MAX - LAYER_MIN);
   } else {
+    // Accuracy: LeNet isn't on ImageNet at all, so it gets a fixed neutral
+    // size rather than being plotted on the ImageNet top-1 scale.
+    if (arch.task !== 'ImageNet') return NEUTRAL_R;
     t = (arch.top1Num - ACC_MIN) / (ACC_MAX - ACC_MIN);
   }
   return 7 + t * 11;
 }
 
 // Bar chart constants
-const BAR_W = 14;
-const BAR_GAP = 10;
+const BAR_W = 15;
+const BAR_GAP = 9;
 const BAR_AREA_H = 80;
-const CHART_W = 160;
+const CHART_W = 185;
 const TOTAL_BARS_W = architectures.length * BAR_W + (architectures.length - 1) * BAR_GAP;
 const BAR_START_X = (CHART_W - TOTAL_BARS_W) / 2;
 
-export default function ArchitectureTimeline() {
+export default function ArchitectureTimeline({ tryThis }) {
   const [selected, setSelected] = useState(null);
   const [hovered, setHovered] = useState(null);
   const [sizeBy, setSizeBy] = useState('Params');
@@ -132,7 +154,7 @@ export default function ArchitectureTimeline() {
   const arch = selected !== null ? architectures[selected] : null;
 
   return (
-    <WidgetCard title="Architecture Timeline — from LeNet to EfficientNet" number="5.3">
+    <WidgetCard title="Architecture Timeline — from LeNet to ConvNeXt" number="6.3" tryThis={tryThis}>
       <style>{`
         @keyframes at-fade-in { from { opacity: 0; } to { opacity: 1; } }
         .at-dot { transition: r 0.15s ease; }
@@ -191,6 +213,13 @@ export default function ArchitectureTimeline() {
           const isActive = selected === i || hovered === i;
           const r = isActive ? Math.max(baseR, baseR + 3) : baseR;
           const isAbove = i % 2 === 0;
+          const notComparable = sizeBy === 'Accuracy' && a.task !== 'ImageNet';
+          const layersCaveat = sizeBy === 'Layers' && !!a.layersNote;
+          const caveatTitle = notComparable
+            ? `${a.top1}: MNIST accuracy — not comparable to ImageNet top-1`
+            : layersCaveat
+              ? `${a.layers} layers: ${a.layersNote}`
+              : null;
 
           // Label positions clear of max possible dot (radius 18)
           const nameY = isAbove ? LINE_Y - 28 : LINE_Y + 44;
@@ -235,18 +264,33 @@ export default function ArchitectureTimeline() {
                 className="at-dot"
                 cx={cx} cy={LINE_Y} r={r}
                 fill={a.color}
-                stroke={selected === i ? a.color : 'var(--border)'}
+                stroke={notComparable ? 'var(--text-muted)' : selected === i ? a.color : 'var(--border)'}
                 strokeWidth={selected === i ? 2 : 1.5}
-                opacity={selected !== null && selected !== i ? 0.5 : 1}
+                strokeDasharray={notComparable ? '2,2' : undefined}
+                opacity={notComparable ? 0.4 : selected !== null && selected !== i ? 0.5 : 1}
                 style={{ cursor: 'pointer' }}
                 onClick={() => setSelected(selected === i ? null : i)}
                 onMouseEnter={() => setHovered(i)}
                 onMouseLeave={() => setHovered(null)}
-              />
+              >
+                {caveatTitle && <title>{caveatTitle}</title>}
+              </circle>
             </g>
           );
         })}
       </svg>
+
+      {sizeBy === 'Accuracy' && (
+        <div style={{
+          fontFamily: "'JetBrains Mono', monospace",
+          fontSize: '9.5px',
+          color: 'var(--text-muted)',
+          marginTop: '-8px',
+          marginBottom: '14px',
+        }}>
+          * LeNet-5's 99.2% is MNIST accuracy (10-class) — shown as a fixed, neutral-size dot rather than on the ImageNet top-1 scale used by the other five.
+        </div>
+      )}
 
       {/* Detail card */}
       {arch === null ? (
@@ -298,17 +342,30 @@ export default function ArchitectureTimeline() {
               color: 'var(--text-muted)',
               marginBottom: '8px',
             }}>
-              {arch.year} · {arch.task} · {arch.layers} layers
+              {arch.year} · {arch.task} · {arch.layers} layers{arch.layersNote ? '*' : ''}
             </div>
 
             <div style={{
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: '13px',
               color: 'var(--accent)',
-              marginBottom: '12px',
+              marginBottom: arch.layersNote ? '4px' : '12px',
             }}>
               {arch.params} params · {arch.top1} Top-1
             </div>
+
+            {arch.layersNote && (
+              <div style={{
+                fontFamily: "'Inter', sans-serif",
+                fontSize: '10.5px',
+                color: 'var(--text-muted)',
+                fontStyle: 'italic',
+                marginBottom: '10px',
+                lineHeight: 1.4,
+              }}>
+                * {arch.layersNote}
+              </div>
+            )}
 
             <div style={{
               fontFamily: "'Inter', sans-serif",
@@ -336,7 +393,7 @@ export default function ArchitectureTimeline() {
           </div>
 
           {/* Right column — bar chart */}
-          <div style={{ width: '160px', flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ width: `${CHART_W}px`, flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{
               fontFamily: "'JetBrains Mono', monospace",
               fontSize: '8px',
@@ -347,7 +404,7 @@ export default function ArchitectureTimeline() {
             }}>
               Top-1 Accuracy
             </div>
-            <svg width={CHART_W} height={BAR_AREA_H + 24} style={{ overflow: 'visible' }}>
+            <svg width={CHART_W} height={BAR_AREA_H + 36} style={{ overflow: 'visible' }}>
               {/* Baseline */}
               <line
                 x1={BAR_START_X - 2} y1={BAR_AREA_H}
@@ -360,22 +417,29 @@ export default function ArchitectureTimeline() {
                 const x = BAR_START_X + i * (BAR_W + BAR_GAP);
                 const y = BAR_AREA_H - barH;
                 const isSelectedBar = i === selected;
+                const notComparableBar = a.task !== 'ImageNet';
 
                 return (
                   <g key={a.name}>
                     <rect
                       x={x} y={y}
                       width={BAR_W} height={barH}
-                      fill={isSelectedBar ? arch.color : 'var(--border-lt)'}
+                      fill={notComparableBar ? 'transparent' : isSelectedBar ? arch.color : 'var(--border-lt)'}
+                      stroke={notComparableBar ? 'var(--text-muted)' : 'none'}
+                      strokeWidth={notComparableBar ? 1 : 0}
+                      strokeDasharray={notComparableBar ? '2,2' : undefined}
+                      opacity={notComparableBar ? 0.7 : 1}
                       rx={2}
                       style={{ transition: 'fill 0.15s' }}
-                    />
+                    >
+                      {notComparableBar && <title>MNIST accuracy — not comparable to ImageNet top-1</title>}
+                    </rect>
                     <text
                       x={x + BAR_W / 2}
                       y={BAR_AREA_H + 14}
                       textAnchor="middle"
                       fill={isSelectedBar ? 'var(--text-mid)' : 'var(--text-muted)'}
-                      fontSize={8}
+                      fontSize={6.8}
                       fontFamily="'JetBrains Mono', monospace"
                     >
                       {BAR_LABELS[i]}
@@ -383,6 +447,17 @@ export default function ArchitectureTimeline() {
                   </g>
                 );
               })}
+
+              <text
+                x={CHART_W / 2}
+                y={BAR_AREA_H + 28}
+                textAnchor="middle"
+                fill="var(--text-muted)"
+                fontSize={6.5}
+                fontFamily="'JetBrains Mono', monospace"
+              >
+                * MNIST, not ImageNet top-1
+              </text>
             </svg>
           </div>
         </div>

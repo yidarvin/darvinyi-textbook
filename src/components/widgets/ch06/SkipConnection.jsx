@@ -58,7 +58,7 @@ function lerpColor(from, to, t) {
 }
 
 // ── Component ──────────────────────────────────────────────────────────────────
-export default function SkipConnection() {
+export default function SkipConnection({ tryThis }) {
   const [N,            setN]           = useState(4);
   const [animStep,     setAnimStep]    = useState(-1);
   const [isAnimating,  setIsAnimating] = useState(false);
@@ -109,7 +109,7 @@ export default function SkipConnection() {
   const sigY     = hasSig ? blockMid(animStep) : 0;
 
   return (
-    <WidgetCard title="Skip Connections — gradient highway through residuals" number="5.4">
+    <WidgetCard title="Skip Connections — gradient highway through residuals" number="6.4" tryThis={tryThis}>
       <div style={{ display:'flex', gap:'12px', alignItems:'flex-start' }}>
 
         {/* ── Diagram + controls ─────────────────────────────────────────── */}
@@ -254,6 +254,17 @@ export default function SkipConnection() {
                 </g>
               )}
             </svg>
+          </div>
+
+          <div style={{
+            marginTop: '8px',
+            fontFamily: MONO, fontSize: '9.5px', color: C.muted,
+            fontStyle: 'italic', lineHeight: 1.5,
+          }}>
+            Illustrative, not measured: assumes a fixed 0.65×/block gradient
+            decay and that the residual branch's own Jacobian ∂F/∂x
+            contributes ~0, so the shortcut's +1 identity term dominates —
+            per ∂L/∂x = (∂L/∂y)(1 + ∂F/∂x) above.
           </div>
 
           {/* ── Controls ── */}
