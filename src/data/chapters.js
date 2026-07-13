@@ -1,73 +1,72 @@
 // ─── Single source of truth for chapter navigation ──────────────────────────
 // Consumed by Sidebar (parts + chapter list) and Topbar (breadcrumb + prev/next).
 //
-// NOTE: this still reflects the ORIGINAL 22-chapter numbering and reading order.
-// The V2 renumbering (25 chapters, new part structure) lands in queue item S1 —
-// see context/V2_PLAN.md and context/CURRICULUM.md for the target structure.
+// V2 curriculum (25 chapters, 7 parts) — see context/V2_PLAN.md and
+// context/CURRICULUM.md. Five chapters (01, 14, 17, 22, 23) are new and not
+// yet built; they are added here (marked `live: false`) as their scaffolds
+// land in queue items S2/N1/N14/N17/N22/N23.
 
 export const PARTS = [
   {
     label: "Part I — Foundations",
     color: "var(--accent)",
     chapters: [
-      { num: "01", title: "Statistical Learning", widgets: 4, live: true },
-      { num: "02", title: "Neural Networks", widgets: 4, live: true },
-      { num: "03", title: "Optimization", widgets: 5, live: true },
-      { num: "04", title: "Training Techniques", widgets: 6, live: true },
-      { num: "05", title: "Word Embeddings", widgets: 5, live: true },
+      { num: "02", title: "Statistical Learning", widgets: 4, live: true },
+      { num: "03", title: "Neural Networks", widgets: 4, live: true },
+      { num: "04", title: "Optimization", widgets: 5, live: true },
+      { num: "05", title: "Training Techniques", widgets: 6, live: true },
+      { num: "06", title: "Convolutional Networks", widgets: 5, live: true },
     ],
   },
   {
-    label: "Part II — Sequence & Attention",
+    label: "Part II — Language & Sequence",
     color: "var(--purple)",
     chapters: [
-      { num: "06", title: "Recurrent Networks & LSTMs", widgets: 4, live: true },
-      { num: "07", title: "Attention", widgets: 4, live: true },
-      { num: "08", title: "Transformers", widgets: 4, live: true },
+      { num: "07", title: "Word Embeddings & Tokenization", widgets: 5, live: true },
+      { num: "08", title: "Recurrent Networks & LSTMs", widgets: 4, live: true },
+      { num: "09", title: "Attention", widgets: 4, live: true },
+      { num: "10", title: "Transformers", widgets: 4, live: true },
     ],
   },
   {
     label: "Part III — Large Language Models",
     color: "#a78bfa",
     chapters: [
-      { num: "09", title: "LLM Architectures", widgets: 5, live: true },
-      { num: "10", title: "LLM Training & Alignment", widgets: 6, live: true },
-      { num: "11", title: "Multimodal Networks", widgets: 4, live: true },
+      { num: "11", title: "LLM Architectures", widgets: 5, live: true },
+      { num: "12", title: "Reinforcement Learning", widgets: 6, live: true },
+      { num: "13", title: "LLM Training & Alignment", widgets: 6, live: true },
+      { num: "15", title: "Multimodal Networks", widgets: 4, live: true },
     ],
   },
   {
-    label: "Part IV — Other Architectures",
+    label: "Part IV — Beyond the Transformer",
     color: "var(--green)",
     chapters: [
-      { num: "12", title: "Convolutional Networks", widgets: 5, live: true },
-      { num: "13", title: "Graph Neural Networks", widgets: 4, live: true },
-      { num: "14", title: "Reinforcement Learning", widgets: 6, live: true },
-      { num: "15", title: "Capsule Networks", widgets: 3, live: true },
+      { num: "16", title: "Graph Neural Networks", widgets: 4, live: true },
     ],
   },
   {
-    label: "Part V — Image Generative Models",
+    label: "Part V — Generative Models",
     color: "var(--orange)",
     chapters: [
-      { num: "16", title: "Variational Autoencoders", widgets: 4, live: true },
-      { num: "17", title: "Generative Adversarial Networks", widgets: 4, live: true },
-      { num: "18", title: "Image-to-Image Translation", widgets: 6, live: true },
-      { num: "19", title: "Diffusion Models", widgets: 4, live: true },
+      { num: "18", title: "Variational Autoencoders", widgets: 4, live: true },
+      { num: "19", title: "GANs & Image-to-Image Translation", widgets: 4, live: true },
+      { num: "20", title: "Diffusion Models", widgets: 4, live: true },
     ],
   },
   {
-    label: "Part VI — Evaluation",
+    label: "Part VI — Evaluation & Understanding",
     color: "var(--green)",
     chapters: [
-      { num: "20", title: "Datasets & Benchmarks", widgets: 3, live: true },
+      { num: "21", title: "Datasets & Benchmarks", widgets: 3, live: true },
     ],
   },
   {
     label: "Part VII — AI Agents",
     color: "#38bdf8",
     chapters: [
-      { num: "21", title: "AI Agents", widgets: 5, live: true },
-      { num: "22", title: "Agent Harnesses", widgets: 6, live: true },
+      { num: "24", title: "AI Agents", widgets: 5, live: true },
+      { num: "25", title: "Agent Harnesses", widgets: 6, live: true },
     ],
   },
 ];
@@ -81,16 +80,19 @@ export function chapterPath(num) {
   return `/ch/${num}`;
 }
 
-// Flattened, ordered list of every chapter with its route path and part metadata —
-// the shape Topbar's prev/next and breadcrumb logic needs.
+// Flattened, ordered list of every LIVE chapter with its route path and part
+// metadata — the shape Topbar's prev/next and breadcrumb logic needs. Not-yet-
+// built chapters (live: false) are excluded here since they have no route.
 export const CHAPTERS = PARTS.flatMap(part =>
-  part.chapters.map(ch => ({
-    ...ch,
-    path: `/ch/${ch.num}`,
-    part: shortPartLabel(part.label),
-    partLabel: part.label,
-    partColor: part.color,
-  }))
+  part.chapters
+    .filter(ch => ch.live)
+    .map(ch => ({
+      ...ch,
+      path: chapterPath(ch.num),
+      part: shortPartLabel(part.label),
+      partLabel: part.label,
+      partColor: part.color,
+    }))
 );
 
 export function findChapterByPath(pathname) {

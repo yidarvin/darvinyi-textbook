@@ -28,7 +28,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 
 | ID | Title | Status |
 |---|---|---|
-| S1 | The renumbering migration — 22→25 chapters, new reading order, `chapters.js` single source of truth | PENDING |
+| S1 | The renumbering migration — 22→25 chapters, new reading order, `chapters.js` single source of truth | DONE |
 | S2 | Section moves (LoRA→ch14, softmax-temp→ch14) + empty scaffolds for new ch01/14/17/22/23 | PENDING |
 | S3 | Home landing page (hero + 7-part chapter-card grid from `chapters.js`) | PENDING |
 

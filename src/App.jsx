@@ -8,28 +8,30 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 // Lazy-load chapter routes so the initial bundle stays small —
 // each chapter (with all its widgets) becomes its own chunk and only
 // downloads when the user navigates into it.
-const StatisticalLearning   = lazy(() => import("./pages/ch01/StatisticalLearning"));
-const NeuralNetworks        = lazy(() => import("./pages/ch02/NeuralNetworks"));
-const Optimization          = lazy(() => import("./pages/ch03/Optimization"));
-const TrainingTechniques    = lazy(() => import("./pages/ch04/TrainingTechniques"));
-const WordEmbeddings        = lazy(() => import("./pages/ch05/WordEmbeddings"));
-const RNNs                  = lazy(() => import("./pages/ch06/RNNs"));
-const Attention             = lazy(() => import("./pages/ch07/Attention"));
-const Transformers          = lazy(() => import("./pages/ch08/Transformers"));
-const LLMArchitectures      = lazy(() => import("./pages/ch09/LLMArchitectures"));
-const LLMTraining           = lazy(() => import("./pages/ch10/LLMTraining"));
-const Multimodal            = lazy(() => import("./pages/ch11/Multimodal"));
-const ConvNets              = lazy(() => import("./pages/ch12/ConvNets"));
-const GNNs                  = lazy(() => import("./pages/ch13/GNNs"));
-const ReinforcementLearning = lazy(() => import("./pages/ch14/ReinforcementLearning"));
-const CapsuleNetworks       = lazy(() => import("./pages/ch15/CapsuleNetworks"));
-const VAEs                  = lazy(() => import("./pages/ch16/VAEs"));
-const GANs                  = lazy(() => import("./pages/ch17/GANs"));
-const ImageToImage          = lazy(() => import("./pages/ch18/ImageToImage"));
-const DiffusionModels       = lazy(() => import("./pages/ch19/DiffusionModels"));
-const Datasets              = lazy(() => import("./pages/ch20/Datasets"));
-const AIAgents              = lazy(() => import("./pages/ch21/AIAgents"));
-const AgentHarnesses        = lazy(() => import("./pages/ch22/AgentHarnesses"));
+//
+// V2 curriculum (25 chapters, 7 parts — see src/data/chapters.js). Chapters
+// 01, 14, 17, 22, 23 are new and not yet built (queue items S2/N1/N14/N17/
+// N22/N23); their routes are added once those pages exist.
+const StatisticalLearning   = lazy(() => import("./pages/ch02/StatisticalLearning"));
+const NeuralNetworks        = lazy(() => import("./pages/ch03/NeuralNetworks"));
+const Optimization          = lazy(() => import("./pages/ch04/Optimization"));
+const TrainingTechniques    = lazy(() => import("./pages/ch05/TrainingTechniques"));
+const ConvNets              = lazy(() => import("./pages/ch06/ConvNets"));
+const WordEmbeddings        = lazy(() => import("./pages/ch07/WordEmbeddings"));
+const RNNs                  = lazy(() => import("./pages/ch08/RNNs"));
+const Attention             = lazy(() => import("./pages/ch09/Attention"));
+const Transformers          = lazy(() => import("./pages/ch10/Transformers"));
+const LLMArchitectures      = lazy(() => import("./pages/ch11/LLMArchitectures"));
+const ReinforcementLearning = lazy(() => import("./pages/ch12/ReinforcementLearning"));
+const LLMTraining           = lazy(() => import("./pages/ch13/LLMTraining"));
+const Multimodal            = lazy(() => import("./pages/ch15/Multimodal"));
+const GNNs                  = lazy(() => import("./pages/ch16/GNNs"));
+const VAEs                  = lazy(() => import("./pages/ch18/VAEs"));
+const GANs                  = lazy(() => import("./pages/ch19/GANs"));
+const DiffusionModels       = lazy(() => import("./pages/ch20/DiffusionModels"));
+const Datasets              = lazy(() => import("./pages/ch21/Datasets"));
+const AIAgents              = lazy(() => import("./pages/ch24/AIAgents"));
+const AgentHarnesses        = lazy(() => import("./pages/ch25/AgentHarnesses"));
 
 function ChapterFallback() {
   return (
@@ -108,28 +110,26 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
-          <Route path="ch/01" element={L(StatisticalLearning)} />
-          <Route path="ch/02" element={L(NeuralNetworks)} />
-          <Route path="ch/03" element={L(Optimization)} />
-          <Route path="ch/04" element={L(TrainingTechniques)} />
-          <Route path="ch/05" element={L(WordEmbeddings)} />
-          <Route path="ch/06" element={L(RNNs)} />
-          <Route path="ch/07" element={L(Attention)} />
-          <Route path="ch/08" element={L(Transformers)} />
-          <Route path="ch/09" element={L(LLMArchitectures)} />
-          <Route path="ch/10" element={L(LLMTraining)} />
-          <Route path="ch/11" element={L(Multimodal)} />
-          <Route path="ch/12" element={L(ConvNets)} />
-          <Route path="ch/13" element={L(GNNs)} />
-          <Route path="ch/14" element={L(ReinforcementLearning)} />
-          <Route path="ch/15" element={L(CapsuleNetworks)} />
-          <Route path="ch/16" element={L(VAEs)} />
-          <Route path="ch/17" element={L(GANs)} />
-          <Route path="ch/18" element={L(ImageToImage)} />
-          <Route path="ch/19" element={L(DiffusionModels)} />
-          <Route path="ch/20" element={L(Datasets)} />
-          <Route path="ch/21" element={L(AIAgents)} />
-          <Route path="ch/22" element={L(AgentHarnesses)} />
+          <Route path="ch/02" element={L(StatisticalLearning)} />
+          <Route path="ch/03" element={L(NeuralNetworks)} />
+          <Route path="ch/04" element={L(Optimization)} />
+          <Route path="ch/05" element={L(TrainingTechniques)} />
+          <Route path="ch/06" element={L(ConvNets)} />
+          <Route path="ch/07" element={L(WordEmbeddings)} />
+          <Route path="ch/08" element={L(RNNs)} />
+          <Route path="ch/09" element={L(Attention)} />
+          <Route path="ch/10" element={L(Transformers)} />
+          <Route path="ch/11" element={L(LLMArchitectures)} />
+          <Route path="ch/12" element={L(ReinforcementLearning)} />
+          <Route path="ch/13" element={L(LLMTraining)} />
+          <Route path="ch/15" element={L(Multimodal)} />
+          <Route path="ch/16" element={L(GNNs)} />
+          <Route path="ch/18" element={L(VAEs)} />
+          <Route path="ch/19" element={L(GANs)} />
+          <Route path="ch/20" element={L(DiffusionModels)} />
+          <Route path="ch/21" element={L(Datasets)} />
+          <Route path="ch/24" element={L(AIAgents)} />
+          <Route path="ch/25" element={L(AgentHarnesses)} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
