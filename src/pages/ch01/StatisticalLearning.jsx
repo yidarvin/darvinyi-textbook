@@ -1,3 +1,4 @@
+import { useTocSections } from "../../components/layout/TocRail";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";
@@ -58,8 +59,17 @@ const CITATIONS = [
   },
 ];
 
+const TOC_SECTIONS = [
+  { id: "the-learning-problem",   label: "The Learning Problem"   },
+  { id: "bias-variance-tradeoff", label: "Bias-Variance Tradeoff" },
+  { id: "regularization",         label: "Regularization"         },
+  { id: "decision-boundaries",    label: "Decision Boundaries"    },
+];
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function StatisticalLearning() {
+  useTocSections(TOC_SECTIONS);
+
   return (
     <article
       style={{
@@ -81,7 +91,7 @@ export default function StatisticalLearning() {
           marginBottom: "12px",
         }}
       >
-        Chapter 01 · Foundations
+        Chapter 01 · Part I — Foundations
       </div>
 
       <h1
@@ -108,7 +118,9 @@ export default function StatisticalLearning() {
       </ChapterLede>
 
       {/* ── Section 1: The Learning Problem ──────────────────────────────── */}
-      <SectionTitle>The Learning Problem</SectionTitle>
+      <div id="the-learning-problem">
+        <SectionTitle>The Learning Problem</SectionTitle>
+      </div>
 
       <p style={prose}>
         Formally, we observe <InlineMath>n</InlineMath> input-output pairs{" "}
@@ -153,7 +165,9 @@ export default function StatisticalLearning() {
       <PolynomialFit />
 
       {/* ── Section 2: Bias-Variance Tradeoff ────────────────────────────── */}
-      <SectionTitle>Bias-Variance Tradeoff</SectionTitle>
+      <div id="bias-variance-tradeoff">
+        <SectionTitle>Bias-Variance Tradeoff</SectionTitle>
+      </div>
 
       <p style={prose}>
         The expected test error of any estimator decomposes into three
@@ -201,7 +215,9 @@ export default function StatisticalLearning() {
       <BiasVariance />
 
       {/* ── Section 3: Regularization ─────────────────────────────────────── */}
-      <SectionTitle>Regularization</SectionTitle>
+      <div id="regularization">
+        <SectionTitle>Regularization</SectionTitle>
+      </div>
 
       <p style={prose}>
         Regularization adds a penalty term <InlineMath>{"Ω(f)"}</InlineMath> to
@@ -247,7 +263,9 @@ export default function StatisticalLearning() {
       <RegularizationExplorer />
 
       {/* ── Section 4: Decision Boundaries ───────────────────────────────── */}
-      <SectionTitle>Decision Boundaries</SectionTitle>
+      <div id="decision-boundaries">
+        <SectionTitle>Decision Boundaries</SectionTitle>
+      </div>
 
       <p style={prose}>
         In classification, a learned model partitions the input space into

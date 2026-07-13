@@ -62,7 +62,7 @@ export default function Transformers() {
           marginBottom: "12px",
         }}
       >
-        Chapter 08 · Part II — Architectures
+        Chapter 08 · Part II — Sequence & Attention
       </div>
 
       <h1

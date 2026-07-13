@@ -61,7 +61,7 @@ export default function Attention() {
           marginBottom: "12px",
         }}
       >
-        Chapter 07 · Part II — Architectures
+        Chapter 07 · Part II — Sequence & Attention
       </div>
 
       <h1

@@ -61,7 +61,7 @@ export default function RNNs() {
           marginBottom: "12px",
         }}
       >
-        Chapter 06 · Part II — Architectures
+        Chapter 06 · Part II — Sequence & Attention
       </div>
 
       <h1
