@@ -52,7 +52,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | C5 | Ch05 Training Techniques — deep pass (Appendix A: ch04→05) | DONE |
 | C6 | Ch06 Convolutional Networks — deep pass + absorb Capsule Networks historical sidebar (Appendix A: ch12→06, ch15) | DONE |
 | C7 | Ch07 Word Embeddings & Tokenization — deep pass + new tokenization/BPE section (Appendix A: ch05→07) | DONE |
-| C8 | Ch08 RNNs & LSTMs — deep pass (Appendix A: ch06→08) | PENDING |
+| C8 | Ch08 RNNs & LSTMs — deep pass (Appendix A: ch06→08) | DONE |
 | C9 | Ch09 Attention — deep pass + cross-attention/masking material (Appendix A: ch07→09) | PENDING |
 | C10 | Ch10 Transformers — deep pass (Appendix A: ch08→10) | PENDING |
 | C11 | Ch11 LLM Architectures — deep pass, owns RoPE (Appendix A: ch09→11) | PENDING |

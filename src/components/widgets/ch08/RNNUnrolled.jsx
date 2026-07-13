@@ -67,7 +67,7 @@ function BtnStyle(disabled, active = false) {
   };
 }
 
-export default function RNNUnrolled() {
+export default function RNNUnrolled({ tryThis }) {
   const [currentStep, setCurrentStep] = useState(0);
   const [preset, setPreset]           = useState('Sine');
   const [playing, setPlaying]         = useState(false);
@@ -112,7 +112,7 @@ export default function RNNUnrolled() {
   const tanhIn   = WX * xt + WH * htPrev + B;
 
   return (
-    <WidgetCard title="RNN Unrolled — step through a sequence" number="6.1">
+    <WidgetCard title="RNN Unrolled — step through a sequence" number="8.1" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 
         {/* Left column: diagram + formula */}

@@ -24,10 +24,91 @@ function makeInputs(preset) {
   return [0.6,-0.3,0.8,0.1,-0.7,0.4,-0.2,0.9,-0.5,0.3,0.7,-0.8,0.2,0.6,-0.4,0.1,0.8,-0.6,0.3,-0.1];
 }
 
-function computeHidden(x, wX, wH) {
-  const h = new Array(20);
-  h[0] = Math.tanh(wX * x[0]);
-  for (let t = 1; t < 20; t++) h[t] = Math.tanh(wX * x[t] + wH * h[t - 1]);
+// ── Gate weight presets ──────────────────────────────────────────────────
+//
+// Each panel drives TWO independent scalar recurrent units (h[0], h[1]) so
+// the widget can show a "long memory" unit next to a "leaky" one for both
+// architectures. Every gate below is a genuine {wx, wh, b} triple applied to
+// the actual LSTM/GRU equations from the MathBlocks above this widget on the
+// page — there is no shared vanilla-tanh update between the two panels.
+//
+// Unit 0 in each architecture biases its forget/update gate to saturate near
+// its "hold" extreme (LSTM: f_t -> 1; GRU: z_t -> 0, so 1 - z_t -> 1), so it
+// carries a memory trace slowly through the sign flip in the "Step" preset.
+// Unit 1 leaves that gate near chance, so it forgets and re-writes quickly.
+
+const LSTM_UNITS = [
+  { // unit 0: forget gate saturates near 1 -> long memory
+    f: { wx: 0.10, wh: 0.20, b:  2.50 },
+    i: { wx: 1.00, wh: 0.30, b: -0.50 },
+    c: { wx: 1.00, wh: 0.30, b:  0.00 },
+    o: { wx: 0.80, wh: 0.50, b:  0.50 },
+  },
+  { // unit 1: forget gate stays near chance -> memory leaks every step
+    f: { wx: 0.30, wh: 0.20, b: -0.50 },
+    i: { wx: 1.20, wh: 0.20, b:  0.50 },
+    c: { wx: 1.20, wh: 0.20, b:  0.00 },
+    o: { wx: 1.00, wh: 0.30, b:  0.30 },
+  },
+];
+
+const GRU_UNITS = [
+  { // unit 0: update gate saturates near 0 -> (1 - z) near 1 -> long memory
+    r: { wx: 0.30, wh: 0.20, b:  0.50 },
+    z: { wx: 0.10, wh: 0.20, b: -2.50 },
+    h: { wx: 1.00, wh: 0.30, b:  0.00 },
+  },
+  { // unit 1: update gate stays near chance -> hidden state rewritten fast
+    r: { wx: 0.30, wh: 0.20, b:  0.00 },
+    z: { wx: 0.30, wh: 0.20, b:  0.50 },
+    h: { wx: 1.20, wh: 0.20, b:  0.00 },
+  },
+];
+
+function countParams(units) {
+  return units.reduce((sum, u) => sum + Object.keys(u).length * 3, 0);
+}
+
+const LSTM_PARAM_COUNT   = countParams(LSTM_UNITS);
+const GRU_PARAM_COUNT    = countParams(GRU_UNITS);
+const PARAM_SAVINGS_PCT  = Math.round((1 - GRU_PARAM_COUNT / LSTM_PARAM_COUNT) * 100);
+
+const sigmoid = z => 1 / (1 + Math.exp(-z));
+
+// f_t = σ(w_f·x_t + u_f·h_{t-1} + b_f); i_t, o_t analogous; c̃_t = tanh(...)
+// c_t = f_t·c_{t-1} + i_t·c̃_t; h_t = o_t·tanh(c_t)
+function computeLSTM(x, gates) {
+  const n = x.length;
+  const h = new Array(n);
+  let hPrev = 0, cPrev = 0;
+  for (let t = 0; t < n; t++) {
+    const f      = sigmoid(gates.f.wx * x[t] + gates.f.wh * hPrev + gates.f.b);
+    const i      = sigmoid(gates.i.wx * x[t] + gates.i.wh * hPrev + gates.i.b);
+    const cTilde = Math.tanh(gates.c.wx * x[t] + gates.c.wh * hPrev + gates.c.b);
+    const cNow   = f * cPrev + i * cTilde;
+    const o      = sigmoid(gates.o.wx * x[t] + gates.o.wh * hPrev + gates.o.b);
+    const hNow   = o * Math.tanh(cNow);
+    h[t] = hNow;
+    hPrev = hNow;
+    cPrev = cNow;
+  }
+  return h;
+}
+
+// r_t = σ(...); z_t = σ(...); h̃_t = tanh(w·(r_t⊙h_{t-1}) + w_x·x_t + b)
+// h_t = (1 - z_t)·h_{t-1} + z_t·h̃_t
+function computeGRU(x, gates) {
+  const n = x.length;
+  const h = new Array(n);
+  let hPrev = 0;
+  for (let t = 0; t < n; t++) {
+    const r      = sigmoid(gates.r.wx * x[t] + gates.r.wh * hPrev + gates.r.b);
+    const z      = sigmoid(gates.z.wx * x[t] + gates.z.wh * hPrev + gates.z.b);
+    const hTilde = Math.tanh(gates.h.wx * x[t] + gates.h.wh * (r * hPrev) + gates.h.b);
+    const hNow   = (1 - z) * hPrev + z * hTilde;
+    h[t] = hNow;
+    hPrev = hNow;
+  }
   return h;
 }
 
@@ -202,7 +283,7 @@ function drawPanel(ctx, px, py, pw, ph, opts) {
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-export default function GRUvsLSTM() {
+export default function GRUvsLSTM({ tryThis }) {
   const [preset,        setPreset]        = useState('Sine');
   const [dim,           setDim]           = useState('Both');
   const [showHighlight, setShowHighlight] = useState(true);
@@ -215,10 +296,10 @@ export default function GRUvsLSTM() {
   const states = useMemo(() => {
     const x = makeInputs(preset);
     return {
-      lstmH0: computeHidden(x, 0.7,  0.90),
-      lstmH1: computeHidden(x, 1.1,  0.30),
-      gruH0:  computeHidden(x, 0.7,  0.75),
-      gruH1:  computeHidden(x, 1.1,  0.25),
+      lstmH0: computeLSTM(x, LSTM_UNITS[0]),
+      lstmH1: computeLSTM(x, LSTM_UNITS[1]),
+      gruH0:  computeGRU(x, GRU_UNITS[0]),
+      gruH1:  computeGRU(x, GRU_UNITS[1]),
     };
   }, [preset]);
 
@@ -294,7 +375,7 @@ export default function GRUvsLSTM() {
   const { lstmH0, gruH0 } = states;
 
   return (
-    <WidgetCard title="GRU vs LSTM — same sequence, different memory" number="6.4">
+    <WidgetCard title="GRU vs LSTM — same sequence, different memory" number="8.4" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 
         {/* Canvas + controls */}
@@ -349,10 +430,10 @@ export default function GRUvsLSTM() {
           borderRadius: '8px', padding: '14px 16px',
           display: 'flex', flexDirection: 'column', gap: '10px',
         }}>
-          <StatSection label="Parameters (approx)">
-            <StatRow label="LSTM"      val="24"         color={C.accent} />
-            <StatRow label="GRU"       val="18"         color={C.orange} />
-            <StatRow label="GRU saves" val="25% fewer"  color={C.muted}  />
+          <StatSection label="Parameters (this demo, 2 units)">
+            <StatRow label="LSTM"      val={String(LSTM_PARAM_COUNT)}            color={C.accent} />
+            <StatRow label="GRU"       val={String(GRU_PARAM_COUNT)}             color={C.orange} />
+            <StatRow label="GRU saves" val={`${PARAM_SAVINGS_PCT}% fewer`}       color={C.muted}  />
           </StatSection>
 
           <Divider />

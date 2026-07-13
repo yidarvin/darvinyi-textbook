@@ -8,6 +8,7 @@ const C = {
   orange:    '#fb923c',
   purple:    '#a78bfa',
   red:       '#f87171',
+  candidate: '#38bdf8',
   border:    '#242424',
   bg2:       '#111111',
   bg4:       '#1e1e1e',
@@ -21,32 +22,41 @@ const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
 // ── Presets ──────────────────────────────────────────────────────────────
 
+// `g` is the candidate cell contents c̃_t = tanh(W_c·[h_{t-1}, x_t] + b_c) — bounded
+// to tanh's [-1, 1] range, and NOT a gate (it has no sigmoid, no "how much" semantics).
+// It is given here as a per-timestep scenario value, exactly like f/i/o, so that
+// c_t = f_t ⊙ c_{t-1} + i_t ⊙ c̃_t can be computed faithfully instead of assuming a
+// fixed constant in place of c̃_t (which would make the cell state provably unable
+// to ever go negative, contradicting the negative-signal color/interpretation below).
 const PRESETS = {
   A: {
     label: 'Remember & Forget',
     f: [0.90, 0.92, 0.88, 0.08, 0.91, 0.89, 0.93, 0.90, 0.06, 0.92],
     i: [0.12, 0.10, 0.75, 0.88, 0.11, 0.13, 0.70, 0.09, 0.91, 0.11],
     o: [0.35, 0.38, 0.40, 0.42, 0.88, 0.91, 0.37, 0.39, 0.41, 0.89],
+    g: [0.80, 0.80, 0.80, 0.80, 0.50, 0.60, 0.70, 0.40, -0.90, 0.30],
   },
   B: {
     label: 'Stable Memory',
     f: [0.95, 0.97, 0.96, 0.98, 0.97, 0.96, 0.98, 0.97, 0.96, 0.98],
     i: [0.90, 0.08, 0.07, 0.09, 0.06, 0.08, 0.07, 0.09, 0.06, 0.08],
     o: [0.55, 0.52, 0.54, 0.51, 0.53, 0.55, 0.52, 0.51, 0.54, 0.53],
+    g: [0.85, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50, 0.50],
   },
   C: {
     label: 'Oscillating',
     f: [0.85, 0.20, 0.88, 0.18, 0.87, 0.21, 0.89, 0.19, 0.86, 0.22],
     i: [0.20, 0.82, 0.18, 0.85, 0.19, 0.83, 0.17, 0.84, 0.21, 0.81],
     o: [0.50, 0.52, 0.48, 0.53, 0.49, 0.51, 0.50, 0.52, 0.47, 0.53],
+    g: [0.75, 0.85, 0.70, 0.90, 0.72, 0.88, 0.68, 0.92, 0.74, 0.86],
   },
 };
 
 function computeCellState(p) {
   const c = new Array(10);
-  c[0] = p.i[0] * 0.8;
+  c[0] = p.i[0] * p.g[0];
   for (let t = 1; t < 10; t++) {
-    c[t] = Math.max(-1.5, Math.min(1.5, p.f[t] * c[t - 1] + p.i[t] * 0.8));
+    c[t] = Math.max(-1.5, Math.min(1.5, p.f[t] * c[t - 1] + p.i[t] * p.g[t]));
   }
   return c;
 }
@@ -67,6 +77,11 @@ const forgetColor = v =>
 
 const inputColor  = v => lerpHex(C.codeBg, C.orange, v);
 const outputColor = v => lerpHex(C.codeBg, C.purple, v);
+
+// Candidate c̃_t is a tanh output, bounded to [-1, 1] (not [0, 1] like the gates).
+const candidateColor = v =>
+  v <= 0 ? lerpHex(C.red, C.bg4, (v + 1) / 1)
+         : lerpHex(C.bg4, C.candidate, v / 1);
 
 const cellColor = v =>
   v <= 0 ? lerpHex(C.red, C.bg4, (v + 1.5) / 1.5)
@@ -97,6 +112,11 @@ const cellInterp = v =>
   v <  0.5 ? 'Cell near neutral' :
               'Cell holding strong positive signal';
 
+const candidateInterp = v =>
+  v < -0.3 ? 'New content would push the cell sharply negative' :
+  v <  0.3 ? 'New content is near-neutral' :
+              'New content would push the cell sharply positive';
+
 // ── SVG layout constants ──────────────────────────────────────────────────
 
 const CELL_W = 46, CELL_H = 46, GAP = 3;
@@ -108,16 +128,22 @@ const cy = row => SVG_TOP + row * (CELL_H + GAP);
 
 // ── Row definitions ───────────────────────────────────────────────────────
 
+// Row 3 (candidate) is deliberately NOT labeled a "gate" — it has no sigmoid and no
+// "how much" semantics, unlike rows 0-2. Rows 3-4 use signed (tanh/clamped) values;
+// rows 0-2 are sigmoid outputs in [0, 1].
 const ROW_DEFS = [
-  { sym: 'f', name: 'forget', color: C.accent,  colorFn: forgetColor, interpFn: forgetInterp, displayName: 'Forget Gate' },
-  { sym: 'i', name: 'input',  color: C.orange,  colorFn: inputColor,  interpFn: inputInterp,  displayName: 'Input Gate'  },
-  { sym: 'o', name: 'output', color: C.purple,  colorFn: outputColor, interpFn: outputInterp, displayName: 'Output Gate' },
-  { sym: 'c', name: 'cell',   color: C.math,    colorFn: cellColor,   interpFn: cellInterp,   displayName: 'Cell State'  },
+  { sym: 'f', name: 'forget',    color: C.accent,    colorFn: forgetColor,    interpFn: forgetInterp,    displayName: 'Forget Gate' },
+  { sym: 'i', name: 'input',     color: C.orange,    colorFn: inputColor,     interpFn: inputInterp,     displayName: 'Input Gate'  },
+  { sym: 'o', name: 'output',    color: C.purple,    colorFn: outputColor,    interpFn: outputInterp,    displayName: 'Output Gate' },
+  { sym: 'c̃', name: 'cand.',     color: C.candidate, colorFn: candidateColor, interpFn: candidateInterp, displayName: 'Candidate Update' },
+  { sym: 'c', name: 'cell',      color: C.math,       colorFn: cellColor,     interpFn: cellInterp,      displayName: 'Cell State'  },
 ];
+
+const SIGNED_ROW_START = 3; // rows >= this index are signed (candidate, cell state)
 
 // ── Component ─────────────────────────────────────────────────────────────
 
-export default function LSTMGates() {
+export default function LSTMGates({ tryThis }) {
   const [preset, setPreset]               = useState('A');
   const [highlightCol, setHighlightCol]   = useState(3);
   const [showCellState, setShowCellState] = useState(true);
@@ -128,20 +154,22 @@ export default function LSTMGates() {
 
   const p         = PRESETS[preset];
   const cellState = useMemo(() => computeCellState(PRESETS[preset]), [preset]);
-  const numRows   = showCellState ? 4 : 3;
+  const numRows   = showCellState ? 5 : 3;
 
   const VB_H       = SVG_TOP + numRows * (CELL_H + GAP) - GAP + 16;
   const highlightH = numRows * (CELL_H + GAP) - GAP;
 
-  const rowData = [p.f, p.i, p.o, cellState];
+  const rowData = [p.f, p.i, p.o, p.g, cellState];
 
   // Stats at highlighted timestep
   const t    = highlightCol;
-  const ft   = p.f[t], it = p.i[t], ot = p.o[t], ct = cellState[t];
+  const ft   = p.f[t], it = p.i[t], ot = p.o[t], gt = p.g[t], ct = cellState[t];
   const meanF = p.f.reduce((a, b) => a + b, 0) / 10;
   const meanI = p.i.reduce((a, b) => a + b, 0) / 10;
   const cMin  = Math.min(...cellState);
   const cMax  = Math.max(...cellState);
+  const gMin  = Math.min(...p.g);
+  const gMax  = Math.max(...p.g);
 
   const handleCellEnter = (row, col, e) => {
     if (!containerRef.current) return;
@@ -166,7 +194,7 @@ export default function LSTMGates() {
       name: rd.displayName,
       t: col,
       val,
-      valStr: row === 3 ? (val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2)) : val.toFixed(2),
+      valStr: row >= SIGNED_ROW_START ? (val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2)) : val.toFixed(2),
       meaning: rd.interpFn(val),
     };
   }
@@ -177,7 +205,7 @@ export default function LSTMGates() {
   const signedCell = v => (v >= 0 ? `+${v.toFixed(2)}` : v.toFixed(2));
 
   return (
-    <WidgetCard title="LSTM Gate Inspector — forget, input, output, cell state" number="6.3">
+    <WidgetCard title="LSTM Gate Inspector — gates, candidate, and cell state" number="8.3" tryThis={tryThis}>
       <div ref={containerRef} style={{ position: 'relative' }} onMouseMove={handleMouseMove}>
         <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 
@@ -238,7 +266,7 @@ export default function LSTMGates() {
                     {Array.from({ length: 10 }, (_, col) => {
                       const val       = rowData[row][col];
                       const isHovered = hoveredCell?.row === row && hoveredCell?.col === col;
-                      const dispVal   = row === 3
+                      const dispVal   = row >= SIGNED_ROW_START
                         ? (val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2))
                         : val.toFixed(2);
 
@@ -323,7 +351,7 @@ export default function LSTMGates() {
                   onChange={e => setShowCellState(e.target.checked)}
                   style={{ accentColor: C.accent }}
                 />
-                <span style={{ ...mono, fontSize: '11px', color: C.muted }}>Show cell state</span>
+                <span style={{ ...mono, fontSize: '11px', color: C.muted }}>Show candidate &amp; cell state</span>
               </label>
             </div>
           </div>
@@ -342,10 +370,11 @@ export default function LSTMGates() {
             </div>
 
             {[
-              { key: 'ft', label: 'ft', valStr: ft.toFixed(2),       interp: forgetInterp(ft), color: C.accent },
-              { key: 'it', label: 'it', valStr: it.toFixed(2),       interp: inputInterp(it),  color: C.orange },
-              { key: 'ot', label: 'ot', valStr: ot.toFixed(2),       interp: outputInterp(ot), color: C.purple },
-              { key: 'ct', label: 'ct', valStr: signedCell(ct),       interp: null,              color: C.math   },
+              { key: 'ft', label: 'ft', valStr: ft.toFixed(2),       interp: forgetInterp(ft),    color: C.accent    },
+              { key: 'it', label: 'it', valStr: it.toFixed(2),       interp: inputInterp(it),     color: C.orange    },
+              { key: 'ot', label: 'ot', valStr: ot.toFixed(2),       interp: outputInterp(ot),    color: C.purple    },
+              { key: 'gt', label: 'c̃t', valStr: signedCell(gt),      interp: candidateInterp(gt), color: C.candidate },
+              { key: 'ct', label: 'ct', valStr: signedCell(ct),       interp: null,               color: C.math      },
             ].map(({ key, label, valStr, interp, color }) => (
               <div key={key}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: interp ? '2px' : 0 }}>
@@ -366,9 +395,10 @@ export default function LSTMGates() {
             <div style={{ borderTop: `1px solid ${C.border}` }} />
 
             {[
-              { key: 'mf', label: 'Mean forget gate', val: meanF.toFixed(2), color: C.accent },
-              { key: 'mi', label: 'Mean input gate',  val: meanI.toFixed(2), color: C.orange },
-              { key: 'cr', label: 'Cell state range', val: `${cMin.toFixed(2)} to ${cMax.toFixed(2)}`, color: C.math },
+              { key: 'mf', label: 'Mean forget gate',  val: meanF.toFixed(2), color: C.accent },
+              { key: 'mi', label: 'Mean input gate',   val: meanI.toFixed(2), color: C.orange },
+              { key: 'gr', label: 'Candidate range',   val: `${gMin.toFixed(2)} to ${gMax.toFixed(2)}`, color: C.candidate },
+              { key: 'cr', label: 'Cell state range',  val: `${cMin.toFixed(2)} to ${cMax.toFixed(2)}`, color: C.math },
             ].map(({ key, label, val, color }) => (
               <div key={key}>
                 <div style={{ ...mono, fontSize: '9px', color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '2px' }}>

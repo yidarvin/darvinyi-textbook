@@ -34,27 +34,44 @@ function fmtSci(val) {
   return `${mant.toFixed(2)}e${exp}`;
 }
 
-export default function VanishingGradient() {
+export default function VanishingGradient({ tryThis = {
+  do: "Set spectral radius ρ above 1.0 (e.g. ρ = 1.2), then drag the new avg tanh' saturation slider down from 1.0 toward 0.5.",
+  notice: "the RNN curve still vanishes even though ρ(Wh) > 1 — tanh saturation shrinks the effective per-step growth factor (ρ·s) below 1, so ρ(Wh) > 1 is necessary but not sufficient for exploding gradients.",
+} } = {}) {
   const canvasRef = useRef(null);
   const [T, setT] = useState(20);
   const [spectralRadius, setSpectralRadius] = useState(0.90);
   const [forgetGate, setForgetGate] = useState(0.95);
+  const [tanhDeriv, setTanhDeriv] = useState(1.0);
   const [showRNN, setShowRNN] = useState(true);
   const [showLSTM, setShowLSTM] = useState(true);
 
+  // Effective per-step growth factor for the RNN gradient product. The true
+  // BPTT gradient is a product of W_h^T · diag(tanh'(z_k)) terms (see the
+  // MathBlock above in RNNs.jsx), so even when rho(W_h) = spectralRadius > 1,
+  // the tanh' factor -- always <= 1, and often << 1 near saturation -- can
+  // still pull the effective factor below 1. spectral radius > 1 is
+  // necessary but NOT sufficient for exploding gradients; tanhDeriv (an
+  // illustrative average of |tanh'(z_k)| across the sequence) lets the
+  // reader see that more subtle relationship instead of an unconditional
+  // exponential blow-up whenever rho > 1.
+  const effRho = spectralRadius * tanhDeriv;
+
   const { rnnGrads, lstmGrads } = useMemo(() => {
     const rnn = [], lstm = [];
+    const eff = spectralRadius * tanhDeriv;
     for (let t = 0; t <= T; t++) {
-      rnn.push(Math.pow(spectralRadius, T - t));
+      rnn.push(Math.pow(eff, T - t));
       lstm.push(Math.pow(forgetGate, T - t));
     }
     return { rnnGrads: rnn, lstmGrads: lstm };
-  }, [T, spectralRadius, forgetGate]);
+  }, [T, spectralRadius, tanhDeriv, forgetGate]);
 
   const { tVanishRNN, tVanishLSTM } = useMemo(() => {
     let rnnV = null, lstmV = null;
-    if (spectralRadius < 1.0) {
-      const v = T - Math.floor(Math.log(1e-4) / Math.log(spectralRadius));
+    const eff = spectralRadius * tanhDeriv;
+    if (eff < 1.0) {
+      const v = T - Math.floor(Math.log(1e-4) / Math.log(eff));
       if (v >= 0 && v <= T) rnnV = v;
     }
     if (forgetGate < 0.99) {
@@ -62,7 +79,7 @@ export default function VanishingGradient() {
       if (v >= 0 && v <= T) lstmV = v;
     }
     return { tVanishRNN: rnnV, tVanishLSTM: lstmV };
-  }, [T, spectralRadius, forgetGate]);
+  }, [T, spectralRadius, tanhDeriv, forgetGate]);
 
   const rnnAt0  = rnnGrads[0];
   const lstmAt0 = lstmGrads[0];
@@ -208,7 +225,7 @@ export default function VanishingGradient() {
       }
 
       // RNN vanishing annotation
-      if (showRNN && spectralRadius < 1.0 && tVanishRNN !== null) {
+      if (showRNN && effRho < 1.0 && tVanishRNN !== null) {
         const x = toX(tVanishRNN);
         ctx.strokeStyle = 'rgba(248,113,113,0.6)';
         ctx.lineWidth = 1;
@@ -225,15 +242,14 @@ export default function VanishingGradient() {
         ctx.fillText(`RNN vanishes at t=${tVanishRNN}`, x, TOP_PAD - 1);
       }
 
-      // Exploding triangle (rho >= 1)
-      if (showRNN && spectralRadius >= 1.0) {
-        let triX;
-        if (spectralRadius > 1.0) {
-          const tExit = T - Math.log(10) / Math.log(spectralRadius);
-          triX = tExit >= 0 && tExit <= T ? toX(tExit) : LEFT_PAD + 10;
-        } else {
-          triX = LEFT_PAD + chartW - 10;
-        }
+      // Exploding triangle -- keyed on the *effective* growth factor
+      // (spectral radius times the average tanh' saturation term), not on
+      // spectral radius alone, and only drawn when that factor is strictly
+      // greater than 1 so it can never contradict the "stable" classification
+      // in the stats panel at the boundary (effRho === 1).
+      if (showRNN && effRho > 1.0) {
+        const tExit = T - Math.log(10) / Math.log(effRho);
+        const triX = tExit >= 0 && tExit <= T ? toX(tExit) : LEFT_PAD + 10;
         ctx.fillStyle = C.orange;
         ctx.beginPath();
         ctx.moveTo(triX, TOP_PAD + 3);
@@ -271,17 +287,27 @@ export default function VanishingGradient() {
     const ro = new ResizeObserver(draw);
     ro.observe(canvas);
     return () => ro.disconnect();
-  }, [T, spectralRadius, forgetGate, showRNN, showLSTM, rnnGrads, lstmGrads, tVanishRNN, tVanishLSTM]);
+  }, [T, spectralRadius, tanhDeriv, effRho, forgetGate, showRNN, showLSTM, rnnGrads, lstmGrads, tVanishRNN, tVanishLSTM]);
 
+  // Raw spectral radius alone is a necessary-but-not-sufficient condition:
+  // rho(Wh) > 1 does NOT guarantee exploding gradients once the tanh'
+  // saturation term is folded in. effRhoHint / rnnVanishStat below classify
+  // the quantity that actually drives the plotted curve (effRho) instead.
   const rhoHint =
-    spectralRadius < 1  ? { text: 'vanishing',  color: C.red }
-  : spectralRadius > 1  ? { text: 'exploding',  color: C.orange }
-  :                       { text: 'stable',     color: C.green };
+    spectralRadius < 1  ? { text: 'ρ(Wh) < 1 alone', color: C.red }
+  : spectralRadius > 1  ? { text: 'ρ(Wh) > 1 alone — necessary, not sufficient, for exploding', color: C.orange }
+  :                       { text: 'ρ(Wh) = 1 alone', color: C.green };
+
+  const effRhoHint =
+    effRho < 1  ? { text: `effective growth ρ·s = ${effRho.toFixed(2)} — actually vanishing`, color: C.red }
+  : effRho > 1  ? { text: `effective growth ρ·s = ${effRho.toFixed(2)} — actually exploding`, color: C.orange }
+  :               { text: `effective growth ρ·s = ${effRho.toFixed(2)} — stable`, color: C.green };
 
   const rnnVanishStat =
-    spectralRadius >= 1     ? { val: 'stable',    color: spectralRadius > 1 ? C.orange : C.green }
-  : tVanishRNN !== null     ? { val: `t = ${tVanishRNN}`, color: C.red }
-  :                           { val: 'beyond T',  color: C.textMid };
+    effRho > 1              ? { val: 'exploding', color: C.orange }
+  : effRho === 1             ? { val: 'stable',    color: C.green }
+  : tVanishRNN !== null      ? { val: `t = ${tVanishRNN}`, color: C.red }
+  :                            { val: 'beyond T',  color: C.textMid };
 
   const lstmVanishStat =
     forgetGate >= 0.99  ? { val: 'stable',    color: C.green }
@@ -289,6 +315,7 @@ export default function VanishingGradient() {
   :                        { val: 'beyond T',  color: C.textMid };
 
   const stats = [
+    { label: 'Effective growth ρ·s',   val: effRho.toFixed(2), color: effRhoHint.color },
     { label: 'RNN gradient at t=0',    val: fmtSci(rnnAt0),  color: C.red },
     { label: 'LSTM gradient at t=0',   val: fmtSci(lstmAt0), color: C.accent },
     { label: 'RNN vanishes at',        val: rnnVanishStat.val,  color: rnnVanishStat.color },
@@ -298,7 +325,7 @@ export default function VanishingGradient() {
   ];
 
   return (
-    <WidgetCard title="Vanishing Gradient — RNN vs LSTM across timesteps" number="6.2">
+    <WidgetCard title="Vanishing Gradient — RNN vs LSTM across timesteps" number="8.2" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 
         {/* Canvas + controls */}
@@ -329,6 +356,25 @@ export default function VanishingGradient() {
               />
               <div style={{ ...mono, fontSize: '10px', marginTop: '4px', color: rhoHint.color }}>
                 {rhoHint.text}
+              </div>
+            </div>
+
+            {/* Average tanh' saturation -- the term a raw-spectral-radius
+                story drops. Even rho(Wh) > 1 can still yield an effective
+                growth factor <= 1 once this is folded in, which is why the
+                chart's "exploding"/"vanishing" annotations are keyed on
+                effRho = spectralRadius * tanhDeriv, not spectralRadius alone. */}
+            <div>
+              <SliderRow
+                label={`avg |tanh'(z)| saturation  s = ${tanhDeriv.toFixed(2)}`}
+                value={tanhDeriv} min={0.20} max={1.00} step={0.05}
+                onChange={v => setTanhDeriv(parseFloat(v))}
+              />
+              <div style={{ ...mono, fontSize: '10px', marginTop: '4px', color: effRhoHint.color }}>
+                {effRhoHint.text}
+              </div>
+              <div style={{ ...mono, fontSize: '9px', marginTop: '3px', color: C.textMuted }}>
+                s = 1.0 is the idealized unsaturated (linear) regime; real tanh units saturate toward s → 0, so the true BPTT gradient product is ρ(Wh)·tanh′(z) per step, not ρ(Wh) alone.
               </div>
             </div>
 
