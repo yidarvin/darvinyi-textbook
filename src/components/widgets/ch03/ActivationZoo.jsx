@@ -45,23 +45,32 @@ function hexToRgba(hex, a) {
   return `rgba(${r},${g},${b},${a})`;
 }
 
+// Dead-zone tolerance for the derivative sign-change check below. This only
+// needs to absorb finite-difference/float noise (which is ~1e-9 or smaller
+// for H_DERIV=0.001 on these smooth functions) -- it must NOT be large enough
+// to swallow real sign changes. Swish's derivative crosses zero near x~-1.28
+// with values as small as ~-0.0006 just before the crossing, so anything
+// approaching 1e-3 (the old tolerance) is unsafe.
+const MONOTONIC_EPS = 1e-6;
+
 function isMonotonic(f) {
   let prev = nd(f, XS[0]);
   for (let i = 1; i < XS.length; i++) {
     const d = nd(f, XS[i]);
-    if (prev > 0.001 && d < -0.001) return false;
-    if (prev < -0.001 && d > 0.001) return false;
+    if (prev > MONOTONIC_EPS && d < -MONOTONIC_EPS) return false;
+    if (prev < -MONOTONIC_EPS && d > MONOTONIC_EPS) return false;
     prev = d;
   }
   return true;
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function ActivationZoo() {
+export default function ActivationZoo({ tryThis }) {
   const [active, setActive] = useState(new Set(['relu', 'gelu']));
   const [showDeriv, setShowDeriv] = useState(false);
   const [showSat, setShowSat] = useState(false);
-  const [alpha, setAlpha] = useState(0.1);
+  const [leakyAlpha, setLeakyAlpha] = useState(0.1);
+  const [eluAlpha, setEluAlpha] = useState(1.0);
   const canvasRef = useRef(null);
 
   function toggle(id) {
@@ -74,7 +83,10 @@ export default function ActivationZoo() {
 
   const activeFns = FN_DEFS
     .filter(d => active.has(d.id))
-    .map(d => ({ ...d, fn: makeFn(d.id, alpha) }));
+    .map(d => ({
+      ...d,
+      fn: makeFn(d.id, d.id === 'elu' ? eluAlpha : d.id === 'leakyRelu' ? leakyAlpha : undefined),
+    }));
 
   const firstFn = activeFns[0] ?? null;
 
@@ -243,12 +255,13 @@ export default function ActivationZoo() {
         });
       });
     }
-  }, [active, showDeriv, showSat, alpha]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [active, showDeriv, showSat, leakyAlpha, eluAlpha]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const leakyOn = active.has('leakyRelu');
+  const eluOn = active.has('elu');
 
   return (
-    <WidgetCard title="Activation Functions — compare all 8" number="3.3">
+    <WidgetCard title="Activation Functions — compare all 8" number="3.3" tryThis={tryThis}>
 
       {/* Canvas + Stats */}
       <div style={{ display: 'flex', gap: '14px', marginBottom: '16px' }}>
@@ -362,12 +375,26 @@ export default function ActivationZoo() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <span style={{ fontFamily: MONO, fontSize: '11px', color: 'var(--text-muted)' }}>leaky α</span>
             <input
-              type="range" min={0.01} max={0.5} step={0.01} value={alpha}
-              onChange={e => setAlpha(+e.target.value)}
+              type="range" min={0.01} max={0.5} step={0.01} value={leakyAlpha}
+              onChange={e => setLeakyAlpha(+e.target.value)}
               style={{ width: '80px' }}
             />
             <span style={{ fontFamily: MONO, fontSize: '11px', color: 'var(--accent)', minWidth: '30px' }}>
-              {alpha.toFixed(2)}
+              {leakyAlpha.toFixed(2)}
+            </span>
+          </div>
+        )}
+
+        {eluOn && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontFamily: MONO, fontSize: '11px', color: 'var(--text-muted)' }}>ELU α</span>
+            <input
+              type="range" min={0.1} max={2.0} step={0.1} value={eluAlpha}
+              onChange={e => setEluAlpha(+e.target.value)}
+              style={{ width: '80px' }}
+            />
+            <span style={{ fontFamily: MONO, fontSize: '11px', color: 'var(--accent)', minWidth: '30px' }}>
+              {eluAlpha.toFixed(1)}
             </span>
           </div>
         )}

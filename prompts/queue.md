@@ -47,7 +47,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | ID | Title | Status |
 |---|---|---|
 | C2 | Ch02 Statistical Learning — deep pass (Appendix A: ch01→02) | DONE |
-| C3 | Ch03 Neural Networks — deep pass (Appendix A: ch02→03) | PENDING |
+| C3 | Ch03 Neural Networks — deep pass (Appendix A: ch02→03) | DONE |
 | C4 | Ch04 Optimization — deep pass (Appendix A: ch03→04) | PENDING |
 | C5 | Ch05 Training Techniques — deep pass (Appendix A: ch04→05) | PENDING |
 | C6 | Ch06 Convolutional Networks — deep pass + absorb Capsule Networks historical sidebar (Appendix A: ch12→06, ch15) | PENDING |

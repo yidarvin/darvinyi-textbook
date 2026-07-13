@@ -23,8 +23,13 @@ const OP_LABELS = ['W⁽¹⁾, b⁽¹⁾, σ', 'W⁽²⁾, b⁽²⁾, σ', 'loss
 const FWD_LABELS = ['a⁽⁰⁾', 'a⁽¹⁾', 'a⁽²⁾'];
 
 // Backward arrows flow below (teal)
-const BWD_LABELS = ['δ⁽⁰⁾', 'δ⁽¹⁾', 'δ⁽²⁾'];
-const BWD_OP_LABELS = ['× W⁽¹⁾ᵀ', '× σ′(z⁽¹⁾) · W⁽²⁾ᵀ', '× σ′(z⁽²⁾)'];
+// bwd-0 undoes layer 1 (a⁽¹⁾ → a⁽⁰⁾): produces δ⁽¹⁾ = (…) ⊙ σ′(z⁽¹⁾), then × W⁽¹⁾ᵀ
+// bwd-1 undoes layer 2 (a⁽²⁾ → a⁽¹⁾): produces δ⁽²⁾ = (…) ⊙ σ′(z⁽²⁾), then × W⁽²⁾ᵀ
+// bwd-2 undoes the loss box (L → a⁽²⁾): no activation or weight to undo, just the loss derivative
+const BWD_LABELS = ['δ⁽¹⁾', 'δ⁽²⁾', 'loss grad'];
+const BWD_OP_LABELS = ['× σ′(z⁽¹⁾) · W⁽¹⁾ᵀ', '× σ′(z⁽²⁾) · W⁽²⁾ᵀ', '× ℓ′(a⁽²⁾)'];
+// Cached values shown under each non-final node; the input a⁽⁰⁾ has no z to cache.
+const CACHE_LABELS = ['cache: a⁽⁰⁾', 'cache: a⁽¹⁾, z⁽¹⁾', 'cache: a⁽²⁾, z⁽²⁾'];
 
 function NodeCircle({ cx, label }) {
   return (
@@ -171,7 +176,7 @@ export default function BackpropFlow() {
             fontSize="10"
             fill={C.muted}
           >
-            cache: a{['⁽⁰⁾', '⁽¹⁾', '⁽²⁾'][i]}, z{['⁽⁰⁾', '⁽¹⁾', '⁽²⁾'][i]}
+            {CACHE_LABELS[i]}
           </text>
         ))}
 

@@ -39,7 +39,7 @@ const PL = 44, PR = 12, PT = 30, PB = 26;
 const N = 100;
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function LossFunctions() {
+export default function LossFunctions({ tryThis }) {
   const canvasRef = useRef(null);
   const [trueLabel, setTrueLabel] = useState(1);
   const [predY, setPredY]         = useState(0.5);
@@ -228,7 +228,7 @@ export default function LossFunctions() {
   });
 
   return (
-    <WidgetCard title="Loss Functions — MSE, cross-entropy, focal" number="3.4">
+    <WidgetCard title="Loss Functions — MSE, cross-entropy, focal" number="3.4" tryThis={tryThis}>
 
       {/* ── Canvas + Stats ─────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>

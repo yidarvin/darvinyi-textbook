@@ -95,7 +95,7 @@ function Toggle({ label, on, onToggle }) {
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function ComputationGraph() {
+export default function ComputationGraph({ tryThis }) {
   const [hovered,       setHovered]       = useState(null);
   const [pinned,        setPinned]        = useState(null);
   const [showValues,    setShowValues]    = useState(true);
@@ -114,7 +114,7 @@ export default function ComputationGraph() {
   }
 
   return (
-    <WidgetCard title="Computation Graph — hover to trace gradients" number="3.2">
+    <WidgetCard title="Computation Graph — hover to trace gradients" number="3.2" tryThis={tryThis}>
 
       {/* ── SVG graph ── */}
       <div style={{

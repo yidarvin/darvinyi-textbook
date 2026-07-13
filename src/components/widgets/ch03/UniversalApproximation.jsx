@@ -183,8 +183,14 @@ function tabStyle(active) {
   };
 }
 
+// ─── Default "try this" guidance (used if the page doesn't supply one) ───────
+const DEFAULT_TRY_THIS = {
+  do: 'Push hidden units from 1 to 64 on the Step target with ReLU.',
+  notice: 'MSE keeps falling as units grow — but only the readout layer ("learned" below) is actually fit each time; the hidden layer is frozen at random from the start.',
+};
+
 // ─── Component ────────────────────────────────────────────────────────────────
-export default function UniversalApproximation() {
+export default function UniversalApproximation({ tryThis = DEFAULT_TRY_THIS }) {
   const [funcIdx,  setFuncIdx]  = useState(0);
   const [actIdx,   setActIdx]   = useState(0);
   const [unitsIdx, setUnitsIdx] = useState(3); // default index 3 → 8 units
@@ -197,7 +203,8 @@ export default function UniversalApproximation() {
   const units  = UNITS_STEPS[unitsIdx];
   const approx = PRECOMPUTED[`${funcIdx}_${actIdx}_${units}`];
   const mse    = computeMSE(approx, funcIdx);
-  const params = units * 3 + 1;
+  const learnedParams = units + 1;      // readout weights + bias — actually least-squares-fit
+  const frozenParams  = units * 2;      // hidden W1 + b1 — random, never optimized
   const qColor = qualityColor(mse);
 
   useEffect(() => {
@@ -306,7 +313,7 @@ export default function UniversalApproximation() {
   }, [funcIdx, actIdx, units]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <WidgetCard title="Universal Approximation — hidden units vs fit quality" number="3.1">
+    <WidgetCard title="Universal Approximation — hidden units vs fit quality" number="3.1" tryThis={tryThis}>
 
       {/* ── Canvas + Stats ── */}
       <div style={{ display: 'flex', gap: '14px', marginBottom: '18px' }}>
@@ -323,16 +330,20 @@ export default function UniversalApproximation() {
         <div style={{
           width: '126px', flexShrink: 0,
           background: 'var(--bg2)', border: '1px solid var(--border)',
-          borderRadius: '8px', padding: '14px 14px',
-          display: 'flex', flexDirection: 'column', gap: '13px',
+          borderRadius: '8px', padding: '12px 14px',
+          display: 'flex', flexDirection: 'column', gap: '9px',
         }}>
           <div>
             <div style={statLabel('MSE')}>MSE</div>
             <div style={statVal(qColor)}>{mse < 0.0001 ? mse.toExponential(1) : mse.toFixed(4)}</div>
           </div>
           <div>
-            <div style={statLabel()}>Parameters</div>
-            <div style={statVal('var(--accent)')}>{params}</div>
+            <div style={statLabel()}>Learned (readout)</div>
+            <div style={statVal('var(--accent)')}>{learnedParams}</div>
+          </div>
+          <div>
+            <div style={statLabel()}>Frozen (random)</div>
+            <div style={statVal('var(--text-muted)')}>{frozenParams}</div>
           </div>
           <div>
             <div style={statLabel()}>Activation</div>
@@ -347,6 +358,22 @@ export default function UniversalApproximation() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ── Disclosure: this is an ELM, not a trained net ── */}
+      <div style={{
+        fontFamily: MONO, fontSize: '11px', lineHeight: 1.5,
+        color: 'var(--text-muted)', marginBottom: '18px',
+        padding: '8px 10px', borderLeft: '2px solid var(--border)',
+      }}>
+        <strong style={{ color: 'var(--text)' }}>How this is fit: </strong>
+        the hidden layer's weights and biases are drawn once at random and then frozen —
+        only the readout layer (teal curve, {learnedParams} values: "learned" above) is
+        solved for by least squares against the target. This is a fast stand-in for
+        gradient training the whole network (backpropagation is introduced later in this
+        chapter); it demonstrates a related but narrower result — a random-features
+        approximation — rather than the trained universal-approximation network described
+        in the text above.
       </div>
 
       {/* ── Controls ── */}
