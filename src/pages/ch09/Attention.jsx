@@ -148,7 +148,11 @@ export default function Attention() {
         come from query-key similarity. The crucial structural point is that <InlineMath>{"Q"}</InlineMath>, <InlineMath>{"K"}</InlineMath>,
         and <InlineMath>{"V"}</InlineMath> are produced by separate learned linear projections of the same
         underlying inputs. The model can learn what to ask, what to advertise, and
-        what to pay out, each independently.
+        what to pay out, each independently. From here on, tokens are row vectors
+        and projections right-multiply — <InlineMath>{"Q = XW_Q"}</InlineMath>, not{" "}
+        <InlineMath>{"Q = W_Q X"}</InlineMath> — the convention used throughout the attention
+        literature, and a transpose of the <InlineMath>{"Wx"}</InlineMath> column-vector convention
+        the earlier chapters used for a single example.
       </p>
 
       <MathBlock>{"$$\\text{Attention}(Q, K, V) = \\text{softmax}\\!\\left(\\frac{QK^{\\top}}{\\sqrt{d_k}}\\right) V$$"}</MathBlock>
@@ -187,7 +191,7 @@ export default function Attention() {
       <p style={prose}>
         The original Transformer uses <InlineMath>{"d_{\\text{model}} = 512"}</InlineMath> and <InlineMath>{"h = 8"}</InlineMath> heads, with
         <InlineMath>{"d_k = d_v = d_{\\text{model}} / h = 64"}</InlineMath>. Each head receives its own learned
-        projections <InlineMath>{"W_Q^i, W_K^i, W_V^i"}</InlineMath> that map from 512 down to 64, runs scaled
+        projections <InlineMath>{"W_i^Q, W_i^K, W_i^V"}</InlineMath> that map from 512 down to 64, runs scaled
         dot-product attention in that 64-dimensional subspace, and produces a
         64-dim output. The eight outputs are concatenated back to 512 and passed
         through a final learned projection <InlineMath>{"W_O \\in \\mathbb{R}^{512 \\times 512}"}</InlineMath>. The compute

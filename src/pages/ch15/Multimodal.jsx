@@ -126,6 +126,14 @@ export default function Multimodal() {
 
       <MathBlock>{"$$\\mathcal{L} = -\\frac{1}{N} \\sum_{i=1}^{N} \\log \\frac{\\exp\\!\\bigl(\\text{sim}(v_i, t_i)/\\tau\\bigr)}{\\sum_{j=1}^{N} \\exp\\!\\bigl(\\text{sim}(v_i, t_j)/\\tau\\bigr)}$$"}</MathBlock>
 
+      <p style={prose}>
+        <InlineMath>{"\\tau"}</InlineMath> plays the same sharpening role as the
+        sampling temperature <InlineMath>{"T"}</InlineMath> introduced in Chapter 14 — dividing similarities before
+        a softmax controls how peaked the distribution is — but here it is a
+        learned parameter optimized alongside the encoders, conventionally
+        written <InlineMath>{"\\tau"}</InlineMath> rather than <InlineMath>{"T"}</InlineMath> to mark that difference.
+      </p>
+
       <CLIPContrastiveMatrix />
 
       <p style={prose}>

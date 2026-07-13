@@ -124,11 +124,11 @@ export default function StatisticalLearning() {
 
       <p style={prose}>
         Formally, we observe <InlineMath>n</InlineMath> input-output pairs{" "}
-        <InlineMath>{"(x_i, y_i) ~ P(X, Y)"}</InlineMath> drawn i.i.d. from an
+        <InlineMath>{"(x_i, y_i) \\sim P(X, Y)"}</InlineMath> drawn i.i.d. from an
         unknown joint distribution. Our goal is to find a function{" "}
-        <InlineMath>{"f: X → Y"}</InlineMath> from a hypothesis class{" "}
+        <InlineMath>{"f: X \\to Y"}</InlineMath> from a hypothesis class{" "}
         <InlineMath>H</InlineMath> that minimizes expected risk{" "}
-        <InlineMath>{"R(f) = E[L(f(x), y)]"}</InlineMath> for some loss{" "}
+        <InlineMath>{"R(f) = \\mathbb{E}[L(f(x), y)]"}</InlineMath> for some loss{" "}
         <InlineMath>L</InlineMath>.
       </p>
 
@@ -220,11 +220,11 @@ export default function StatisticalLearning() {
       </div>
 
       <p style={prose}>
-        Regularization adds a penalty term <InlineMath>{"Ω(f)"}</InlineMath> to
+        Regularization adds a penalty term <InlineMath>{"\\Omega(f)"}</InlineMath> to
         the empirical risk, shrinking the hypothesis class toward simpler
         solutions. The two most common choices are{" "}
-        <InlineMath>L2</InlineMath> (ridge), which penalizes the squared norm of
-        the weights, and <InlineMath>L1</InlineMath> (lasso), which penalizes
+        <InlineMath>{"L_2"}</InlineMath> (ridge), which penalizes the squared norm of
+        the weights, and <InlineMath>{"L_1"}</InlineMath> (lasso), which penalizes
         the absolute norm and induces sparsity by driving individual weights
         exactly to zero — geometrically, because the L1 constraint region has
         corners on the coordinate axes that the loss contours tend to intersect.
@@ -235,10 +235,10 @@ export default function StatisticalLearning() {
       <L1L2Geometry />
 
       <p style={prose}>
-        The regularization strength <InlineMath>λ</InlineMath> is a
+        The regularization strength <InlineMath>{"\\lambda"}</InlineMath> is a
         hyperparameter that controls the bias-variance tradeoff directly: larger{" "}
-        <InlineMath>λ</InlineMath> increases bias and decreases variance. In
-        practice, <InlineMath>λ</InlineMath> is selected via cross-validation,
+        <InlineMath>{"\\lambda"}</InlineMath> increases bias and decreases variance. In
+        practice, <InlineMath>{"\\lambda"}</InlineMath> is selected via cross-validation,
         and the right choice can be the single largest lever for improving
         generalization on a fixed architecture.
       </p>
@@ -246,8 +246,8 @@ export default function StatisticalLearning() {
       <p style={prose}>
         More broadly, regularization is the <em>injection of prior belief</em>{" "}
         about what a good function looks like, expressed as a preference for
-        simpler solutions in the absence of contrary evidence. <InlineMath>L2</InlineMath>{" "}
-        says "all weights should be small"; <InlineMath>L1</InlineMath> says
+        simpler solutions in the absence of contrary evidence. <InlineMath>{"L_2"}</InlineMath>{" "}
+        says "all weights should be small"; <InlineMath>{"L_1"}</InlineMath> says
         "most weights should be exactly zero." This view generalizes far beyond
         explicit norms: dropout is regularization by input noise, early stopping
         is regularization through finite optimization time, data augmentation

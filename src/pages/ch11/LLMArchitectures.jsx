@@ -361,7 +361,7 @@ export default function LLMArchitectures() {
 
       <MathBlock>{`$$\\begin{aligned}
   y &= \\sum_{i \\in \\text{TopK}(G(x), k)} G_i(x) \\cdot \\text{FFN}_i(x) \\\\
-  G(x) &= \\text{Softmax}(\\text{TopK}(W_g \\cdot x,\\, k)) \\\\
+  G(x) &= \\text{Softmax}(\\text{TopK}(x W_g,\\, k)) \\\\
   \\text{active params per token} &\\approx \\tfrac{k}{E} \\cdot \\text{dense params}
 \\end{aligned}$$`}</MathBlock>
 
