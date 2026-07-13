@@ -37,7 +37,7 @@ const DEFAULT_POINTS = [
   { x: 0.75, y: 0.55, cls: 1 },
   { x: 0.68, y: 0.70, cls: 1 },
   { x: 0.82, y: 0.28, cls: 1 },
-  { x: 0.55, y: 0.72, cls: 1 },
+  { x: 0.40, y: 0.24, cls: 1 }, // intruder: class 1, but sits inside the class-0 cluster
 ];
 
 // ─── Math utilities ───────────────────────────────────────────────────────────
@@ -60,9 +60,21 @@ function linearFeatures(x, y) {
   return [1, x, y];
 }
 
-// Polynomial degree-2: [1, x, y, x², xy, y²]
-function polyFeatures(x, y) {
-  return [1, x, y, x * x, x * y, y * y];
+// Polynomial, general degree d: every monomial x^i·y^j with i+j ≤ d,
+// ordered by total degree then descending power of x — e.g. for d=2:
+// [1, x, y, x², xy, y²]. The complexity slider sets d directly, so
+// higher complexity genuinely enlarges the hypothesis class (more
+// curvature terms available), not just how long GD runs for a fixed
+// quadratic.
+function polyFeatures(x, y, degree) {
+  const f = [];
+  for (let total = 0; total <= degree; total++) {
+    for (let i = total; i >= 0; i--) {
+      const j = total - i;
+      f.push(Math.pow(x, i) * Math.pow(y, j));
+    }
+  }
+  return f;
 }
 
 // RBF: [1, exp(-γ·||·-c||²) for each center]
@@ -108,6 +120,8 @@ function buildModel(points, modelType, complexity) {
   const labels = points.map(p => p.cls);
 
   if (modelType === 'Linear') {
+    // Linear hypothesis class ([1, x, y]) has no capacity knob — the
+    // complexity slider is disabled in the UI for this tab.
     const feats = points.map(p => linearFeatures(p.x, p.y));
     const w = trainLogistic(feats, labels);
     if (!w) return null;
@@ -115,12 +129,15 @@ function buildModel(points, modelType, complexity) {
   }
 
   if (modelType === 'Polynomial') {
-    // degree-2 features — complexity slider shifts learning rate / iterations
-    const feats = points.map(p => polyFeatures(p.x, p.y));
-    const iters = Math.round(200 + complexity * 800); // 200..1000
-    const w = trainLogistic(feats, labels, iters, 0.3);
+    // complexity slider sets the polynomial degree (2..6), i.e. it
+    // genuinely changes the hypothesis class — more curvature terms
+    // become available, not just more optimizer iterations.
+    const degree = Math.round(2 + complexity * 4); // 2..6
+    const feats = points.map(p => polyFeatures(p.x, p.y, degree));
+    const iters = 500 + degree * 100; // higher-degree models need more GD steps to converge
+    const w = trainLogistic(feats, labels, iters, 0.4);
     if (!w) return null;
-    return (x, y) => sigmoid(dot(w, polyFeatures(x, y)));
+    return (x, y) => sigmoid(dot(w, polyFeatures(x, y, degree)));
   }
 
   if (modelType === 'RBF') {
@@ -362,9 +379,16 @@ function TabGroup({ options, value, onChange }) {
   );
 }
 
-function Slider({ label, value, min, max, step, onChange, format }) {
+function Slider({ label, value, min, max, step, onChange, format, disabled }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      gap: '10px',
+      opacity: disabled ? 0.35 : 1,
+      pointerEvents: disabled ? 'none' : 'auto',
+      transition: 'opacity 0.15s ease',
+    }}>
       <span style={{
         fontFamily: "'JetBrains Mono', monospace",
         fontSize: '11px',
@@ -380,6 +404,7 @@ function Slider({ label, value, min, max, step, onChange, format }) {
         max={max}
         step={step}
         value={value}
+        disabled={disabled}
         onChange={e => onChange(parseFloat(e.target.value))}
         style={{
           flex: 1,
@@ -387,7 +412,7 @@ function Slider({ label, value, min, max, step, onChange, format }) {
           height: '2px',
           background: C.borderLt,
           borderRadius: '2px',
-          cursor: 'pointer',
+          cursor: disabled ? 'default' : 'pointer',
           accentColor: C.accent,
           outline: 'none',
         }}
@@ -433,7 +458,7 @@ function StatRow({ label, value, color }) {
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
-export default function DecisionBoundary() {
+export default function DecisionBoundary({ tryThis }) {
   const [points,     setPoints]     = useState(DEFAULT_POINTS);
   const [nextClass,  setNextClass]  = useState(0); // alternates 0→1→0→...
   const [modelType,  setModelType]  = useState('Linear');
@@ -531,7 +556,7 @@ export default function DecisionBoundary() {
   }
 
   return (
-    <WidgetCard title="Decision Boundary" number="1.4">
+    <WidgetCard title="Decision Boundary" number="2.4" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
 
         {/* Canvas */}
@@ -612,7 +637,9 @@ export default function DecisionBoundary() {
           />
         </div>
 
-        {/* Complexity slider */}
+        {/* Complexity slider — meaning depends on the selected hypothesis class:
+            inert for Linear (no capacity knob), sets polynomial degree for
+            Polynomial, sets RBF kernel width (γ) for RBF. */}
         <Slider
           label="complexity"
           value={complexity}
@@ -620,7 +647,12 @@ export default function DecisionBoundary() {
           max={1}
           step={0.01}
           onChange={setComplexity}
-          format={v => v.toFixed(2)}
+          disabled={modelType === 'Linear'}
+          format={v => {
+            if (modelType === 'Linear') return 'n/a';
+            if (modelType === 'Polynomial') return `deg ${Math.round(2 + v * 4)}`;
+            return `γ=${(0.5 + v * 19.5).toFixed(1)}`;
+          }}
         />
 
         {/* Clear button */}

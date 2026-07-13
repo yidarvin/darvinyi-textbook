@@ -86,6 +86,44 @@ export const CITATIONS = {
     year: "2023",
     tag: "paper",
   },
+  "elements-of-statistical-learning": {
+    title: "The Elements of Statistical Learning",
+    authors: "Hastie, Tibshirani, Friedman",
+    venue: "Springer",
+    year: "2001",
+    tag: "seminal",
+  },
+  "bias-variance-dilemma": {
+    title: "Neural Networks and the Bias/Variance Dilemma",
+    authors: "Geman, Bienenstock, Doursat",
+    venue: "Neural Computation",
+    year: "1992",
+    tag: "seminal",
+  },
+  "lack-of-a-priori-distinctions": {
+    // The supervised-learning No Free Lunch result — distinct from Wolpert &
+    // Macready's 1997 optimization-focused NFL paper, which is about
+    // black-box search over objective functions, not learning algorithms.
+    title: "The Lack of A Priori Distinctions Between Learning Algorithms",
+    authors: "Wolpert",
+    venue: "Neural Computation",
+    year: "1996",
+    tag: "seminal",
+  },
+  "vc-dimension-learnability": {
+    title: "Learnability and the Vapnik-Chervonenkis Dimension",
+    authors: "Blumer, Ehrenfeucht, Haussler, Warmuth",
+    venue: "Journal of the ACM",
+    year: "1989",
+    tag: "paper",
+  },
+  "reconciling-bias-variance-tradeoff": {
+    title: "Reconciling Modern Machine-Learning Practice and the Classical Bias-Variance Trade-off",
+    authors: "Belkin, Hsu, Ma, Mandal",
+    venue: "PNAS",
+    year: "2019",
+    tag: "seminal",
+  },
 };
 
 // Build a chapter's numbered citation list from an ordered array of entries.

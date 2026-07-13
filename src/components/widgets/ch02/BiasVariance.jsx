@@ -24,20 +24,29 @@ const C = {
 
 // ─── Math: analytic approximations ───────────────────────────────────────────
 // d: degree 1..20, noiseLevel: 0.1..1.0
-function getBias2(d, noiseLevel) {
-  return Math.max(0, 1 - d / 4) * noiseLevel;
+//
+// Bias² depends only on model capacity vs. the true function — a hypothesis
+// class that is too simple (low d) mismatches the target regardless of how
+// noisy the observations are, so it must NOT depend on noiseLevel.
+function getBias2(d) {
+  return 0.5 * Math.exp(-d / 3);
 }
 
+// Variance grows with model capacity (more free parameters to fit to the
+// sample) AND with observation noise (noisier samples wiggle the fit more).
+// A nonzero floor (0.15) keeps the noise term from vanishing at low noise,
+// so the argmin still shifts smoothly across the whole noise range.
 function getVariance(d, noiseLevel) {
-  return (d / 20) * (d / 20) * noiseLevel;
+  return (d / 20) * (d / 20) * (0.15 + noiseLevel);
 }
 
+// Irreducible error: the only term that is a pure function of noiseLevel.
 function getNoise(noiseLevel) {
   return noiseLevel;
 }
 
 function getTotalError(d, noiseLevel) {
-  return getNoise(noiseLevel) + getBias2(d, noiseLevel) + getVariance(d, noiseLevel);
+  return getNoise(noiseLevel) + getBias2(d) + getVariance(d, noiseLevel);
 }
 
 // Build arrays over complexity 1..20
@@ -46,7 +55,7 @@ function buildCurves(noiseLevel) {
   return degrees.map(d => ({
     d,
     noise:    getNoise(noiseLevel),
-    bias2:    getBias2(d, noiseLevel),
+    bias2:    getBias2(d),
     variance: getVariance(d, noiseLevel),
     total:    getTotalError(d, noiseLevel),
   }));
@@ -365,14 +374,14 @@ function StatRow({ label, value, color, sub }) {
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
-export default function BiasVariance() {
+export default function BiasVariance({ tryThis }) {
   const [complexity,  setComplexity]  = useState(5);
   const [noiseLevel,  setNoiseLevel]  = useState(0.4);
 
   const canvasRef = useRef(null);
 
   const optD      = findOptimalComplexity(noiseLevel);
-  const bias2Val  = getBias2(complexity, noiseLevel);
+  const bias2Val  = getBias2(complexity);
   const varVal    = getVariance(complexity, noiseLevel);
   const noiseVal  = getNoise(noiseLevel);
   const totalVal  = getTotalError(complexity, noiseLevel);
@@ -399,7 +408,7 @@ export default function BiasVariance() {
   }, [draw]);
 
   return (
-    <WidgetCard title="Bias-Variance Decomposition" number="1.2">
+    <WidgetCard title="Bias-Variance Decomposition" number="2.2" tryThis={tryThis}>
       {/* Canvas + stat panel */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
         {/* Canvas */}

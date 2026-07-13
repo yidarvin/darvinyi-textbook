@@ -326,7 +326,7 @@ function Legend() {
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
-export default function RegularizationExplorer() {
+export default function RegularizationExplorer({ tryThis }) {
   const [regType, setRegType] = useState('L1');
   const [lambda,  setLambda]  = useState(0.3);
   const [alpha,   setAlpha]   = useState(0.5);
@@ -356,7 +356,7 @@ export default function RegularizationExplorer() {
   }, [draw]);
 
   return (
-    <WidgetCard title="Regularization Explorer" number="1.3">
+    <WidgetCard title="Regularization Explorer" number="2.3" tryThis={tryThis}>
       {/* Canvas + stat panel */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
         {/* Canvas */}
@@ -474,6 +474,15 @@ export default function RegularizationExplorer() {
         {regType === 'Elastic Net' && (
           <>w&#x27; = L2(L1(w, &lambda;&alpha;), &lambda;(1&minus;&alpha;))</>
         )}
+      </div>
+      <div style={{
+        marginTop: '6px',
+        fontFamily: "'JetBrains Mono', monospace",
+        fontSize: '9.5px',
+        color: C.textMuted,
+        lineHeight: 1.4,
+      }}>
+        Closed form shown for an orthogonal/uncorrelated design; with correlated features, shrinkage couples across weights instead of applying independently per-weight.
       </div>
     </WidgetCard>
   );

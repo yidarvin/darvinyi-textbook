@@ -15,13 +15,24 @@ const R = 55;                   // constraint radius
 
 // Loss minimum offset from origin (same in both panels — same loss function)
 const LOSS_DX = 90;
-const LOSS_DY = -55;
+const LOSS_DY = -45;
 
-// Three concentric contour ellipses around the loss minimum
+// Three concentric, self-similar contour ellipses around the loss minimum
+// (all share CONTOUR_ANGLE and the same rx:ry aspect ratio — true level sets
+// of one quadratic loss are always scaled copies of the same ellipse shape).
+// The outermost ellipse's (rx, ry) is solved so it is genuinely TANGENT to
+// the L1 diamond's right corner T2 = (O2.x + R, O2.y): it passes exactly
+// through T2 (ellipse value 1.0000) AND stays outside the diamond's two
+// adjacent edges everywhere else (min value ~1.0000 along the top edge,
+// ~1.0028 along the bottom edge, verified numerically by sampling 1000
+// points per edge) — the earlier rx=72/ry=56.04 pair only satisfied the
+// first condition, so the contour visibly cut through the diamond's edge
+// before reaching the corner. The inner two contours are the same shape
+// scaled down (matching the original 72→50→24 relative spacing).
 const CONTOURS = [
-  { rx: 72, ry: 48 },
-  { rx: 50, ry: 32 },
-  { rx: 24, ry: 15 },
+  { rx: 55,    ry: 64.59 },
+  { rx: 38.19, ry: 44.85 },
+  { rx: 18.33, ry: 21.53 },
 ];
 const CONTOUR_ANGLE = -22;
 

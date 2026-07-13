@@ -39,19 +39,27 @@ const CLASS_B = [
   [0.3, 0.3], [-0.2, -0.4],
 ];
 
-// Vertex sequence for the 1-NN jagged main region (around class-A interior cluster).
+// Vertex sequence for the 1-NN region enclosing class A, computed as the true
+// nearest-neighbor (Voronoi-union) boundary for the CLASS_A/CLASS_B points
+// above, clipped to the plotted [-1, 1] square. This guarantees the
+// zero-training-error property of 1-NN: every CLASS_A point falls strictly
+// inside a drawn region and every CLASS_B point strictly outside. Note the
+// outlier at [-0.85, 0.3] is not an isolated island — its cell is connected
+// to the main cluster by an open corridor with no class-B point in between,
+// so it appears as a peninsula reaching the left edge of the plot.
 const JAGGED_MAIN = [
-  [0.05, 0.62], [0.22, 0.6], [0.32, 0.45], [0.18, 0.4],
-  [0.4, 0.35], [0.58, 0.4], [0.6, 0.1], [0.66, -0.05],
-  [0.55, -0.15], [0.62, -0.35], [0.48, -0.58], [0.32, -0.55],
-  [0.22, -0.42], [0.08, -0.5], [-0.08, -0.32], [-0.18, -0.5],
-  [-0.35, -0.55], [-0.52, -0.4], [-0.6, -0.18], [-0.44, -0.02],
-  [-0.6, 0.18], [-0.62, 0.38], [-0.48, 0.55], [-0.25, 0.58], [-0.05, 0.62],
+  [-1.0, 0.17], [-0.7, 0.12], [-0.7, -0.24], [-0.42, -0.58], [-0.22, -0.18],
+  [-0.15, -0.25], [-0.15, -0.67], [0.15, -0.61], [0.43, -0.83], [0.49, -0.75],
+  [0.59, -0.38], [0.72, -0.24], [0.63, -0.04], [0.81, 0.25], [0.49, 0.44],
+  [0.34, 0.12], [0.1, 0.2], [0.15, 0.35], [0.38, 0.58], [0.26, 0.72],
+  [-0.1, 0.68], [-0.42, 0.96], [-0.53, 0.74], [-0.53, 0.3], [-0.56, 0.28], [-1.0, 0.5],
 ];
 
-// Small jagged 'island' polygons for the two class-A outliers.
-const ISLAND_TL = [[-0.95, 0.4], [-0.75, 0.42], [-0.7, 0.22], [-0.88, 0.16], [-0.97, 0.28]];
-const ISLAND_TR = [[0.7, 0.72], [0.92, 0.7], [0.92, 0.48], [0.7, 0.52]];
+// The outlier at [0.8, 0.6] does form its own separate cell, but that cell is
+// unbounded (nearest-neighbor territory extending away from the cluster), so
+// clipped to the plot bounds it reaches the top-right corner rather than
+// forming a small closed island.
+const ISLAND_TR = [[1.0, 1.0], [0.88, 1.0], [0.67, 0.74], [0.9, 0.28], [1.0, 0.3]];
 
 // Build SVG polygon `points` string from panel index + coord array.
 function pts(i, arr) {
@@ -140,10 +148,10 @@ export default function DecisionBoundaryShapes() {
         />
         <Points i={0} />
         <text x={PANEL_CX[0]} y={282} textAnchor="middle" fontFamily={mono} fontSize="10.5" fill={C.muted}>
-          logistic / SVM
+          logistic regression
         </text>
 
-        {/* ── Panel 1: Quadratic kernel ───────────────────── */}
+        {/* ── Panel 1: Smooth kernel boundary ─────────────── */}
         <PanelFrame i={1} title="KERNEL" />
         {/* Smooth elliptical boundary */}
         <ellipse
@@ -158,7 +166,7 @@ export default function DecisionBoundaryShapes() {
         />
         <Points i={1} />
         <text x={PANEL_CX[1]} y={282} textAnchor="middle" fontFamily={mono} fontSize="10.5" fill={C.muted}>
-          quadratic-kernel SVM
+          smooth kernel boundary
         </text>
 
         {/* ── Panel 2: 1-NN jagged ────────────────────────── */}
@@ -170,13 +178,7 @@ export default function DecisionBoundaryShapes() {
           stroke={C.accent}
           strokeWidth="1.5"
         />
-        {/* Two small islands around the outlier class-A points */}
-        <polygon
-          points={pts(2, ISLAND_TL)}
-          fill="none"
-          stroke={C.accent}
-          strokeWidth="1.5"
-        />
+        {/* Separate unbounded cell around the top-right outlier, clipped to the panel */}
         <polygon
           points={pts(2, ISLAND_TR)}
           fill="none"
@@ -185,7 +187,7 @@ export default function DecisionBoundaryShapes() {
         />
         <Points i={2} />
         <text x={PANEL_CX[2]} y={282} textAnchor="middle" fontFamily={mono} fontSize="10.5" fill={C.muted}>
-          k-nearest neighbours, k = 1
+          k-nearest neighbors, k = 1
         </text>
       </svg>
 

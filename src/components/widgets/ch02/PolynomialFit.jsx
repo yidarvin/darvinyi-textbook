@@ -51,13 +51,28 @@ function splitData(points, trainFrac) {
   return { train, val };
 }
 
-// ─── Build Vandermonde matrix ─────────────────────────────────────────────────
-function vandermonde(xs, degree) {
-  return xs.map(x => {
-    const row = [];
-    for (let d = 0; d <= degree; d++) row.push(Math.pow(x, d));
-    return row;
-  });
+// ─── Map raw x in [0,1) to a centered range ──────────────────────────────────
+// Fitting is done in t = 2x - 1 ∈ [-1,1) rather than raw x, and with a
+// Chebyshev (orthogonal-ish) polynomial basis instead of raw monomials x^d.
+// Raw monomials on x ∈ [0,1] are catastrophically ill-conditioned once
+// degree passes ~10 (they become numerically near-collinear), which makes
+// the VᵀV normal-equation solve lose precision and train MSE plateau well
+// above zero. Chebyshev polynomials stay well-conditioned to degree 20+.
+function toCentered(x) {
+  return 2 * x - 1;
+}
+
+// ─── Build Chebyshev (first-kind) design matrix ──────────────────────────────
+function chebyshevRow(t, degree) {
+  const row = new Array(degree + 1);
+  row[0] = 1;
+  if (degree >= 1) row[1] = t;
+  for (let d = 2; d <= degree; d++) row[d] = 2 * t * row[d - 1] - row[d - 2];
+  return row;
+}
+
+function designMatrix(xs, degree) {
+  return xs.map(x => chebyshevRow(toCentered(x), degree));
 }
 
 // ─── Gaussian elimination to solve Ax = b ────────────────────────────────────
@@ -92,7 +107,7 @@ function gaussElim(A, b) {
 
 // ─── Least-squares via normal equations: (VᵀV)c = Vᵀy ────────────────────────
 function fitPolynomial(xs, ys, degree) {
-  const V = vandermonde(xs, degree);
+  const V = designMatrix(xs, degree);
   const n = degree + 1;
 
   // VᵀV
@@ -111,10 +126,11 @@ function fitPolynomial(xs, ys, degree) {
   return gaussElim(VtV, Vty);
 }
 
-// ─── Evaluate polynomial ──────────────────────────────────────────────────────
+// ─── Evaluate polynomial (Chebyshev basis on centered x) ─────────────────────
 function polyEval(coeffs, x) {
+  const row = chebyshevRow(toCentered(x), coeffs.length - 1);
   let y = 0;
-  for (let d = 0; d < coeffs.length; d++) y += coeffs[d] * Math.pow(x, d);
+  for (let d = 0; d < coeffs.length; d++) y += coeffs[d] * row[d];
   return y;
 }
 
@@ -362,7 +378,7 @@ function StatRow({ label, value, color }) {
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
-export default function PolynomialFit() {
+export default function PolynomialFit({ tryThis }) {
   const N_POINTS   = 20;
   const TRAIN_FRAC = 0.8; // fixed 80/20 split
 
@@ -399,7 +415,7 @@ export default function PolynomialFit() {
   if (trainMSE > 0.05 && degree <= 2) {
     status = 'underfit';
     statusColor = C.orange;
-  } else if (valMSE > 2 * trainMSE + 0.01 && degree >= 5) {
+  } else if (valMSE > 2 * trainMSE + 0.01 && degree >= 9) {
     status = 'overfit';
     statusColor = C.red;
   } else if (trainMSE < 0.005 && valMSE > 0.05) {
@@ -436,7 +452,7 @@ export default function PolynomialFit() {
   }, [draw]);
 
   return (
-    <WidgetCard title="Polynomial Fit" number="1.1">
+    <WidgetCard title="Polynomial Fit" number="2.1" tryThis={tryThis}>
       {/* Main layout: canvas + stat panel */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
         {/* Canvas */}
