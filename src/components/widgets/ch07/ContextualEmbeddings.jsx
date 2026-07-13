@@ -275,8 +275,8 @@ function StatsPanel({ word, ctxSims }) {
   const maxIdx = ctxSims.indexOf(Math.max(...ctxSims));
   const minIdx = ctxSims.indexOf(Math.min(...ctxSims));
 
-  const row = (label, val, col) => (
-    <div key={label} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
+  const row = (label, val, col, keyPrefix) => (
+    <div key={`${keyPrefix}-${label}`} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '3px' }}>
       <span style={{ fontFamily: MONO, fontSize: '8.5px', color: C.muted }}>{label}:</span>
       <span style={{ fontFamily: MONO, fontSize: '8.5px', color: col || C.accent }}>{val}</span>
     </div>
@@ -306,8 +306,8 @@ function StatsPanel({ word, ctxSims }) {
       <div style={{ fontFamily: SANS, fontSize: '9px', color: C.mid, marginBottom: '5px', fontStyle: 'italic' }}>
         Static (Word2Vec / GloVe)
       </div>
-      {pairLabels.map(lbl => row(lbl, '1.000', C.muted))}
-      {row('Unique', '1  (same for all ctx)', C.muted)}
+      {pairLabels.map(lbl => row(lbl, '1.000', C.muted, 'static'))}
+      {row('Unique', '1  (same for all ctx)', C.muted, 'static')}
 
       {divider()}
 
@@ -315,8 +315,8 @@ function StatsPanel({ word, ctxSims }) {
       <div style={{ fontFamily: SANS, fontSize: '9px', color: C.mid, marginBottom: '5px', fontStyle: 'italic' }}>
         Contextual (BERT / ELMo)
       </div>
-      {pairLabels.map((lbl, i) => row(lbl, ctxSims[i].toFixed(3), simColor(ctxSims[i])))}
-      {row('Unique', '3  (one per context)', C.accent)}
+      {pairLabels.map((lbl, i) => row(lbl, ctxSims[i].toFixed(3), simColor(ctxSims[i]), 'contextual'))}
+      {row('Unique', '3  (one per context)', C.accent, 'contextual')}
 
       {divider()}
 
