@@ -154,11 +154,11 @@ export default function TocRail() {
   }
 
   if (!sections.length) {
-    return <div style={railStyle} />;
+    return <div id="toc-rail" style={railStyle} />;
   }
 
   return (
-    <div style={railStyle}>
+    <div id="toc-rail" style={railStyle}>
       <div style={innerStyle}>
         <div style={labelStyle}>On this page</div>
         {sections.map(s => (

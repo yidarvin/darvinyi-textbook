@@ -118,7 +118,7 @@ export default function Topbar({ pathname, HamburgerSlot, isMobile = false }) {
   const isHome = pathname === "/" || !pathname.startsWith("/ch/");
 
   return (
-    <div style={topbarStyle}>
+    <div id="topbar" style={topbarStyle}>
       {HamburgerSlot}
       {/* Breadcrumb */}
       <div style={breadcrumbStyle}>

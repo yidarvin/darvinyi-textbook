@@ -11,6 +11,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource/crimson-pro": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
+    "@fontsource/jetbrains-mono": "^5.2.8",
     "katex": "^0.16.45",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",

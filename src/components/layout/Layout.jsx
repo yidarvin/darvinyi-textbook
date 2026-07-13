@@ -225,7 +225,7 @@ export default function Layout() {
 
   return (
     <TocProvider>
-      <div style={rootStyle}>
+      <div id="app-shell" style={rootStyle}>
         {/* Left sidebar — sticky on desktop, drawer on mobile */}
         {!isMobile && <Sidebar />}
         {isMobile && (
@@ -236,7 +236,7 @@ export default function Layout() {
         )}
 
         {/* Main column: topbar + scrollable content + right TOC */}
-        <div style={mainStyle}>
+        <div id="main-column" style={mainStyle}>
           <Topbar
             pathname={location.pathname}
             isMobile={isMobile}
@@ -247,7 +247,7 @@ export default function Layout() {
             }
           />
 
-          <div style={contentWrapStyle}>
+          <div id="content-wrap" style={contentWrapStyle}>
             {/* Scrollable content area */}
             <div id="content-scroll" style={contentScrollStyle}>
               <MobileNavMount />

@@ -201,7 +201,7 @@ function ChapterItem({ chapter, partColor }) {
 
 export default function Sidebar() {
   return (
-    <nav style={s.sidebar}>
+    <nav id="sidebar" style={s.sidebar}>
       {/* Logo */}
       <div style={s.logoArea}>
         <div style={s.logoMark}>

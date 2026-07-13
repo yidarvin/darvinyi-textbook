@@ -1,4 +1,15 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&display=swap");
+/* Self-hosted fonts (@fontsource) — avoids the render-blocking cross-origin
+   request a Google Fonts @import makes on every first visit. Only the
+   weights/styles actually used in the book are pulled in. */
+@import "@fontsource/inter/300.css";
+@import "@fontsource/inter/400.css";
+@import "@fontsource/inter/500.css";
+@import "@fontsource/inter/600.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/crimson-pro/400.css";
+@import "@fontsource/crimson-pro/600.css";
+@import "@fontsource/crimson-pro/400-italic.css";
 @import "katex/dist/katex.min.css";
 @import "tailwindcss";
 @source "../index.html";
@@ -180,5 +191,46 @@ input[type=range]::-webkit-slider-thumb {
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ── Print ─────────────────────────────────────────────────────────────
+   Basic printability: prose, math, and SVG diagrams print; widget
+   interactivity obviously doesn't. The shell is a fixed-height flex layout
+   with internal scroll containers (needed on screen) — for print that has
+   to unwind into a normal flowing document, and the dark palette has to
+   flip to something that doesn't drown a printer in ink. */
+@media print {
+  :root {
+    --bg: #fff; --bg2: #fff; --bg3: #f5f5f5; --bg4: #eee;
+    --border: #ccc; --border-lt: #ccc;
+    --text: #111; --text-muted: #555; --text-mid: #333;
+    --accent: #0f766e; --accent-dim: #e6fffa;
+    --math-color: #7c2d12;
+    --code-bg: #f5f5f5;
+  }
+
+  body { background: #fff; color: #111; }
+
+  /* Navigation chrome has no use on paper. */
+  #sidebar, #topbar, #toc-rail, [data-mobile-only] {
+    display: none !important;
+  }
+
+  /* Unwind the fixed-viewport-height, internally-scrolling shell into a
+     normal document flow so content spans as many pages as it needs. */
+  html, body, #root, #app-shell, #main-column, #content-wrap, #content-scroll {
+    height: auto !important;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  #content-scroll { padding: 0; }
+
+  a { color: inherit; text-decoration: none; }
+
+  /* Avoid splitting an equation or figure across a page break where possible. */
+  svg, .katex-display {
+    break-inside: avoid;
   }
 }
