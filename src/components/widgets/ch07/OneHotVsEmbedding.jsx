@@ -163,7 +163,7 @@ function Heatmap({ data }) {
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
-export default function OneHotVsEmbedding() {
+export default function OneHotVsEmbedding({ tryThis }) {
   const [selected, setSelected]       = useState(new Set());
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [showValues, setShowValues]   = useState(true);
@@ -213,7 +213,7 @@ export default function OneHotVsEmbedding() {
   function rowCY(i) { return rowY(i) + ROW_H / 2; }
 
   return (
-    <WidgetCard title="One-Hot vs Embedding — from sparse to dense representation" number="5.1">
+    <WidgetCard title="One-Hot vs Embedding — from sparse to dense representation" number="7.1" tryThis={tryThis}>
 
       {/* ── SVG panels — full width ──────────────────────────────────────────── */}
       <div style={{ border: '1px solid #242424', borderRadius: '6px', overflow: 'hidden', background: '#0a0a0a' }}>

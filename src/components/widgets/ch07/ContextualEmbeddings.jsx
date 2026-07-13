@@ -349,7 +349,7 @@ function StatsPanel({ word, ctxSims }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function ContextualEmbeddings() {
+export default function ContextualEmbeddings({ tryThis }) {
   const [preset,      setPreset]      = useState('bank');
   const [showCells,   setShowCells]   = useState(true);
   const [showChart,   setShowChart]   = useState(true);
@@ -507,7 +507,7 @@ export default function ContextualEmbeddings() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <WidgetCard title="Static vs Contextual — one vector vs one per context" number="5.5">
+    <WidgetCard title="Static vs Contextual — one vector vs one per context" number="7.5" tryThis={tryThis}>
 
       {/* Preset tabs */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>

@@ -26,7 +26,7 @@ export const PARTS = [
     label: "Part II — Language & Sequence",
     color: "var(--purple)",
     chapters: [
-      { num: "07", title: "Word Embeddings & Tokenization", widgets: 5, live: true },
+      { num: "07", title: "Word Embeddings & Tokenization", widgets: 6, live: true },
       { num: "08", title: "Recurrent Networks & LSTMs", widgets: 4, live: true },
       { num: "09", title: "Attention", widgets: 4, live: true },
       { num: "10", title: "Transformers", widgets: 4, live: true },

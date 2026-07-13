@@ -9,24 +9,28 @@ const SANS = "'Inter', sans-serif";
 const SENTENCE = ["the","cat","sat","on","the","mat","at","home"];
 const VOCAB    = ["the","cat","sat","on","mat","at","home"];
 
+// Fixed-seed pseudo-random draws (not hand-tuned toward the pairs below) —
+// chosen so distributionally-related pairs the widget highlights (cat/mat,
+// sat/home, on/at) start weakly correlated (cos ~0.0-0.3) instead of
+// pre-clustered, leaving real room for training to pull them together.
 const INIT_W_IN = {
-  the:  [ 0.12,-0.08, 0.31, 0.05],
-  cat:  [ 0.55, 0.42,-0.18, 0.67],
-  sat:  [-0.22, 0.71, 0.44,-0.31],
-  on:   [ 0.08,-0.44, 0.19, 0.52],
-  mat:  [ 0.48, 0.39,-0.25, 0.61],
-  at:   [ 0.05,-0.12, 0.38, 0.47],
-  home: [-0.31, 0.58, 0.22,-0.14],
+  the:  [-0.367, 0.367,-0.154, 0.410],
+  cat:  [ 0.356, 0.089, 0.069,-0.550],
+  sat:  [ 0.466, 0.378,-0.158,-0.515],
+  on:   [-0.075, 0.207, 0.386,-0.309],
+  mat:  [-0.233,-0.297,-0.105,-0.375],
+  at:   [ 0.435,-0.319, 0.054,-0.522],
+  home: [ 0.298,-0.469,-0.523, 0.038],
 };
 
 const INIT_W_OUT = {
-  the:  [ 0.10,-0.05, 0.22, 0.08],
-  cat:  [ 0.48, 0.35,-0.20, 0.55],
-  sat:  [-0.18, 0.62, 0.38,-0.25],
-  on:   [ 0.05,-0.38, 0.15, 0.45],
-  mat:  [ 0.42, 0.30,-0.18, 0.50],
-  at:   [ 0.03,-0.10, 0.32, 0.40],
-  home: [-0.25, 0.50, 0.18,-0.10],
+  the:  [ 0.105,-0.295, 0.412, 0.545],
+  cat:  [-0.235,-0.050,-0.391,-0.107],
+  sat:  [-0.461,-0.444,-0.434, 0.420],
+  on:   [-0.051,-0.348,-0.169,-0.541],
+  mat:  [ 0.065,-0.289,-0.167, 0.547],
+  at:   [-0.089, 0.048, 0.259,-0.139],
+  home: [-0.080, 0.303,-0.321, 0.206],
 };
 
 const LR = 0.05;
@@ -205,7 +209,7 @@ function HDivider() {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function SkipGram() {
+export default function SkipGram({ tryThis }) {
   const [centerPos, setCenterPos] = useState(2);
   const [winSize,   setWinSize]   = useState(2);
   const [showNeg,   setShowNeg]   = useState(true);
@@ -279,7 +283,7 @@ export default function SkipGram() {
     let s = 0;
     function next() {
       if (s >= 10) return;
-      const pos  = 2 + (s % 4);
+      const pos  = 1 + (s % 5);
       const negs = pickNegs(pos, winSize);
       if (s === 0) setNegWords(negs);
       runTrainStep(pos, winSize, Win.current, Wout.current, negs);
@@ -304,7 +308,7 @@ export default function SkipGram() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <WidgetCard title="Skip-Gram Training — learning embeddings from context" number="5.2">
+    <WidgetCard title="Skip-Gram Training — learning embeddings from context" number="7.2" tryThis={tryThis}>
       <div style={{ display:'flex', gap:'12px', alignItems:'flex-start' }}>
 
         {/* ── Left column ──────────────────────────────────────────────── */}

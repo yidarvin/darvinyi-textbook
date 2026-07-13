@@ -131,7 +131,7 @@ function btnStyle(active, col = C.accent) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function GloVeFastText() {
+export default function GloVeFastText({ tryThis }) {
   const [selectedCell, setSelectedCell] = useState([1, 2]); // cat, sat
   const [logScale,     setLogScale]     = useState(false);
   const [inputWord,    setInputWord]    = useState('playing');
@@ -335,7 +335,7 @@ export default function GloVeFastText() {
 
   // ── Render ───────────────────────────────────────────────────────────────────
   return (
-    <WidgetCard title="GloVe & fastText — co-occurrence matrices and subword models" number="5.4">
+    <WidgetCard title="GloVe & fastText — co-occurrence matrices and subword models" number="7.4" tryThis={tryThis}>
 
       {/* ── Two panels side by side (each ~302px) ─────────────────────────── */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
