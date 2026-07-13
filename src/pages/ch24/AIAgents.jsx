@@ -162,20 +162,18 @@ export default function AIAgents() {
       </p>
 
       <p style={prose}>
-        Schick, Dwivedi-Yu, Dessì, Raileanu, Lomeli, Zettlemoyer, Cancedda &
-        Scialom's Toolformer (2023) [2] demonstrated that language models could
-        be trained to use tools through self-supervision: insert tool calls into
-        existing text, run the calls, keep the insertions that improved the
-        model's downstream prediction. The trained model learned where in a
-        generation to call a calculator, a search engine, a translator. Toolformer
-        was an existence proof more than a deployed system — its scope was narrow,
-        a handful of tools, simple invocation patterns — but it framed tool use as
-        something a model could learn to do well, not just a behavior that needed
-        to be coaxed out via prompting. The lineage runs from Toolformer through
-        OpenAI's 2023 function-calling API and Anthropic's 2024 tool-use API, both
-        of which standardized the structured-output approach: the model outputs a
-        JSON object specifying which function to call and with what arguments, and
-        the runtime executes it.
+        Schick, Dwivedi-Yu, Dessì, Raileanu, Lomeli, Zettlemoyer, Cancedda &amp;
+        Scialom's Toolformer (2023) [2] was the existence proof: a language model
+        trained via self-supervision (Chapter 13 covers the training mechanism)
+        to decide, on its own, where in a generation to call a calculator, a
+        search engine, a translator. It was narrow — a handful of tools, simple
+        invocation patterns — but it framed tool use as something a model could
+        learn to do well, not just a behavior coaxed out via prompting. The
+        lineage runs from Toolformer through OpenAI's 2023 function-calling API
+        and Anthropic's 2024 tool-use API, both of which standardized the
+        structured-output approach: the model outputs a JSON object specifying
+        which function to call and with what arguments, and the runtime
+        executes it.
       </p>
 
       <p style={prose}>
@@ -378,11 +376,10 @@ export default function AIAgents() {
         restricting tool permissions, monitoring tool calls for sensitive
         patterns, and constraining the model with system prompts that emphasize
         the user's authority. Constitutional AI (Bai, Jones, Ndousse, Askell et
-        al. 2022) [7] framed the broader question of how to make AI systems
-        behave according to specified principles — its two-phase recipe
-        (supervised learning from AI-generated critiques, then RL from AI
-        feedback against a constitution) influenced how alignment is approached
-        across the agent ecosystem. Constitutional approaches don't solve prompt
+        al. 2022) [7] — the training-time technique covered in Chapter 13 — framed
+        the broader question of how to make AI systems behave according to
+        specified principles, and that framing influenced how alignment is
+        approached across the agent ecosystem. Constitutional approaches don't solve prompt
         injection, but they shape the agent's default behavior to resist obvious
         manipulation and to escalate ambiguous cases. The broader picture: agent
         reliability in 2026 is an ongoing engineering discipline, not a solved

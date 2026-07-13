@@ -331,9 +331,13 @@ export default function ReinforcementLearning() {
       </div>
 
       <p style={prose}>
-        RLHF (Reinforcement Learning from Human Feedback) trains a reward model
-        from human preference comparisons, then optimizes the language model against
-        that reward using PPO. RLEF (from Execution Feedback) uses code execution
+        This section takes the RL view of aligning language models: RLHF, RLEF,
+        and RLVR are three ways to define <em>what counts as reward</em>, and all
+        three hand that reward to the same optimizer machinery covered above.
+        Chapter 13 covers the full training pipeline — where the reward model
+        comes from, why a KL penalty against the SFT policy matters, and how DPO
+        sidesteps the RL loop entirely; here the reward model is just another
+        reward function. RLEF (from Execution Feedback) uses code execution
         results — correct or incorrect — as a verifiable binary reward, eliminating
         the need for human annotation on coding tasks. RLVR (from Verifiable Rewards)
         generalizes this to any task with a ground-truth verifier: math problems

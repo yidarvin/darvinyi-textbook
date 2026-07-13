@@ -228,8 +228,9 @@ export default function RNNs() {
       </div>
 
       <p style={prose}>
-        The GRU simplifies the LSTM from 4 gates to 2 — a reset gate and an update
-        gate — and merges the cell state and hidden state into one. This reduces
+        The GRU simplifies the LSTM's three gates and separate cell state down to
+        two gates — a reset gate and an update gate — merging the cell state and
+        hidden state into one. This reduces
         parameter count by roughly 25% while achieving comparable performance on
         most sequence modeling tasks. Before transformers, GRUs and LSTMs were the
         default architecture for anything sequential.

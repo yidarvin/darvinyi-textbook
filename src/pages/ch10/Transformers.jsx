@@ -181,19 +181,16 @@ export default function Transformers() {
         Rotary Position Embedding [6] takes a different approach: instead of{" "}
         <em>adding</em> a position signal to the token embedding, it{" "}
         <em>rotates</em> pairs of features in the query and key vectors by an
-        angle proportional to position. For each pair of feature dimensions,
-        position <InlineMath>p</InlineMath> applies a 2D rotation by angle{" "}
-        <InlineMath>{"p \\cdot \\theta_i"}</InlineMath>, where the frequencies{" "}
-        <InlineMath>{"\\theta_i"}</InlineMath> span many octaves (similar to
-        sinusoidal). The clever consequence: when you take the dot product{" "}
-        <InlineMath>{"q^\\top k"}</InlineMath>, the rotations combine so that the
-        result depends only on the <em>relative</em> position{" "}
-        <InlineMath>{"p_q - p_k"}</InlineMath>, not the absolute positions. RoPE
-        generalizes naturally to longer sequences than seen at training
-        (especially with simple position-interpolation tricks) and is now used
-        in Llama, Mistral, Qwen, Gemma, and Phi — essentially every major
-        open-source LLM since 2023. ALiBi (Press, Smith & Lewis 2022) is the
-        other widely-used relative-position scheme, used in BLOOM and MPT.
+        angle proportional to position, so that the dot product between a
+        query at position <InlineMath>m</InlineMath> and a key at position{" "}
+        <InlineMath>n</InlineMath> depends only on the <em>relative</em> offset{" "}
+        <InlineMath>{"m - n"}</InlineMath>, never the absolute positions. RoPE
+        generalizes naturally to longer sequences than seen at training and is
+        now used in Llama, Mistral, Qwen, Gemma, and Phi — essentially every
+        major open-source LLM since 2023. ALiBi (Press, Smith & Lewis 2022) is
+        the other widely-used relative-position scheme, used in BLOOM and MPT.
+        Chapter 11 covers RoPE's frequency spectrum and long-context extension
+        in depth.
       </p>
 
       <RoPEMechanism />

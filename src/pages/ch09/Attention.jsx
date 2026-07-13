@@ -89,13 +89,14 @@ export default function Attention() {
       </div>
 
       <p style={prose}>
-        In the original encoder-decoder RNN of Sutskever et al., the encoder reads
-        the entire source sentence one token at a time and folds everything it has
-        seen into a single hidden state — a vector typically of dimension 256 to
-        1024. That one vector is the only thing the decoder receives. Every output
-        token, for every position, is generated conditioned on the same fixed
-        summary. Information about early tokens has already been overwritten by the
-        time the encoder reaches the end.
+        Chapter 8 ended with exactly this problem. In the original encoder-decoder
+        RNN of Sutskever et al., the encoder reads the entire source sentence one
+        token at a time and folds everything it has seen into a single hidden
+        state — a vector typically of dimension 256 to 1024. That one vector is
+        the only thing the decoder receives. Every output token, for every
+        position, is generated conditioned on the same fixed summary. Information
+        about early tokens has already been overwritten by the time the encoder
+        reaches the end.
       </p>
 
       <p style={prose}>

@@ -160,7 +160,8 @@ export default function LLMArchitectures() {
       <p style={prose}>
         During autoregressive generation, the model processes one new token per
         step while all previous tokens remain unchanged. Without caching, every
-        step recomputes keys and values for all prior tokens — quadratic total cost.
+        step recomputes keys and values for all prior tokens — quadratic cost per
+        step, cubic total cost across a full generation.
         The KV cache stores the key and value projections from all previous layers
         and all previous tokens, reusing them at each new step. Only the new token's
         keys and values need to be computed. This reduces per-step compute from{" "}
@@ -231,10 +232,16 @@ export default function LLMArchitectures() {
       </p>
 
       <MathBlock>{`$$\\begin{aligned}
-  \\text{MHA:} \\quad &Q_i, K_i, V_i \\text{ for } i = 1..h \\qquad &\\text{KV size: } h \\cdot T \\cdot d_{\\text{head}} \\\\
-  \\text{MQA:} \\quad &Q_i \\text{ for } i = 1..h,\\ K, V \\text{ shared} \\qquad &\\text{KV size: } 1 \\cdot T \\cdot d_{\\text{head}} \\\\
-  \\text{GQA:} \\quad &Q_i \\text{ for } i = 1..h,\\ K_g, V_g \\text{ for } g = 1..G \\qquad &\\text{KV size: } G \\cdot T \\cdot d_{\\text{head}}
+  \\text{MHA:} \\quad &Q_i, K_i, V_i \\text{ for } i = 1..h \\qquad &\\text{K entries/layer: } h \\cdot T \\cdot d_{\\text{head}} \\\\
+  \\text{MQA:} \\quad &Q_i \\text{ for } i = 1..h,\\ K, V \\text{ shared} \\qquad &\\text{K entries/layer: } 1 \\cdot T \\cdot d_{\\text{head}} \\\\
+  \\text{GQA:} \\quad &Q_i \\text{ for } i = 1..h,\\ K_g, V_g \\text{ for } g = 1..G \\qquad &\\text{K entries/layer: } G \\cdot T \\cdot d_{\\text{head}}
 \\end{aligned}$$`}</MathBlock>
+
+      <p style={prose}>
+        (Doubling for both K and V, and multiplying by the number of layers{" "}
+        <InlineMath>{"L"}</InlineMath>, recovers the full-model byte count from
+        the cache-size formula above.)
+      </p>
 
       <MHAvsMQAvsGQA />
 
