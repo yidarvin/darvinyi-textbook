@@ -21,7 +21,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | E3 | Scroll correctness — TOC/MobileNav offset math, scroll-reset on route change, hash deep-links | DONE |
 | E4 | ch01 TOC sections + eyebrow part-label fixes (ch01, ch06, ch07, ch08) | DONE |
 | E5 | Resilience + metadata — ErrorBoundary (routes + WidgetCard), 404 route, per-route title/meta | DONE |
-| E6 | Hygiene — remove d3/recharts, delete dead files, fix/delete ScrollableFigure, relax lint rules | PENDING |
+| E6 | Hygiene — remove d3/recharts, delete dead files, fix/delete ScrollableFigure, relax lint rules | DONE |
 | E7 | Self-host fonts (woff2 `@font-face`) + `@media print` stylesheet | PENDING |
 
 ### Phase S — Structural reorganization

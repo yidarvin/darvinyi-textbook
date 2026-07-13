@@ -8,7 +8,7 @@ export default function ScrollableFigure({ children, caption, minWidth = 640 }) 
         WebkitOverflowScrolling: "touch",
       }}
     >
-      <div style={{ minWidth: `min(${minWidth}px, 100%)` }}>{children}</div>
+      <div style={{ minWidth: `${minWidth}px` }}>{children}</div>
       {caption && (
         <figcaption
           style={{

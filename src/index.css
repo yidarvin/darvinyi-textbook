@@ -130,13 +130,6 @@ body { background: var(--bg); color: var(--text); }
    Applied to body only — applying to html can break `position: fixed`. */
 body { overflow-x: hidden; }
 
-.widget-placeholder {
-  border: 1px dashed var(--border-lt);
-  border-radius: 8px;
-  height: 220px;
-  margin: 28px 0;
-  background: var(--bg2);
-}
 ::-webkit-scrollbar { width: 4px; }
 ::-webkit-scrollbar-thumb { background: var(--border-lt); border-radius: 2px; }
 input[type=range] {
