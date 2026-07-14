@@ -107,7 +107,7 @@ function Toggle({ label, checked, onChange }) {
   );
 }
 
-export default function CrossModalRetrieval() {
+export default function CrossModalRetrieval({ tryThis }) {
   const [activeQuery,      setActiveQuery]      = useState(0);
   const [threshold,        setThreshold]        = useState(0.0);
   const [showScores,       setShowScores]       = useState(true);
@@ -159,7 +159,8 @@ export default function CrossModalRetrieval() {
   return (
     <WidgetCard
       title="Cross-Modal Retrieval — text query finds matching images"
-      number="9.4"
+      number="15.4"
+      tryThis={tryThis}
     >
       <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
 

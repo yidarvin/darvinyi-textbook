@@ -102,7 +102,7 @@ function Btn({ onClick, disabled, primary, active, children }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function VitPatches() {
+export default function VitPatches({ tryThis }) {
   const [P,           setP]           = useState(16);
   const [selected,    setSelected]    = useState(null);   // [patchRow, patchCol]
   const [showNums,    setShowNums]    = useState(false);
@@ -233,7 +233,7 @@ export default function VitPatches() {
   const labelY = TOK_Y + TOK_H_PX + 12;
 
   return (
-    <WidgetCard title="ViT Patches — turning images into token sequences" number="9.3">
+    <WidgetCard title="ViT Patches — turning images into token sequences" number="15.3" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* ── Left column ───────────────────────────────────────────────── */}

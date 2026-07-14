@@ -166,6 +166,100 @@ export const CITATIONS = {
     year: "2024",
     tag: "paper",
   },
+
+  // ── ch15 Multimodal Networks ──────────────────────────────────────────────
+  // Previously a hand-rolled local array in Multimodal.jsx (topical-grouping
+  // order, not first-appearance order, and with a fabricated author list on
+  // "mind-the-gap"). Consolidated here per the llama2/dpo entries' precedent.
+  "clip": {
+    title: "Learning Transferable Visual Models From Natural Language Supervision (CLIP)",
+    authors: "Radford, Kim, Hallacy, Ramesh, Goh, Agarwal, Sastry, Askell, Mishkin, Clark, Krueger, Sutskever",
+    venue: "ICML",
+    year: "2021",
+    tag: "seminal",
+  },
+  "simclr": {
+    title: "A Simple Framework for Contrastive Learning of Visual Representations (SimCLR)",
+    authors: "Chen, Kornblith, Norouzi, Hinton",
+    venue: "ICML",
+    year: "2020",
+    tag: "paper",
+  },
+  "flamingo": {
+    title: "Flamingo: a Visual Language Model for Few-Shot Learning",
+    authors: "Alayrac, Donahue, Luc, Miech, Barr, Hasson, Lenc, Mensch, Millican, Reynolds, et al.",
+    venue: "NeurIPS",
+    year: "2022",
+    tag: "paper",
+  },
+  "mind-the-gap": {
+    // Author list previously fabricated in ch15 as "Liang, Zhang, Cui, Lin &
+    // Zou" — verified correct authors below via web search.
+    title: "Mind the Gap: Understanding the Modality Gap in Multi-modal Contrastive Representation Learning",
+    authors: "Liang, Zhang, Kwon, Yeung, Zou",
+    venue: "NeurIPS",
+    year: "2022",
+    tag: "paper",
+  },
+  "vit": {
+    title: "An Image is Worth 16x16 Words: Transformers for Image Recognition at Scale (ViT)",
+    authors: "Dosovitskiy, Beyer, Kolesnikov, Weissenborn, Zhai, Unterthiner, Dehghani, Minderer, Heigold, Gelly, Uszkoreit, Houlsby",
+    venue: "ICLR",
+    year: "2021",
+    tag: "seminal",
+  },
+  "whisper": {
+    title: "Robust Speech Recognition via Large-Scale Weak Supervision (Whisper)",
+    authors: "Radford, Kim, Xu, Brockman, McLeavey, Sutskever",
+    venue: "ICML",
+    year: "2023",
+    tag: "paper",
+  },
+  "vall-e": {
+    title: "Neural Codec Language Models are Zero-Shot Text to Speech Synthesizers (VALL-E)",
+    authors: "Wang, Chen, Wu, Zhang, Zhou, Liu, Chen, Liu, Wang, Li, He, Zhao, Wei",
+    venue: "arXiv",
+    year: "2023",
+    tag: "paper",
+  },
+  "soundstream": {
+    title: "SoundStream: An End-to-End Neural Audio Codec",
+    authors: "Zeghidour, Luebs, Omran, Skoglund, Tagliasacchi",
+    venue: "IEEE/ACM Transactions on Audio, Speech, and Language Processing",
+    year: "2021",
+    tag: "paper",
+  },
+  "encodec": {
+    // Published version preferred over the 2022 arXiv preprint, per this
+    // file's established policy — accepted to TMLR 09/2023
+    // (OpenReview id=ivCd8z8zR2).
+    title: "High Fidelity Neural Audio Compression (EnCodec)",
+    authors: "Défossez, Copet, Synnaeve, Adi",
+    venue: "TMLR",
+    year: "2023",
+    tag: "paper",
+  },
+  "audiolm": {
+    title: "AudioLM: a Language Modeling Approach to Audio Generation",
+    authors: "Borsos, Marinier, Vincent, Kharitonov, Pietquin, Sharifi, Roblek, Teboul, Grangier, Tagliasacchi, Zeghidour",
+    venue: "IEEE/ACM Transactions on Audio, Speech, and Language Processing",
+    year: "2023",
+    tag: "paper",
+  },
+  "clap": {
+    title: "CLAP: Learning Audio Concepts From Natural Language Supervision",
+    authors: "Elizalde, Deshmukh, Al Ismail, Wang",
+    venue: "ICASSP",
+    year: "2023",
+    tag: "paper",
+  },
+  "laion-clap": {
+    title: "Large-scale Contrastive Language-Audio Pretraining with Feature Fusion and Keyword-to-Caption Augmentation (LAION-CLAP)",
+    authors: "Wu, Chen, Zhang, Hui, Berg-Kirkpatrick, Dubnov",
+    venue: "ICASSP",
+    year: "2023",
+    tag: "paper",
+  },
 };
 
 // Build a chapter's numbered citation list from an ordered array of entries.

@@ -31,6 +31,10 @@ const PAIRS = [
   { key: 'ocean',    color: '#f472b6', label: 'ocean' },
 ];
 
+// Untrained starting layout — image/text embeddings scattered with no relation
+// to their pairing. Everything past this point is reached by real gradient
+// descent on the loss shown in the stats panel, not by scripting toward a
+// pre-baked "trained" answer.
 const INITIAL_POS = {
   cat:      { img: [-0.72,  0.48], txt: [ 0.61, -0.53] },
   sunset:   { img: [ 0.55,  0.71], txt: [-0.48, -0.62] },
@@ -40,17 +44,28 @@ const INITIAL_POS = {
   ocean:    { img: [ 0.29, -0.58], txt: [-0.63,  0.44] },
 };
 
-const TRAINED_POS = {
-  cat:      { img: [-0.65,  0.52], txt: [-0.60,  0.57] },
-  sunset:   { img: [ 0.58,  0.63], txt: [ 0.62,  0.58] },
-  car:      { img: [ 0.52, -0.55], txt: [ 0.57, -0.51] },
-  dog:      { img: [-0.58, -0.48], txt: [-0.53, -0.53] },
-  mountain: { img: [-0.08,  0.72], txt: [-0.04,  0.68] },
-  ocean:    { img: [ 0.10, -0.72], txt: [ 0.06, -0.68] },
-};
+// Each embedding's starting radius — real CLIP L2-normalizes image/text
+// embeddings before the dot product, so only direction (not magnitude) should
+// carry similarity information. We re-project onto this fixed radius after
+// every gradient step so the 2D toy embeddings behave the same way.
+const INIT_NORM = {};
+for (const { key } of PAIRS) {
+  INIT_NORM[key] = {
+    img: Math.hypot(INITIAL_POS[key].img[0], INITIAL_POS[key].img[1]),
+    txt: Math.hypot(INITIAL_POS[key].txt[0], INITIAL_POS[key].txt[1]),
+  };
+}
 
 const MAX_STEPS = 20;
 const ANIM_MS   = 400;
+// Gradient-descent hyperparameters, tuned empirically so training visibly
+// converges within MAX_STEPS across the full temperature slider range
+// (tau = 0.01–0.5) without diverging at low tau.
+const LR        = 0.5;    // SGD learning rate applied to the (clipped) gradient
+const GRAD_CLIP = 0.8;    // global gradient-norm clip — keeps steps stable when
+                           // low tau makes the raw InfoNCE gradient very sharp
+const FD_H      = 0.002;  // central-difference step for the numerical gradient
+                           // (same convention as ch04's GradientDescentNavigator)
 
 // ── SVG coordinate system ─────────────────────────────────────────────────────
 const VW = 460, VH = 380, PAD = 32;
@@ -82,47 +97,150 @@ const logSumExp = (vals) => {
   return m + Math.log(vals.reduce((s, v) => s + Math.exp(v - m), 0));
 };
 
-function getPosAt(t) {
+// sim[i][j] = cosine similarity between image i and text j
+function buildSimMatrix(pos) {
+  return PAIRS.map(({ key: ki }) => PAIRS.map(({ key: kj }) => cosSim(pos[ki].img, pos[kj].txt)));
+}
+
+// Symmetric InfoNCE: average the image->text cross-entropy (softmax over texts
+// for each image anchor) and the text->image cross-entropy (softmax over images
+// for each text anchor) — matches the "average the two cross-entropies" claim
+// in the surrounding prose, rather than only the one-directional form.
+function lossFromSim(sim, tau) {
+  const N = PAIRS.length;
+
+  let i2t = 0;
+  for (let i = 0; i < N; i++) {
+    const row = sim[i].map(s => s / tau);
+    i2t += -(row[i] - logSumExp(row));
+  }
+  i2t /= N;
+
+  let t2i = 0;
+  for (let j = 0; j < N; j++) {
+    const col = sim.map(row => row[j] / tau);
+    t2i += -(col[j] - logSumExp(col));
+  }
+  t2i /= N;
+
+  return (i2t + t2i) / 2;
+}
+
+function totalLoss(pos, tau) {
+  return lossFromSim(buildSimMatrix(pos), tau);
+}
+
+function clonePos(pos) {
   const out = {};
   for (const { key } of PAIRS) {
-    out[key] = {
-      img: lerpP(INITIAL_POS[key].img, TRAINED_POS[key].img, t),
-      txt: lerpP(INITIAL_POS[key].txt, TRAINED_POS[key].txt, t),
-    };
+    out[key] = { img: [pos[key].img[0], pos[key].img[1]], txt: [pos[key].txt[0], pos[key].txt[1]] };
   }
   return out;
 }
 
+// Numerical gradient of the symmetric InfoNCE loss w.r.t. every 2D coordinate,
+// via central differences — same technique as computeGrad() in
+// src/components/widgets/ch04/GradientDescentNavigator.jsx.
+function numGrad(pos, tau) {
+  const grad = {};
+  for (const { key } of PAIRS) {
+    grad[key] = { img: [0, 0], txt: [0, 0] };
+    for (const mod of ['img', 'txt']) {
+      for (let d = 0; d < 2; d++) {
+        const plus  = clonePos(pos); plus[key][mod][d]  += FD_H;
+        const minus = clonePos(pos); minus[key][mod][d] -= FD_H;
+        grad[key][mod][d] = (totalLoss(plus, tau) - totalLoss(minus, tau)) / (2 * FD_H);
+      }
+    }
+  }
+  return grad;
+}
+
+function renormalize(v, targetNorm) {
+  const n = Math.hypot(v[0], v[1]);
+  if (n < 1e-6) return [targetNorm, 0];
+  const s = targetNorm / n;
+  return [v[0] * s, v[1] * s];
+}
+
+// One real SGD step on the symmetric InfoNCE loss: compute the gradient at the
+// current positions, clip its global norm for stability (raw gradients get very
+// sharp at low tau), then descend. tau therefore genuinely shapes both the
+// direction and the size of every step, unlike a pre-scripted animation.
+function gradStep(pos, tau, lr, clip) {
+  const grad = numGrad(pos, tau);
+
+  let gradNormSq = 0;
+  for (const { key } of PAIRS) {
+    for (const mod of ['img', 'txt']) {
+      gradNormSq += grad[key][mod][0] ** 2 + grad[key][mod][1] ** 2;
+    }
+  }
+  const gradNorm = Math.sqrt(gradNormSq);
+  const scale = gradNorm > clip ? clip / gradNorm : 1;
+
+  const next = {};
+  for (const { key } of PAIRS) {
+    const img = [
+      pos[key].img[0] - lr * scale * grad[key].img[0],
+      pos[key].img[1] - lr * scale * grad[key].img[1],
+    ];
+    const txt = [
+      pos[key].txt[0] - lr * scale * grad[key].txt[0],
+      pos[key].txt[1] - lr * scale * grad[key].txt[1],
+    ];
+    next[key] = {
+      img: renormalize(img, INIT_NORM[key].img),
+      txt: renormalize(txt, INIT_NORM[key].txt),
+    };
+  }
+  return next;
+}
+
+function lerpPositions(a, b, t) {
+  const out = {};
+  for (const { key } of PAIRS) {
+    out[key] = { img: lerpP(a[key].img, b[key].img, t), txt: lerpP(a[key].txt, b[key].txt, t) };
+  }
+  return out;
+}
+
+// Blend between the two nearest *real, gradient-computed* keyframes for smooth
+// on-screen motion — the keyframes themselves are genuine training steps, only
+// the sub-step interpolation between them is for visual smoothness.
+function getDisplayPos(posSteps, stepFloat) {
+  const lastIdx = posSteps.length - 1;
+  const lo = Math.max(0, Math.min(lastIdx, Math.floor(stepFloat)));
+  const hi = Math.min(lastIdx, lo + 1);
+  const frac = Math.min(1, Math.max(0, stepFloat - lo));
+  return lerpPositions(posSteps[lo], posSteps[hi], frac);
+}
+
 function computeStats(pos, tau) {
-  let totalLoss = 0, matchSum = 0, nonMatchSum = 0, nonMatchCnt = 0;
+  const N = PAIRS.length;
+  const sim = buildSimMatrix(pos);
+  const loss = lossFromSim(sim, tau);
+
+  let matchSum = 0, nonMatchSum = 0, nonMatchCnt = 0;
   let closestSim = -Infinity, closestName = '';
 
-  for (let i = 0; i < PAIRS.length; i++) {
-    const ki   = PAIRS[i].key;
-    const imgI = pos[ki].img;
-
-    // Numerically stable softmax via log-sum-exp
-    const scaledSims = PAIRS.map(({ key: kj }) => cosSim(imgI, pos[kj].txt) / tau);
-    const lse = logSumExp(scaledSims);
-    totalLoss += -(scaledSims[i] - lse);
-    matchSum  += cosSim(imgI, pos[ki].txt);
-
-    for (let j = 0; j < PAIRS.length; j++) {
+  for (let i = 0; i < N; i++) {
+    matchSum += sim[i][i];
+    for (let j = 0; j < N; j++) {
       if (j === i) continue;
-      const kj = PAIRS[j].key;
-      const s  = cosSim(imgI, pos[kj].txt);
+      const s = sim[i][j];
       nonMatchSum += s;
       nonMatchCnt++;
       if (s > closestSim) {
         closestSim  = s;
-        closestName = `${ki}-${kj}`;
+        closestName = `${PAIRS[i].key}-${PAIRS[j].key}`;
       }
     }
   }
 
   return {
-    loss:        totalLoss / PAIRS.length,
-    avgMatchSim: matchSum / PAIRS.length,
+    loss,
+    avgMatchSim: matchSum / N,
     avgNonMatch: nonMatchSum / nonMatchCnt,
     closestName,
     closestSim,
@@ -191,18 +309,22 @@ function Btn({ onClick, disabled, primary, title, children }) {
 }
 
 // ── Main widget ───────────────────────────────────────────────────────────────
-export default function ContrastiveLearning() {
-  const [step,        setStep]        = useState(0);
-  const [dispProg,    setDispProg]    = useState(0);
-  const [playing,     setPlaying]     = useState(false);
-  const [tau,         setTau]         = useState(0.07);
-  const [showLabels,  setShowLabels]  = useState(false);
-  const [showNonMatch,setShowNonMatch]= useState(false);
-  const [hovKey,      setHovKey]      = useState(null);
-  const [hovType,     setHovType]     = useState(null);
+export default function ContrastiveLearning({ tryThis }) {
+  const [step,          setStep]          = useState(0);
+  const [dispStepFloat, setDispStepFloat] = useState(0);
+  const [playing,       setPlaying]       = useState(false);
+  const [tau,           setTau]           = useState(0.07);
+  const [showLabels,    setShowLabels]    = useState(false);
+  const [showNonMatch,  setShowNonMatch]  = useState(false);
+  const [hovKey,        setHovKey]        = useState(null);
+  const [hovType,       setHovType]       = useState(null);
+  // posSteps[n] = embeddings after n real gradient-descent steps, grown
+  // lazily by the effect below as training advances.
+  const [posSteps,      setPosSteps]      = useState([INITIAL_POS]);
 
   const dispRef = useRef(0);
   const rafRef  = useRef(null);
+  const tauRef  = useRef(tau);
 
   // Pause the continuous play loop when scrolled off-screen; never auto-run for reduced motion.
   const [cardRef, isVisible] = useIsVisible();
@@ -210,11 +332,36 @@ export default function ContrastiveLearning() {
   const isVisibleRef         = useRef(true);
   isVisibleRef.current = isVisible;
 
-  // Animate dispProg toward step/MAX_STEPS on every step change
+  useEffect(() => { tauRef.current = tau; }, [tau]);
+
+  // Keep posSteps caught up with step: each new entry is one real gradient
+  // step from the previous entry, taken at whatever temperature was current
+  // at that moment — exactly like real training, where changing a
+  // hyperparameter only affects future steps, never rewrites steps already
+  // taken.
   useEffect(() => {
-    const target = step / MAX_STEPS;
+    setPosSteps(prev => {
+      if (prev.length > step) return prev;
+      const next = [...prev];
+      while (next.length <= step) {
+        next.push(gradStep(next[next.length - 1], tauRef.current, LR, GRAD_CLIP));
+      }
+      return next;
+    });
+  }, [step]);
+
+  // Animate dispStepFloat toward the target step on every step change. Reset
+  // (step 0) snaps on the next frame — there's no gradient path "backwards"
+  // to animate along.
+  useEffect(() => {
     cancelAnimationFrame(rafRef.current);
-    const from = dispRef.current;
+    if (step === 0) {
+      dispRef.current = 0;
+      rafRef.current = requestAnimationFrame(() => setDispStepFloat(0));
+      return () => cancelAnimationFrame(rafRef.current);
+    }
+    const target = step;
+    const from   = dispRef.current;
     let t0 = null;
 
     function frame(ts) {
@@ -223,12 +370,12 @@ export default function ContrastiveLearning() {
       const t = Math.min(elapsed / ANIM_MS, 1);
       const val = lerp(from, target, ease(t));
       dispRef.current = val;
-      setDispProg(val);
+      setDispStepFloat(val);
       if (t < 1) {
         rafRef.current = requestAnimationFrame(frame);
       } else {
         dispRef.current = target;
-        setDispProg(target);
+        setDispStepFloat(target);
       }
     }
     rafRef.current = requestAnimationFrame(frame);
@@ -251,22 +398,32 @@ export default function ContrastiveLearning() {
   // Cleanup on unmount
   useEffect(() => () => cancelAnimationFrame(rafRef.current), []);
 
-  const pos   = useMemo(() => getPosAt(dispProg),       [dispProg]);
-  const stats = useMemo(() => computeStats(pos, tau),   [pos, tau]);
+  const pos   = useMemo(() => getDisplayPos(posSteps, dispStepFloat), [posSteps, dispStepFloat]);
+  const stats = useMemo(() => computeStats(pos, tau),                 [pos, tau]);
 
-  const lineOp    = lerp(0.25, 0.80, dispProg);
+  const lineOp    = lerp(0.25, 0.80, dispStepFloat / MAX_STEPS);
   const lossColor = stats.loss > 1.5 ? C.red : stats.loss > 0.8 ? C.orange : C.green;
   const sep       = stats.avgMatchSim - stats.avgNonMatch;
   const sepColor  = sep > 0.4 ? C.green : sep > 0 ? C.accent : C.red;
 
   function trainStep() {
-    if (step < MAX_STEPS) { setStep(s => s + 1); setPlaying(false); }
+    if (step < MAX_STEPS) {
+      setStep(s => s + 1);
+      setPlaying(false);
+    }
   }
-  function reset()     { setPlaying(false); setStep(0); }
+  function reset() {
+    setPlaying(false);
+    setPosSteps([INITIAL_POS]);
+    setStep(0);
+  }
   function playPause() {
     if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     if (playing) { setPlaying(false); return; }
-    if (step >= MAX_STEPS) setStep(0);
+    if (step >= MAX_STEPS) {
+      setPosSteps([INITIAL_POS]);
+      setStep(0);
+    }
     setPlaying(true);
   }
 
@@ -274,7 +431,8 @@ export default function ContrastiveLearning() {
     <WidgetCard
       ref={cardRef}
       title="Contrastive Learning — image-text pairs converge during training"
-      number="9.1"
+      number="15.1"
+      tryThis={tryThis}
     >
       {/* ── Canvas + Stats row ──────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
@@ -412,7 +570,7 @@ export default function ContrastiveLearning() {
           borderRadius: '8px', padding: '14px',
         }}>
           <StatRow label="Training step" val={`${step} / ${MAX_STEPS}`} color={C.accent} />
-          <StatRow label="Progress"      val={`${Math.round(dispProg * 100)}%`} />
+          <StatRow label="Progress"      val={`${Math.round((dispStepFloat / MAX_STEPS) * 100)}%`} />
           <StatRow label="Contrastive loss" val={stats.loss.toFixed(3)} color={lossColor} />
           <SDiv />
           <StatRow

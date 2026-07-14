@@ -127,7 +127,7 @@ function Toggle({ label, checked, onChange }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function EmbeddingSpace() {
+export default function EmbeddingSpace({ tryThis }) {
   const [selected,   setSelected]   = useState(null); // { concept, modality }
   const [hovered,    setHovered]    = useState(null); // { concept, modality }
   const [colorBy,    setColorBy]    = useState('category');
@@ -205,7 +205,7 @@ export default function EmbeddingSpace() {
   const GRID = [-0.5, 0, 0.5];
 
   return (
-    <WidgetCard title="Embedding Space — image and text clustered by concept" number="9.2">
+    <WidgetCard title="Embedding Space — image and text clustered by concept" number="15.2" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* ── SVG canvas ──────────────────────────────────────────────────── */}
