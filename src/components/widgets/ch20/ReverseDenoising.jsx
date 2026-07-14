@@ -3,7 +3,7 @@ import WidgetCard from '../../shared/WidgetCard';
 import { useIsVisible } from '../../../hooks/useIsVisible';
 import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
-// ── PRNG (identical seed to ForwardDiffusion) ─────────────────────────────────
+// ── PRNG (identical construction to ForwardDiffusion; independent seeds) ──────
 function mulberry32(seed) {
   let s = seed >>> 0;
   return () => {
@@ -19,27 +19,16 @@ function randn(rng) {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
 }
 
-function generatePoints() {
-  const rng = mulberry32(55);
-  const pts = [];
-  for (const [cx, cy, n, color] of [
-    [-1.5, -1.5, 67, '#2dd4bf'],
-    [ 1.5, -1.5, 67, '#fb923c'],
-    [ 0.0,  1.8, 66, '#a78bfa'],
-  ]) {
-    for (let i = 0; i < n; i++) {
-      pts.push({ x: cx + 0.4 * randn(rng), y: cy + 0.4 * randn(rng), color });
-    }
-  }
-  return pts;
-}
-
-function generateEps(n) {
-  const rng = mulberry32(66);
-  const ex = new Float64Array(n), ey = new Float64Array(n);
-  for (let i = 0; i < n; i++) { ex[i] = randn(rng); ey[i] = randn(rng); }
-  return { ex, ey };
-}
+// ── Data distribution — mirrors ForwardDiffusion's generatePoints(): a
+//    3-component isotropic Gaussian mixture, std sigma0, ~equal weights ──────
+const GMM = [
+  { mu: [-1.5, -1.5], n: 67, color: '#2dd4bf' },
+  { mu: [ 1.5, -1.5], n: 67, color: '#fb923c' },
+  { mu: [ 0.0,  1.8], n: 66, color: '#a78bfa' },
+];
+const SIGMA0   = 0.4;
+const N_PTS    = GMM.reduce((s, c) => s + c.n, 0); // 200
+const GMM_LOGW = GMM.map(c => Math.log(c.n / N_PTS));
 
 function buildAlphaBar() {
   const T = 1000, ab = new Float64Array(T + 1);
@@ -49,6 +38,125 @@ function buildAlphaBar() {
     ab[t] = ab[t - 1] * (1 - beta);
   }
   return ab;
+}
+const AB = buildAlphaBar();
+
+// ── Exact score of the noised marginal q(x_t) = Σ_k w_k N(x_t; √ᾱ_t μ_k, v_t I),
+//    v_t = ᾱ_t σ0² + (1 − ᾱ_t). r_k is the standard Gaussian-mixture posterior
+//    responsibility (softmax over negative squared distances). ───────────────
+function respAndScore(x, y, t) {
+  const ab_t = AB[t];
+  const v_t  = ab_t * SIGMA0 * SIGMA0 + (1 - ab_t);
+  const ss   = Math.sqrt(ab_t);
+  const logw = new Array(GMM.length);
+  let maxLw = -Infinity;
+  for (let k = 0; k < GMM.length; k++) {
+    const mx = ss * GMM[k].mu[0], my = ss * GMM[k].mu[1];
+    const dx = x - mx, dy = y - my;
+    const lw = GMM_LOGW[k] - (dx * dx + dy * dy) / (2 * v_t);
+    logw[k] = lw;
+    if (lw > maxLw) maxLw = lw;
+  }
+  let sumExp = 0;
+  const resp = new Array(GMM.length);
+  for (let k = 0; k < GMM.length; k++) { resp[k] = Math.exp(logw[k] - maxLw); sumExp += resp[k]; }
+  let sx = 0, sy = 0;
+  for (let k = 0; k < GMM.length; k++) {
+    resp[k] /= sumExp;
+    const mx = ss * GMM[k].mu[0], my = ss * GMM[k].mu[1];
+    sx += resp[k] * (-(x - mx) / v_t);
+    sy += resp[k] * (-(y - my) / v_t);
+  }
+  return { resp, sx, sy };
+}
+
+// eps_theta(x_t, t) = -√(1-ᾱ_t) · score(x_t, t) — the analytic "oracle" noise
+// prediction a perfectly-trained network would output for this toy density.
+function epsThetaAt(x, y, t) {
+  const { sx, sy } = respAndScore(x, y, t);
+  const sn = Math.sqrt(1 - AB[t]);
+  return [-sn * sx, -sn * sy];
+}
+
+// ── Independent pure-noise starting points — NOT derived from any known x_0.
+//    A real generative sampler starts from unlabeled N(0,I) noise. ───────────
+function generateXT(n, seed) {
+  const rng = mulberry32(seed);
+  const x = new Float64Array(n), y = new Float64Array(n);
+  for (let i = 0; i < n; i++) { x[i] = randn(rng); y[i] = randn(rng); }
+  return { x, y };
+}
+
+// ── DDPM ancestral sampling, every t: 1000 → 1 ────────────────────────────────
+//    x_{t-1} = (1/√α_t)(x_t − (β_t/√(1-ᾱ_t)) ε_θ(x_t,t)) + σ_t z, σ_t² = β_t,
+//    z = 0 at the final step (t=1), matching Ho et al. Algorithm 2.
+function buildDdpmTrajectory(xt, zSeed) {
+  const T = 1000;
+  const rng = mulberry32(zSeed);
+  const trajX = new Float32Array((T + 1) * N_PTS);
+  const trajY = new Float32Array((T + 1) * N_PTS);
+  for (let i = 0; i < N_PTS; i++) { trajX[T * N_PTS + i] = xt.x[i]; trajY[T * N_PTS + i] = xt.y[i]; }
+  for (let t = T; t >= 1; t--) {
+    const ab_t = AB[t], ab_prev = AB[t - 1];
+    const alpha_t = ab_t / ab_prev;
+    const beta_t  = 1 - alpha_t;
+    const invSqrtAlpha = 1 / Math.sqrt(alpha_t);
+    const sqrt1mAbt = Math.sqrt(1 - ab_t);
+    const sigma_t = Math.sqrt(beta_t);
+    const rowIn = t * N_PTS, rowOut = (t - 1) * N_PTS;
+    for (let i = 0; i < N_PTS; i++) {
+      const x = trajX[rowIn + i], y = trajY[rowIn + i];
+      const [ex, ey] = epsThetaAt(x, y, t);
+      const meanX = invSqrtAlpha * (x - (beta_t / sqrt1mAbt) * ex);
+      const meanY = invSqrtAlpha * (y - (beta_t / sqrt1mAbt) * ey);
+      const zx = t > 1 ? randn(rng) : 0;
+      const zy = t > 1 ? randn(rng) : 0;
+      trajX[rowOut + i] = meanX + sigma_t * zx;
+      trajY[rowOut + i] = meanY + sigma_t * zy;
+    }
+  }
+  return { trajX, trajY };
+}
+
+// ── DDIM deterministic sampling, stride Δ ─────────────────────────────────────
+//    x0_hat = (x_t − √(1-ᾱ_t) ε_θ) / √ᾱ_t
+//    x_{t-Δ} = √ᾱ_{t-Δ} x0_hat + √(1-ᾱ_{t-Δ}) ε_θ
+function buildDdimTrajectory(xt, stride) {
+  const T = 1000, nSteps = T / stride; // 50
+  const trajX = new Float32Array((nSteps + 1) * N_PTS);
+  const trajY = new Float32Array((nSteps + 1) * N_PTS);
+  for (let i = 0; i < N_PTS; i++) { trajX[i] = xt.x[i]; trajY[i] = xt.y[i]; }
+  for (let m = 0; m < nSteps; m++) {
+    const t = T - m * stride, tPrev = t - stride;
+    const ab_t = AB[t], ab_prev = AB[tPrev];
+    const sqrtAbt = Math.sqrt(ab_t), sqrt1mAbt = Math.sqrt(1 - ab_t);
+    const sqrtAbPrev = Math.sqrt(ab_prev), sqrt1mAbPrev = Math.sqrt(1 - ab_prev);
+    const rowIn = m * N_PTS, rowOut = (m + 1) * N_PTS;
+    for (let i = 0; i < N_PTS; i++) {
+      const x = trajX[rowIn + i], y = trajY[rowIn + i];
+      const [ex, ey] = epsThetaAt(x, y, t);
+      const x0x = (x - sqrt1mAbt * ex) / sqrtAbt;
+      const x0y = (y - sqrt1mAbt * ey) / sqrtAbt;
+      trajX[rowOut + i] = sqrtAbPrev * x0x + sqrt1mAbPrev * ex;
+      trajY[rowOut + i] = sqrtAbPrev * x0y + sqrt1mAbPrev * ey;
+    }
+  }
+  return { trajX, trajY };
+}
+
+// Color a point by whichever mixture component it's closest to (its posterior
+// responsibility at t=0) once generation has completed — a real sampler only
+// learns a point's identity after the fact, never from a pre-assigned label.
+function finalColors(trajX, trajY, finalIdx) {
+  const base = finalIdx * N_PTS;
+  const colors = new Array(N_PTS);
+  for (let i = 0; i < N_PTS; i++) {
+    const { resp } = respAndScore(trajX[base + i], trajY[base + i], 0);
+    let best = 0;
+    for (let k = 1; k < resp.length; k++) if (resp[k] > resp[best]) best = k;
+    colors[i] = GMM[best].color;
+  }
+  return colors;
 }
 
 function hexToRgb(h) {
@@ -60,10 +168,14 @@ function lerpColor(a, b, t) {
   return `rgb(${Math.round(r1 + (r2 - r1) * t)},${Math.round(g1 + (g2 - g1) * t)},${Math.round(b1 + (b2 - b1) * t)})`;
 }
 
-// ── Module-level stable data (same seeds → same points as ForwardDiffusion) ───
-const POINTS = generatePoints();
-const { ex: EPS_X, ey: EPS_Y } = generateEps(POINTS.length);
-const AB = buildAlphaBar();
+// ── Module-level: two independent reverse trajectories, each seeded from its
+//    own fresh N(0,I) draw — never from a known x_0 or a fixed forward eps ────
+const XT_DDPM = generateXT(N_PTS, 77);
+const XT_DDIM = generateXT(N_PTS, 78);
+const DDPM = buildDdpmTrajectory(XT_DDPM, 88);
+const DDIM = buildDdimTrajectory(XT_DDIM, 20);
+DDPM.colors = finalColors(DDPM.trajX, DDPM.trajY, 1000);
+DDIM.colors = finalColors(DDIM.trajX, DDIM.trajY, 50);
 
 // ── Per-panel canvas coordinate space ─────────────────────────────────────────
 const PCW = 220, PCH = 240, PPAD = 12;
@@ -73,7 +185,7 @@ const PDH = PCH - 2 * PPAD; // 216
 function pX(x) { return PPAD + (x + 4) / 8 * PDW; }
 function pY(y) { return PPAD + (4 - y) / 8 * PDH; }
 
-function drawPanel(canvas, t) {
+function drawPanel(canvas, trajX, trajY, colors, idx, tForColor) {
   if (!canvas) return;
   const dpr = window.devicePixelRatio || 1;
   const rect = canvas.getBoundingClientRect();
@@ -100,18 +212,16 @@ function drawPanel(canvas, t) {
     ctx.beginPath(); ctx.moveTo(0, cy); ctx.lineTo(w, cy); ctx.stroke();
   }
 
-  const ab_t = AB[t];
-  const ss = Math.sqrt(ab_t);
-  const sn = Math.sqrt(1 - ab_t);
-  const colorT = t / 1000;
+  const colorT = tForColor / 1000;
   const opacity = 1 - 0.3 * colorT;
   const r = 2.5 * Math.min(sx, sy);
+  const base = idx * N_PTS;
 
-  for (let i = 0; i < POINTS.length; i++) {
-    const px = ss * POINTS[i].x + sn * EPS_X[i];
-    const py = ss * POINTS[i].y + sn * EPS_Y[i];
+  for (let i = 0; i < N_PTS; i++) {
+    const px = trajX[base + i];
+    const py = trajY[base + i];
     ctx.globalAlpha = opacity;
-    ctx.fillStyle = lerpColor(POINTS[i].color, '#555555', colorT);
+    ctx.fillStyle = lerpColor(colors[i], '#555555', colorT);
     ctx.beginPath();
     ctx.arc(pX(px) * sx, pY(py) * sy, r, 0, 2 * Math.PI);
     ctx.fill();
@@ -120,7 +230,7 @@ function drawPanel(canvas, t) {
   ctx.restore();
 }
 
-export default function ReverseDenoising() {
+export default function ReverseDenoising({ tryThis }) {
   const leftRef  = useRef(null);
   const rightRef = useRef(null);
   const animRef  = useRef(null);
@@ -146,10 +256,14 @@ export default function ReverseDenoising() {
   const ab_ddpm   = AB[tDdpm];
   const ab_ddim   = AB[tDdim];
 
-  // Canvas redraw whenever progress changes
+  // Canvas redraw whenever progress changes — index straight into the
+  // precomputed reverse-sampler trajectories (DDPM by timestep, DDIM by step).
   useEffect(() => {
-    drawPanel(leftRef.current,  Math.round(1000 * (1 - progress)));
-    drawPanel(rightRef.current, Math.round((1 - progress) * 50) * 20);
+    const tDdpmNow = Math.round(1000 * (1 - progress));
+    const tDdimNow = Math.round((1 - progress) * 50) * 20;
+    const mDdim    = (1000 - tDdimNow) / 20;
+    drawPanel(leftRef.current,  DDPM.trajX, DDPM.trajY, DDPM.colors, tDdpmNow, tDdpmNow);
+    drawPanel(rightRef.current, DDIM.trajX, DDIM.trajY, DDIM.colors, mDdim,    tDdimNow);
   }, [progress]);
 
   // Animation loop
@@ -196,7 +310,7 @@ export default function ReverseDenoising() {
   const tabAct  = { ...tabBase, background: '#0b2422', color: '#2dd4bf', borderColor: '#2dd4bf' };
 
   return (
-    <WidgetCard ref={cardRef} title="Reverse Denoising — DDPM vs DDIM" number="13.2">
+    <WidgetCard ref={cardRef} title="Reverse Denoising — DDPM vs DDIM" number="20.2" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* ── Left: two panels + NFE + scrubber + controls ─────────────── */}

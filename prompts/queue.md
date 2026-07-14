@@ -62,7 +62,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | C16 | Ch16 Graph Neural Networks — deep pass (Appendix A: ch13→16) | DONE |
 | C18 | Ch18 Variational Autoencoders — deep pass (Appendix A: ch16→18) | DONE |
 | C19 | Ch19 GANs & Image-to-Image — merge old ch17+ch18, deep pass (Appendix A: ch17→19, ch18) | DONE |
-| C20 | Ch20 Diffusion Models — deep pass + video/world-models closing section (Appendix A: ch19→20) | PENDING |
+| C20 | Ch20 Diffusion Models — deep pass + video/world-models closing section (Appendix A: ch19→20) | DONE |
 | C21 | Ch21 Datasets & Benchmarks — deep pass (Appendix A: ch20→21) | PENDING |
 | C24 | Ch24 AI Agents — deep pass, owns multi-agent concepts (Appendix A: ch21→24) | PENDING |
 | C25 | Ch25 Agent Harnesses — deep pass (Appendix A: ch22→25) | PENDING |

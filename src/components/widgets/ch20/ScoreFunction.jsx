@@ -142,7 +142,7 @@ function marchingSquaresContour(grid, nx, ny, threshold) {
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
-export default function ScoreFunction() {
+export default function ScoreFunction({ tryThis }) {
   const canvasRef   = useRef(null);
   const animRef     = useRef(null);
   const trailRef    = useRef([]);
@@ -428,7 +428,7 @@ export default function ScoreFunction() {
   });
 
   return (
-    <WidgetCard ref={cardRef} title="Score Function — the gradient field that guides denoising" number="13.4">
+    <WidgetCard ref={cardRef} title="Score Function — the gradient field that guides denoising" number="20.4" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Canvas */}
         <div style={{ flex: 1, minWidth: 0 }}>

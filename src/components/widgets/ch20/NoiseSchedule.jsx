@@ -102,7 +102,7 @@ function StatRow({ label, value, color }) {
   );
 }
 
-export default function NoiseSchedule() {
+export default function NoiseSchedule({ tryThis }) {
   const canvasRef = useRef(null);
   const [tSel,     setTSel]     = useState(500);
   const [sOff,     setSoff]     = useState(0.008);
@@ -352,7 +352,7 @@ export default function NoiseSchedule() {
   const colPad = { padding: '10px 14px' };
 
   return (
-    <WidgetCard title="Noise Schedule — linear vs cosine SNR" number="13.3">
+    <WidgetCard title="Noise Schedule — linear vs cosine SNR" number="20.3" tryThis={tryThis}>
       {/* Canvas — full usable width */}
       <canvas
         ref={canvasRef}

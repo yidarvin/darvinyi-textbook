@@ -68,13 +68,15 @@ function ImageGlyph({ cx, cy, size = 60, alphaBar, accent = false }) {
 }
 
 export default function NoiseInjectionFormula() {
-  // Five timesteps with stylized ᾱ values
+  // Five timesteps with ᾱ values computed from the actual cosine schedule
+  // (s = 0.008), matching the schedule used in NoiseSchedule.jsx elsewhere
+  // on this page — these are real numbers, not illustrative placeholders.
   const panels = [
     { t: 't = 0',     alphaLabel: 'ᾱ_t ≈ 1.00', alphaBar: 1.00, sigCoef: '1.00', noiCoef: '0.00', status: 'clean' },
-    { t: 't = T/4',   alphaLabel: 'ᾱ_t ≈ 0.70', alphaBar: 0.70, sigCoef: '0.84', noiCoef: '0.55', status: 'mostly signal' },
-    { t: 't = T/2',   alphaLabel: 'ᾱ_t ≈ 0.30', alphaBar: 0.30, sigCoef: '0.55', noiCoef: '0.84', status: 'crossover', accent: true },
-    { t: 't = 3T/4',  alphaLabel: 'ᾱ_t ≈ 0.05', alphaBar: 0.05, sigCoef: '0.22', noiCoef: '0.97', status: 'mostly noise' },
-    { t: 't = T',     alphaLabel: 'ᾱ_t ≈ 0.00', alphaBar: 0.00, sigCoef: '0.00', noiCoef: '1.00', status: 'pure noise' },
+    { t: 't = T/4',   alphaLabel: 'ᾱ_t ≈ 0.85', alphaBar: 0.85, sigCoef: '0.92', noiCoef: '0.39', status: 'mostly signal' },
+    { t: 't = T/2',   alphaLabel: 'ᾱ_t ≈ 0.49', alphaBar: 0.49, sigCoef: '0.70', noiCoef: '0.71', status: 'crossover', accent: true },
+    { t: 't = 3T/4',  alphaLabel: 'ᾱ_t ≈ 0.14', alphaBar: 0.14, sigCoef: '0.38', noiCoef: '0.93', status: 'mostly noise' },
+    { t: 't = T',     alphaLabel: 'ᾱ_t ≈ 0.00', alphaBar: 0.00, sigCoef: '0.03', noiCoef: '1.00', status: 'pure noise' },
   ];
 
   // Layout: 5 columns spanning 600px content width inside 640 viewBox
@@ -95,7 +97,7 @@ export default function NoiseInjectionFormula() {
         <text x="320" y="22" textAnchor="middle"
               fontFamily={mono} fontSize="11.5" fill={C.muted2}
               letterSpacing="0.06em">
-          closed-form forward jump
+          closed-form forward jump — cosine schedule (s = 0.008)
         </text>
 
         {/* Formula box */}
@@ -179,7 +181,8 @@ export default function NoiseInjectionFormula() {
       >
         The closed-form forward jump lets training sample any timestep directly
         from <em>x_0</em>, making diffusion training computationally tractable
-        despite the long noising chain.
+        despite the long noising chain. ᾱ_t values shown are computed from the
+        cosine schedule discussed later in this chapter.
       </figcaption>
     </figure>
   );

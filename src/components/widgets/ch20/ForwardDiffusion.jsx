@@ -142,7 +142,7 @@ const CLUSTER_CENTERS = [
   { x:  0.0, y:  1.8, label: 'C', color: '#a78bfa' },
 ];
 
-export default function ForwardDiffusion() {
+export default function ForwardDiffusion({ tryThis }) {
   const canvasRef = useRef(null);
   const animRef   = useRef(null);
 
@@ -344,7 +344,7 @@ export default function ForwardDiffusion() {
   };
 
   return (
-    <WidgetCard ref={cardRef} title="Forward Diffusion — data dissolves into noise" number="13.1">
+    <WidgetCard ref={cardRef} title="Forward Diffusion — data dissolves into noise" number="20.1" tryThis={tryThis}>
       {/* Main layout: canvas + stats side-by-side */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Canvas */}
