@@ -172,7 +172,7 @@ function btnSty(active = false) {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function NodeClassification() {
+export default function NodeClassification({ tryThis }) {
   const [depth,        setDepth]        = useState(0);
   const [showGT,       setShowGT]       = useState(false);
   const [showContested,setShowContested]= useState(true);
@@ -245,7 +245,7 @@ export default function NodeClassification() {
   const stats = getStats(depth, showContested);
 
   return (
-    <WidgetCard title="Node Classification — labels spread through the graph" number="14.3">
+    <WidgetCard title="Node Classification — labels spread through the graph" number="16.3" tryThis={tryThis}>
 
       {/* ── Canvas + Stats ── */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
@@ -420,7 +420,7 @@ export default function NodeClassification() {
             <div style={{ ...mono, fontSize: '9px', color: C.textMute, textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: '6px' }}>
               Bridge nodes
             </div>
-            {[[4,'A–B'],[3,'A–B'],[8,'B–C']].map(([nid, lbl]) => {
+            {[[4,'A–B'],[9,'B–C']].map(([nid, lbl]) => {
               const bi = bridgeInfo(nid);
               return (
                 <div key={nid} style={{ marginBottom: '5px' }}>

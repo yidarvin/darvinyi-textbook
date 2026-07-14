@@ -80,7 +80,7 @@ function dotProduct(patch, kernel) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function GraphVsGrid() {
+export default function GraphVsGrid({ tryThis }) {
   const [center,    setCenter]    = useState({ r: 2, c: 2 });
   const [kName,     setKName]     = useState('edge');
   const [animT,     setAnimT]     = useState(null);
@@ -184,7 +184,7 @@ export default function GraphVsGrid() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <WidgetCard title="Graph vs Grid — CNN is a special case of GNN" number="14.4">
+    <WidgetCard title="Graph vs Grid — CNN is a special case of GNN" number="16.4" tryThis={tryThis}>
 
       {/* Full-width SVG — no right stats column, scale 1:1 */}
       <div style={{ background: C.codeBg, borderRadius: '6px', overflow: 'hidden' }}>

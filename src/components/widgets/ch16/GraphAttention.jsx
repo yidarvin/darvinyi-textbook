@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
 
-// ── Graph definition (same layout as W14.1) ───────────────────────────────────
+// ── Graph definition (same layout as Widget 16.1) ─────────────────────────────
 
 const NODES = {
   A: { x: 78,  y: 96  },
@@ -40,13 +40,20 @@ const GAT_WEIGHTS = {
   F: { C: 0.31, B: 0.24, E: 0.45 },
 };
 
+// GCN's true symmetric-normalization weight for edge (u, v) is
+// 1 / sqrt(d̃_u · d̃_v), where d̃ = degree + 1 (the self-loop from Ã = A + I).
+// Computed from this graph's actual degrees — deg(A,C,D)=2, deg(E,F)=3, deg(B)=4,
+// so d̃ = 3, 3, 3, 4, 4, 5 respectively — these are fixed by topology alone,
+// not learned, and are unequal across a node's own neighbors whenever those
+// neighbors' degrees differ (contrast with GAT_WEIGHTS below, which vary with
+// node features instead).
 const GCN_WEIGHTS = {
-  A: { B: 0.50, D: 0.50 },
-  B: { A: 0.25, C: 0.25, E: 0.25, F: 0.25 },
-  C: { B: 0.50, F: 0.50 },
-  D: { A: 0.50, E: 0.50 },
-  E: { B: 0.333, D: 0.333, F: 0.333 },
-  F: { C: 0.333, B: 0.333, E: 0.333 },
+  A: { B: 0.258, D: 0.333 },
+  B: { A: 0.258, C: 0.258, E: 0.224, F: 0.224 },
+  C: { B: 0.258, F: 0.289 },
+  D: { A: 0.333, E: 0.289 },
+  E: { B: 0.224, D: 0.289, F: 0.250 },
+  F: { C: 0.289, B: 0.224, E: 0.250 },
 };
 
 // ── Colors ────────────────────────────────────────────────────────────────────
@@ -152,7 +159,7 @@ function ToggleBtn({ label, active, onClick }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function GraphAttention() {
+export default function GraphAttention({ tryThis }) {
   const [selectedNode, setSelectedNode] = useState(null);
   const [mode, setMode] = useState('gat');
   const [showAllWeights, setShowAllWeights] = useState(false);
@@ -191,7 +198,7 @@ export default function GraphAttention() {
   // ── Render ──────────────────────────────────────────────────────────────────
 
   return (
-    <WidgetCard title="Graph Attention Weights — which neighbors matter most" number="14.2">
+    <WidgetCard title="Graph Attention Weights — which neighbors matter most" number="16.2" tryThis={tryThis}>
 
       {/* Controls row */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
@@ -382,7 +389,7 @@ export default function GraphAttention() {
             <span style={{ ...mono, fontSize: '9px', color: CLR.textMute, textAlign: 'right' }}>
               {mode === 'gat'
                 ? 'GAT learns which neighbors matter most'
-                : 'GCN assigns equal weight to all neighbors'}
+                : 'GCN weights are fixed by degree, not learned'}
             </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

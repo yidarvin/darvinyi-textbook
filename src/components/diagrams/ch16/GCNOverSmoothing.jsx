@@ -40,9 +40,13 @@ const PANEL2_COLORS = {
   e: '#65938f', f: '#5b8a87', g: '#6f978f', h: '#7a9c90',
 };
 
+// Degrees in this graph range from 1 (f) to 5 (e) — an irregular graph, so
+// over-smoothing collapses nodes toward a degree-scaled subspace, not a
+// single shared vector. Same-degree nodes (a/c/h: deg 2; b/d/g: deg 4)
+// converge to near-identical color; f (deg 1) and e (deg 5) stay distinct.
 const PANEL3_COLORS = {
-  a: '#5d6f6c', b: '#5d6f6c', c: '#5d6f6c', d: '#5d6f6c',
-  e: '#5d6f6c', f: '#5d6f6c', g: '#5d6f6c', h: '#5d6f6c',
+  a: '#5d6f6c', b: '#70827f', c: '#5d6f6c', d: '#70827f',
+  e: '#7f9188', f: '#4a5c59', g: '#70827f', h: '#5d6f6c',
 };
 
 function Panel({ ox, oy, title, sub, colors, highlightCenter }) {
@@ -113,7 +117,7 @@ export default function GCNOverSmoothing() {
 
         <Panel ox={P3} oy={PY}
                title="after 10 layers"
-               sub="all nodes look identical"
+               sub="same-degree nodes converge"
                colors={PANEL3_COLORS} />
 
         {/* Panel dividers */}
@@ -131,7 +135,7 @@ export default function GCNOverSmoothing() {
         </text>
         <text x="320" y="311" textAnchor="middle"
               fontFamily={mono} fontSize="10.5" fill={C.muted}>
-          beyond that, every node converges to the same representation
+          beyond that, nodes collapse toward a shared, degree-scaled subspace
         </text>
       </svg>
 

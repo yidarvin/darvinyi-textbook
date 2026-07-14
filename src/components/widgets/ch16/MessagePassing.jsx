@@ -80,7 +80,10 @@ function computeRounds(agg) {
     const prev = rounds[r - 1];
     const curr = {};
     for (const v of NODE_IDS) {
-      const vals = NEIGHBORS[v].map(u => prev[u]);
+      // UPDATE folds a node's own previous state into the aggregate alongside
+      // its neighbors' — the self-loop trick GCN uses (see the GCN section) —
+      // rather than discarding it, so this matches h_v^(l) = UPDATE(h_v^(l-1), m_v^(l)).
+      const vals = [prev[v], ...NEIGHBORS[v].map(u => prev[u])];
       if (agg === 'mean')     curr[v] = vals.reduce((s, x) => s + x, 0) / vals.length;
       else if (agg === 'sum') curr[v] = vals.reduce((s, x) => s + x, 0);
       else                    curr[v] = Math.max(...vals);
@@ -237,7 +240,7 @@ function HistoryPanel({ node, features, agg, currentRound }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function MessagePassing() {
+export default function MessagePassing({ tryThis }) {
   const [round, setRound]               = useState(0);
   const [animT, setAnimT]               = useState(null);
   const [animNext, setAnimNext]         = useState(null);
@@ -340,7 +343,7 @@ export default function MessagePassing() {
   };
 
   return (
-    <WidgetCard title="Message Passing — neighbors share information" number="14.1">
+    <WidgetCard title="Message Passing — neighbors share information" number="16.1" tryThis={tryThis}>
 
       {/* ── Graph canvas — full width ── */}
       <div style={{ background: C.codeBg, borderRadius: '6px', overflow: 'hidden' }}>

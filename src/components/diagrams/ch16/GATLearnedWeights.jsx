@@ -108,13 +108,13 @@ export default function GATLearnedWeights() {
   return (
     <figure style={{ margin: '28px 0' }}>
       <svg viewBox="0 0 640 320" width="100%" role="img"
-           aria-label="GCN's uniform neighbor weights versus GAT's learned attention coefficients"
+           aria-label="GCN's fixed, degree-based neighbor weights versus GAT's learned attention coefficients"
            style={{ display: 'block' }}>
 
         <Panel cx={155} cy={150}
                title="GCN: degree-normalized weights"
-               sub="all neighbors weighted equally"
-               weights={[0.20, 0.20, 0.20, 0.20, 0.20]} />
+               sub="weights fixed by topology, not learned"
+               weights={[0.29, 0.14, 0.23, 0.19, 0.15]} />
 
         <Panel cx={485} cy={150}
                title="GAT: learned attention coefficients"
