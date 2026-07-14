@@ -240,7 +240,7 @@ const PRESETS = [
 // ── Component ─────────────────────────────────────────────────────────────────
 const INIT_PROBS = softmaxT(LOGITS, 1.0);
 
-export default function SoftmaxTemperature() {
+export default function SoftmaxTemperature({ tryThis }) {
   const [sliderVal,    setSliderVal]    = useState(50); // maps to T=1.0
   const [showEntropy,  setShowEntropy]  = useState(true);
   const [displayProbs, setDisplayProbs] = useState(INIT_PROBS);
@@ -311,7 +311,7 @@ export default function SoftmaxTemperature() {
   const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
   return (
-    <WidgetCard title="Softmax Temperature — sharpen or flatten attention" number="7.4">
+    <WidgetCard title="Softmax Temperature — sharpen or flatten the next-token distribution" number="14.1" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
 
         {/* ── Canvas + controls ── */}

@@ -10,8 +10,8 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 // downloads when the user navigates into it.
 //
 // V2 curriculum (25 chapters, 7 parts — see src/data/chapters.js). Chapters
-// 14, 17, 22, 23 are new and not yet built (queue items S2/N14/N17/N22/N23);
-// their routes are added once those pages exist.
+// 17, 22, 23 are new and not yet built (queue items N17/N22/N23); their
+// routes are added once those pages exist.
 const ProbabilityAndInformation = lazy(() => import("./pages/ch01/ProbabilityAndInformation"));
 const StatisticalLearning   = lazy(() => import("./pages/ch02/StatisticalLearning"));
 const NeuralNetworks        = lazy(() => import("./pages/ch03/NeuralNetworks"));
@@ -25,6 +25,7 @@ const Transformers          = lazy(() => import("./pages/ch10/Transformers"));
 const LLMArchitectures      = lazy(() => import("./pages/ch11/LLMArchitectures"));
 const ReinforcementLearning = lazy(() => import("./pages/ch12/ReinforcementLearning"));
 const LLMTraining           = lazy(() => import("./pages/ch13/LLMTraining"));
+const EfficientInference    = lazy(() => import("./pages/ch14/EfficientInference"));
 const Multimodal            = lazy(() => import("./pages/ch15/Multimodal"));
 const GNNs                  = lazy(() => import("./pages/ch16/GNNs"));
 const VAEs                  = lazy(() => import("./pages/ch18/VAEs"));
@@ -124,6 +125,7 @@ export default function App() {
           <Route path="ch/11" element={L(LLMArchitectures)} />
           <Route path="ch/12" element={L(ReinforcementLearning)} />
           <Route path="ch/13" element={L(LLMTraining)} />
+          <Route path="ch/14" element={L(EfficientInference)} />
           <Route path="ch/15" element={L(Multimodal)} />
           <Route path="ch/16" element={L(GNNs)} />
           <Route path="ch/18" element={L(VAEs)} />

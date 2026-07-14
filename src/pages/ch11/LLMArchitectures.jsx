@@ -44,7 +44,7 @@ const CITATIONS = buildCitations([
   { title: "Mistral 7B", authors: "Jiang, Sablayrolles, Mensch, Bamford, Chaplot, de las Casas, Bressand, Lengyel, Lample, Saulnier, Lavaud, Lachaux, Stock, Scao, Lavril, Wang, Lacroix, El Sayed", venue: "arXiv", year: "2023", tag: "paper" },
   { title: "Efficient Streaming Language Models with Attention Sinks", authors: "Xiao, Tian, Chen, Han, Lewis", venue: "arXiv", year: "2023", tag: "paper" },
   { title: "Sentence-BERT: Sentence Embeddings using Siamese BERT-Networks", authors: "Reimers, Gurevych", venue: "EMNLP", year: "2019", tag: "paper" },
-  { title: "Efficient Memory Management for Large Language Model Serving with PagedAttention", authors: "Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang, Stoica", venue: "SOSP", year: "2023", tag: "paper" },
+  "pagedattention",
   { title: "Extending Context Window of Large Language Models via Positional Interpolation", authors: "Chen, Wong, Chen, Tian", venue: "arXiv", year: "2023", tag: "paper" },
   { title: "YaRN: Efficient Context Window Extension of Large Language Models", authors: "Peng, Quesnelle, Fan, Shippole", venue: "ICLR", year: "2024", tag: "paper" },
 ]);

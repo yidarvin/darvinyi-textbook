@@ -185,7 +185,7 @@ const W0_NORM = normalizeMax(W0);
 const W0_FROB = frobNorm(W0);
 
 // ── Main widget ───────────────────────────────────────────────────────────────
-export default function LoRADecomposition() {
+export default function LoRADecomposition({ tryThis }) {
   const [rank,    setRank]   = useState(2);
   const [alpha,   setAlpha]  = useState(8);
   const [bState,  setBState] = useState({ zero: true, seed: 0 });
@@ -235,7 +235,7 @@ export default function LoRADecomposition() {
   const handleResetB = () => setBState({ zero: true, seed: 0 });
 
   return (
-    <WidgetCard title="LoRA — low-rank weight adaptation visualized" number="4.5">
+    <WidgetCard title="LoRA — low-rank weight adaptation visualized" number="14.6" tryThis={tryThis}>
       <div
         ref={containerRef}
         style={{ position: 'relative' }}

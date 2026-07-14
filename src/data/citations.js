@@ -64,6 +64,15 @@ export const CITATIONS = {
     year: "2022",
     tag: "paper",
   },
+  "pagedattention": {
+    // Previously duplicated as identical inline objects in ch11 and ch14 —
+    // consolidated here per the llama2/dpo entries' precedent.
+    title: "Efficient Memory Management for Large Language Model Serving with PagedAttention",
+    authors: "Kwon, Li, Zhuang, Sheng, Zheng, Yu, Gonzalez, Zhang, Stoica",
+    venue: "SOSP",
+    year: "2023",
+    tag: "paper",
+  },
   "instructgpt": {
     title: "Training Language Models to Follow Instructions with Human Feedback (InstructGPT)",
     authors: "Ouyang, Wu, Jiang, Almeida, Wainwright, Mishkin, Zhang, Agarwal, Slama, Ray, Schulman, Hilton, Kelton, Miller, Simens, Askell, Welinder, Christiano, Leike, Lowe",
