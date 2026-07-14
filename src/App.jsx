@@ -10,8 +10,9 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 // downloads when the user navigates into it.
 //
 // V2 curriculum (25 chapters, 7 parts — see src/data/chapters.js). Chapters
-// 01, 14, 17, 22, 23 are new and not yet built (queue items S2/N1/N14/N17/
-// N22/N23); their routes are added once those pages exist.
+// 14, 17, 22, 23 are new and not yet built (queue items S2/N14/N17/N22/N23);
+// their routes are added once those pages exist.
+const ProbabilityAndInformation = lazy(() => import("./pages/ch01/ProbabilityAndInformation"));
 const StatisticalLearning   = lazy(() => import("./pages/ch02/StatisticalLearning"));
 const NeuralNetworks        = lazy(() => import("./pages/ch03/NeuralNetworks"));
 const Optimization          = lazy(() => import("./pages/ch04/Optimization"));
@@ -110,6 +111,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<Home />} />
+          <Route path="ch/01" element={L(ProbabilityAndInformation)} />
           <Route path="ch/02" element={L(StatisticalLearning)} />
           <Route path="ch/03" element={L(NeuralNetworks)} />
           <Route path="ch/04" element={L(Optimization)} />

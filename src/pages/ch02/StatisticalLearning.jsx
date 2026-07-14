@@ -159,7 +159,11 @@ export default function StatisticalLearning() {
         <InlineMath>{"\\hat{p}_i"}</InlineMath> is the model's predicted
         probability that example <InlineMath>i</InlineMath> belongs to class
         1. The polynomial-fitting exercise below is scored with MSE; the
-        classifier later in this chapter is trained with log-loss.
+        classifier later in this chapter is trained with log-loss. Minimizing
+        log-loss over the training set is exactly maximum likelihood
+        estimation for a Bernoulli-distributed label — the same MLE principle
+        Chapter 1 introduces for fitting a coin's bias, applied here to a
+        model's predicted probability instead of a single fixed parameter.
       </p>
 
       <p style={prose}>

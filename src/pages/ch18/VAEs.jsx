@@ -207,7 +207,8 @@ export default function VAEs() {
         built from it. The reconstruction term encourages the decoder to
         faithfully reconstruct inputs from codes sampled out of{" "}
         <InlineMath>{"q(z \\mid x)"}</InlineMath>. The KL divergence term —
-        short for Kullback-Leibler divergence, a measure of how far one
+        short for Kullback-Leibler divergence, the same quantity Chapter 1
+        defines: a measure of how far one
         probability distribution sits from another, equal to zero only when
         the two match exactly — penalizes{" "}
         <InlineMath>{"q(z \\mid x)"}</InlineMath> for straying from a standard

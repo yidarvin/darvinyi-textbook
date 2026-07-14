@@ -281,6 +281,27 @@ export const CITATIONS = {
     year: "2017",
     tag: "paper",
   },
+
+  // ── ch01 Probability & Information for ML ─────────────────────────────────
+  // Foundational information-theory sources. Promoted to the shared registry
+  // (rather than kept as ch01-local inline objects) because entropy and KL
+  // divergence recur constantly elsewhere in the book (ch03 cross-entropy
+  // loss, ch13 RLHF's KL penalty, ch18's ELBO) and a later chapter citing
+  // either concept by name should reuse this entry rather than re-typing it.
+  "shannon-1948": {
+    title: "A Mathematical Theory of Communication",
+    authors: "Shannon",
+    venue: "Bell System Technical Journal",
+    year: "1948",
+    tag: "seminal",
+  },
+  "kullback-leibler-1951": {
+    title: "On Information and Sufficiency",
+    authors: "Kullback, Leibler",
+    venue: "Annals of Mathematical Statistics",
+    year: "1951",
+    tag: "seminal",
+  },
 };
 
 // Build a chapter's numbered citation list from an ordered array of entries.

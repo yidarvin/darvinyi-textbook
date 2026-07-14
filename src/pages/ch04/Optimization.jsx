@@ -451,7 +451,8 @@ export default function Optimization() {
       <p style={prose}>
         AdamW is the modern default, but it took years to get there. Adam has
         one subtle defect: when L2 regularization is added as <InlineMath>{"\\lambda \\|\\theta\\|^2"}</InlineMath> to the
-        loss, the gradient of that term gets scaled by Adam's per-parameter{" "}
+        loss — equivalent to Chapter 1's MAP estimation under a Gaussian prior on{" "}
+        <InlineMath>{"\\theta"}</InlineMath> — the gradient of that term gets scaled by Adam's per-parameter{" "}
         <InlineMath>{"1/\\sqrt{\\hat{v}}"}</InlineMath> factor — which is not the same as classical weight decay.
         Loshchilov & Hutter (2019) [9] showed that this scaling
         materially hurts performance and proposed AdamW, which decouples

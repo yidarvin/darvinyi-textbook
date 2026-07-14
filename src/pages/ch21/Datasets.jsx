@@ -157,7 +157,7 @@ export default function Datasets() {
       </p>
 
       <p style={prose}>
-        When classes are imbalanced, plain accuracy can be misleading — a detector that always says "no" scores well on a rare-event task without finding a single true positive. Precision and recall separate the two ways a classifier can be wrong, and F1 combines them into a single number that punishes ignoring either one.
+        When classes are imbalanced, plain accuracy can be misleading — a detector that always says "no" scores well on a rare-event task without finding a single true positive. Precision and recall, first defined in Chapter 1 alongside the confusion matrix they are built from, separate the two ways a classifier can be wrong, and F1 combines them into a single number that punishes ignoring either one.
       </p>
 
       <MathBlock>{"$$F_1 = 2\\cdot\\frac{\\text{precision}\\cdot\\text{recall}}{\\text{precision}+\\text{recall}}, \\qquad \\text{precision}=\\frac{TP}{TP+FP}, \\qquad \\text{recall}=\\frac{TP}{TP+FN}$$"}</MathBlock>

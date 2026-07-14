@@ -282,7 +282,8 @@ export default function LLMTraining() {
         a reward model <InlineMath>{"r_\\phi(x, y)"}</InlineMath> to predict which
         output is preferred, fit with the pairwise loss below. <strong>Stage 3</strong>:
         optimize the policy <InlineMath>{"\\pi_\\theta"}</InlineMath> against this
-        reward model using PPO, with a KL penalty against the SFT policy to
+        reward model using PPO, with a KL penalty — the same KL divergence Chapter 1
+        defines — against the SFT policy to
         prevent reward hacking. Chapter 12 derives why that KL term is what keeps the policy from
         exploiting the reward model — the reward-hacking failure mode — and why
         PPO's hyperparameters are famously fiddly to tune; here it is enough to
