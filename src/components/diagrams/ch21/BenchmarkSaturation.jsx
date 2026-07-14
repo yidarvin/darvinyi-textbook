@@ -48,35 +48,50 @@ const SERIES = [
     labelAt: { year: 2018.7, pct: 64, anchor: 'start' },
   },
   {
+    // GPT-3.5-era models: ~44 (2021.5); GPT-4: 86.4 at its March 2023 release
+    // (OpenAI, 2023); o1-preview: 92.3, crossing the 89.8 human-expert
+    // ceiling in September 2024 (OpenAI, "Learning to Reason with LLMs",
+    // 2024). MMLU's effective ceiling sits around 91-93 thereafter.
     name: 'MMLU',
     color: C.muted2,
     points: [
-      [2021, 30], [2022, 45], [2022.5, 55], [2023, 70],
-      [2023.5, 78], [2024, 86], [2024.5, 88], [2025, 89.5], [2026, 90],
+      [2021, 25], [2021.5, 44], [2022, 60], [2022.5, 70],
+      [2023, 79], [2023.2, 86.4], [2023.5, 87.5], [2024, 88.5],
+      [2024.7, 92.3], [2025, 92.8], [2025.5, 93], [2026, 93.2],
     ],
-    humanBaseline: 90,
-    labelAt: { year: 2021.3, pct: 23, anchor: 'start' },
+    humanBaseline: 89.8,
+    labelAt: { year: 2021.3, pct: 18, anchor: 'start' },
   },
   {
+    // Codex-12B 28.8 (2021); GPT-4 67.0 (2023); GPT-4o 90.2 (2024) — matches
+    // the model-level data plotted in the BenchmarkLeaderboard widget.
     name: 'HumanEval',
     color: C.muted2,
     points: [
-      [2021, 28], [2022, 60], [2022.5, 72], [2023, 85],
-      [2024, 92], [2025, 93], [2026, 94],
+      [2021, 28.8], [2022, 37], [2022.5, 42.7], [2023, 67],
+      [2023.5, 78], [2024, 90.2], [2025, 93], [2026, 95],
     ],
     humanBaseline: null,
     labelAt: { year: 2022.3, pct: 80, anchor: 'start' },
   },
   {
-    name: 'GPQA / FrontierMath / HLE',
+    // GPQA alone from its Nov 2023 release (GPT-4 scored 39% on GPQA
+    // Diamond at launch; Rein et al. 2023/2024). FrontierMath did not exist
+    // until Nov 8, 2024 (Epoch AI) and Humanity's Last Exam not until Jan
+    // 2025 (CAIS/Scale AI) — so the unweighted three-benchmark composite
+    // only becomes meaningful from January 2025 onward, and it drops sharply
+    // right there because FrontierMath and HLE scores start far lower than
+    // GPQA's by then.
+    name: 'GPQA family',
     color: C.accent,
     points: [
-      [2023, 5], [2023.5, 8], [2024, 15], [2024.5, 20],
-      [2025, 25], [2025.5, 32], [2026, 38],
+      [2023.85, 39], [2024.3, 48], [2024.8, 58],
+      [2025.05, 29], [2025.5, 36], [2026, 46],
     ],
     humanBaseline: null,
     isFrontier: true,
-    labelAt: { year: 2023.2, pct: 1, anchor: 'start' },
+    compositeFrom: 2025.05,
+    labelAt: { year: 2024.1, pct: 68, anchor: 'start' },
   },
 ];
 
@@ -90,7 +105,7 @@ export default function BenchmarkSaturation() {
         viewBox="0 0 640 470"
         width="100%"
         role="img"
-        aria-label="Time-series plot of NLP and reasoning benchmark state-of-the-art performance from 2018 to 2026, showing each benchmark saturating within a few years and the current frontier benchmarks still rising."
+        aria-label="Time-series plot of NLP and reasoning benchmark state-of-the-art performance from 2018 to 2026, showing GLUE, SuperGLUE, and MMLU saturating within a few years of release, HumanEval approaching its ceiling by 2024, and GPQA — joined by FrontierMath and Humanity's Last Exam from January 2025 — still well below saturation."
         style={{ display: 'block' }}
       >
         <defs>
@@ -228,17 +243,30 @@ export default function BenchmarkSaturation() {
           </g>
         ))}
 
+        {/* Composite-transition marker — where FrontierMath + HLE join GPQA */}
+        <line x1={xOf(2025.05)} y1={Y0} x2={xOf(2025.05)} y2={Y1}
+              stroke={C.accent} strokeWidth="1"
+              strokeDasharray="2 3" opacity="0.55" />
+        <text x={xOf(2025.05) + 4} y={yOf(66)}
+              fontFamily={mono} fontSize="8.5" fill={C.accent} opacity="0.85">
+          FrontierMath + HLE join
+        </text>
+        <text x={xOf(2025.05) + 4} y={yOf(60)}
+              fontFamily={mono} fontSize="8.5" fill={C.accent} opacity="0.85">
+          the composite here
+        </text>
+
         {/* Frontier annotation — teal callout */}
         <line
-          x1={xOf(2025.6)} y1={yOf(30)}
-          x2={xOf(2024.5)} y2={yOf(50)}
+          x1={xOf(2025.6)} y1={yOf(20)}
+          x2={xOf(2024.8)} y2={yOf(40)}
           stroke={C.accent} strokeWidth="1" opacity="0.7" />
-        <text x={xOf(2024.4)} y={yOf(52)} textAnchor="end"
+        <text x={xOf(2024.7)} y={yOf(42)} textAnchor="end"
               fontFamily={mono} fontSize="9" fill={C.accent}
               fontStyle="italic">
           current measurement frontier
         </text>
-        <text x={xOf(2024.4)} y={yOf(46)} textAnchor="end"
+        <text x={xOf(2024.7)} y={yOf(36)} textAnchor="end"
               fontFamily={mono} fontSize="9" fill={C.accent}
               fontStyle="italic">
           not yet saturated
@@ -265,7 +293,12 @@ export default function BenchmarkSaturation() {
         <text x="320" y={Y1 + 92} textAnchor="middle"
               fontFamily={sans} fontSize="10.5" fill={C.muted}
               fontStyle="italic">
-          The frontier composite combines GPQA, FrontierMath, and Humanity's Last Exam.
+          The teal line is GPQA alone through 2024, then an unweighted average of GPQA, FrontierMath, and Humanity's Last Exam
+        </text>
+        <text x="320" y={Y1 + 106} textAnchor="middle"
+              fontFamily={sans} fontSize="10.5" fill={C.muted}
+              fontStyle="italic">
+          from January 2025 onward — the two later benchmarks did not exist before November 2024 and January 2025 respectively.
         </text>
       </svg>
 

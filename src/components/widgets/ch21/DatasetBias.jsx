@@ -406,7 +406,7 @@ function StatRow({ label, value, color }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function DatasetBias() {
+export default function DatasetBias({ tryThis }) {
   const [dataset, setDataset]       = useState('imagenet');
   const [topN, setTopN]             = useState(10);
   const [showUniform, setShowUniform] = useState(true);
@@ -454,7 +454,7 @@ export default function DatasetBias() {
   });
 
   return (
-    <WidgetCard title="Dataset Bias — class and geographic distribution" number="15.3">
+    <WidgetCard title="Dataset Bias — class and geographic distribution" number="21.3" tryThis={tryThis}>
 
       {/* Controls */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px', flexWrap: 'wrap' }}>

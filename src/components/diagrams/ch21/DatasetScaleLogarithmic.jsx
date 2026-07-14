@@ -28,9 +28,9 @@ const DATASETS = [
   { name: 'MNIST',         year: 1998, value: 7e4,    units: 'images',  cat: 'vision',  dx: 6,  dy: 3 },
   { name: 'CIFAR-10',      year: 2009, value: 6e4,    units: 'images',  cat: 'vision',  dx: -6, dy: 14, anchor: 'end' },
   { name: 'ImageNet',      year: 2009, value: 1.4e6,  units: 'images',  cat: 'vision',  dx: 6,  dy: -4 },
-  { name: 'Common Crawl',  year: 2014, value: 5e10,   units: 'tokens',  cat: 'lm',      dx: 6,  dy: 4 },
-  { name: 'C4',            year: 2019, value: 7e11,   units: 'tokens',  cat: 'lm',      dx: -6, dy: -3, anchor: 'end' },
-  { name: 'The Pile',      year: 2020, value: 8e11,   units: 'tokens',  cat: 'lm',      dx: 6,  dy: 12 },
+  { name: 'Common Crawl',  year: 2008, value: 5e10,   units: 'tokens',  cat: 'lm',      dx: 6,  dy: 18 },
+  { name: 'C4',            year: 2019, value: 1.56e11, units: 'tokens', cat: 'lm',      dx: -6, dy: -3, anchor: 'end' },
+  { name: 'The Pile',      year: 2020, value: 3e11,   units: 'tokens',  cat: 'lm',      dx: 6,  dy: 12 },
   { name: 'LAION-5B',      year: 2022, value: 5.85e9, units: 'pairs',   cat: 'multi',   dx: 6,  dy: 4 },
   { name: 'GPT-4 (est.)',  year: 2023, value: 1.3e13, units: 'tokens',  cat: 'lm',      dx: -6, dy: 4,  anchor: 'end' },
   { name: 'Llama 3',       year: 2024, value: 1.5e13, units: 'tokens',  cat: 'lm',      dx: 6,  dy: 4 },
@@ -69,7 +69,7 @@ export default function DatasetScaleLogarithmic() {
         viewBox="0 0 640 460"
         width="100%"
         role="img"
-        aria-label="Log-scale plot of major ML dataset sizes from 1998 to 2026, showing roughly 10x growth every two to three years and a projected data-exhaustion window of 2025–2032."
+        aria-label="Log-scale plot of major ML dataset sizes from 1998 to 2026, showing roughly 10x growth every two to three years and a projected data-exhaustion window of 2026–2032."
         style={{ display: 'block' }}
       >
         <defs>
@@ -151,10 +151,10 @@ export default function DatasetScaleLogarithmic() {
           ≈ 10× every 2–3 years
         </text>
 
-        {/* Data-exhaustion shaded band — from 2025 to right edge,
-            represents the leading edge of the 2025–2032 projection */}
-        <rect x={xOf(2025)} y={Y0}
-              width={X1 - xOf(2025)} height={Y1 - Y0}
+        {/* Data-exhaustion shaded band — from 2026 to right edge,
+            represents the leading edge of the 2026–2032 projection */}
+        <rect x={xOf(2026)} y={Y0}
+              width={X1 - xOf(2026)} height={Y1 - Y0}
               fill={C.accent} opacity="0.06" />
 
         {/* Dashed line at right edge of plot */}
@@ -170,7 +170,7 @@ export default function DatasetScaleLogarithmic() {
         </text>
         <text x={X1 - 4} y={Y0 + 26} textAnchor="end"
               fontFamily={mono} fontSize="9.5" fill={C.accent}>
-          2025 — 2032
+          2026 — 2032
         </text>
 
         {/* Dataset points + labels */}

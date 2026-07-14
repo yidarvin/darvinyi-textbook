@@ -90,19 +90,19 @@ const DATASETS = [
   },
   {
     name: 'Common Crawl',
-    year: 2017,
+    year: 2008,
     size: 100000000000,
     sizeLabel: '100B+ tokens',
     domain: 'language',
     task: 'Language model pretraining',
-    significance: 'A snapshot of the public web. The largest freely available text corpus. Noisy but vast — careful filtering extracts the usable signal.',
+    significance: 'Founded in 2007 as a nonprofit and began archiving the public web in 2008 — the largest freely available text corpus, and the raw substrate nearly every later text corpus in this timeline filters down from. Noisy but vast; careful filtering extracts the usable signal.',
     enabled: 'GPT-3, LLaMA, and all frontier language models at scale',
-    storage: '~100 TB (raw)',
+    storage: '~100 TB (raw, per crawl)',
     storageBytes: 100e12,
     source: 'Web crawl of publicly accessible pages',
     impactScore: 9,
-    dotY: 142,
-    labelXOffset: 0,
+    dotY: 172,
+    labelXOffset: 24,
   },
   {
     name: 'The Pile',
@@ -127,7 +127,7 @@ const DATASETS = [
     sizeLabel: '400M pairs',
     domain: 'multimodal',
     task: 'Vision-language alignment',
-    significance: 'First open large-scale image-text dataset. Made CLIP-style training accessible outside large labs. Enabled open-source multimodal research.',
+    significance: 'First open large-scale image-text dataset. Made CLIP (Contrastive Language–Image Pretraining)-style training accessible outside large labs. Enabled open-source multimodal research.',
     enabled: 'Open CLIP, Stable Diffusion (early), and multimodal research democratization',
     storage: '~240 GB',
     storageBytes: 240e9,
@@ -202,7 +202,7 @@ function StatCell({ label, value, valueColor }) {
   );
 }
 
-export default function DatasetTimeline() {
+export default function DatasetTimeline({ tryThis }) {
   const [selected, setSelected] = useState(null);
   const [hovered,  setHovered]  = useState(null);
   const [sizeMode, setSizeMode] = useState('Examples');
@@ -215,7 +215,7 @@ export default function DatasetTimeline() {
   }
 
   return (
-    <WidgetCard title="Dataset Scale Timeline — from 60K to 5 billion" number="15.1">
+    <WidgetCard title="Dataset Scale Timeline — from 60K to 5 billion" number="21.1" tryThis={tryThis}>
       <style>{`
         @keyframes dt-fade { from { opacity: 0 } to { opacity: 1 } }
         .dt-dot { transition: r 0.15s ease, opacity 0.15s ease; }

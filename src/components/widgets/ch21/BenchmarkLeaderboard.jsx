@@ -26,17 +26,24 @@ const GLUE_DATA = [
 
 const HUMANEVAL_DATA = [
   { model: 'Codex-12B',     year: 2021, score: 28.8, innovation: 'First model specifically trained on code. Fine-tuned GPT on GitHub.',              callout: true, calloutDx: 20, calloutDy: -30, calloutText: 'Code-specific training' },
-  { model: 'InstructGPT',   year: 2022, score: 37.0, innovation: 'RLHF fine-tuning for instruction following improved code generation.' },
+  { model: 'InstructGPT',   year: 2022, score: 37.0, innovation: 'RLHF (reinforcement learning from human feedback) fine-tuning for instruction following improved code generation.' },
   { model: 'CodeT5+',       year: 2022, score: 42.7, innovation: 'Encoder-decoder model pretrained on code-text pairs.' },
   { model: 'GPT-4',         year: 2023, score: 67.0, innovation: 'Scale + RLHF + careful data curation at unprecedented scale.',                     callout: true, calloutDx: 0,  calloutDy: -30, calloutText: 'Scale + RLHF leap' },
-  { model: 'Claude-3 Opus', year: 2024, score: 84.9, innovation: 'Constitutional AI + scaling achieves near-human coding ability.' },
-  { model: 'GPT-4o',        year: 2024, score: 90.2, innovation: 'Multimodal training + improved code reasoning surpasses HumanEval human baseline.' },
+  { model: 'Claude-3 Opus', year: 2024, score: 84.9, innovation: 'Constitutional AI (self-critique against a written set of principles, rather than RLHF) combined with scaling.' },
+  { model: 'GPT-4o',        year: 2024, score: 90.2, innovation: 'Multimodal training + improved code reasoning. No rigorous human pass@1 baseline exists for HumanEval, so "surpassing humans" isn’t a claim this benchmark alone can support.' },
 ];
 
+// Human-baseline notes:
+// - ImageNet: the only published human figure is Russakovsky et al. (2015)'s
+//   5.1% TOP-5 error (~94.9% top-5 accuracy) on a 1500-image subset — a
+//   different metric than the top-1 scores plotted here, so it is shown as a
+//   labeled, non-comparable reference rather than a same-axis threshold.
+// - HumanEval: no rigorous human pass@1 baseline has ever been published for
+//   this benchmark, so no human line is drawn at all.
 const BENCHMARKS = {
-  ImageNet:  { data: IMAGENET_DATA,  human: 95.5, yearMin: 2012, yearMax: 2023, label: 'Top-1 Accuracy (%)' },
-  GLUE:      { data: GLUE_DATA,      human: 87.1, yearMin: 2018, yearMax: 2023, label: 'GLUE Score (0–100)' },
-  HumanEval: { data: HUMANEVAL_DATA, human: 85,   yearMin: 2021, yearMax: 2025, label: 'Pass@1 (%)' },
+  ImageNet:  { data: IMAGENET_DATA,  human: 94.9, humanComparable: false, humanLabel: 'Human top-5 ≈ 94.9% (not top-1 — not directly comparable)', yearMin: 2012, yearMax: 2023, label: 'Top-1 Accuracy (%)' },
+  GLUE:      { data: GLUE_DATA,      human: 87.1, humanComparable: true,  humanLabel: 'Human ~87.1%',                                              yearMin: 2018, yearMax: 2023, label: 'GLUE Score (0–100)' },
+  HumanEval: { data: HUMANEVAL_DATA, human: null, humanComparable: false, humanLabel: 'No rigorous human pass@1 baseline is published for HumanEval',   yearMin: 2021, yearMax: 2025, label: 'Pass@1 (%)' },
 };
 
 // ── Colors + Layout ───────────────────────────────────────────────────────────
@@ -59,9 +66,10 @@ const L = { left: 50, right: 20, top: 20, bot: 36 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getSaturationYear(data, humanScore) {
+function getSaturationYear(data, bench) {
+  if (!bench.humanComparable || bench.human == null) return null;
   for (const d of data) {
-    if (d.score > humanScore) return d.year;
+    if (d.score > bench.human) return d.year;
   }
   return null;
 }
@@ -98,7 +106,14 @@ function drawChart(canvas, { bench, hovIdx, selIdx, showHuman, showCallouts, sho
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   ctx.clearRect(0, 0, W, H);
 
-  const { data, human } = BENCHMARKS[bench];
+  const { data, human, humanComparable, humanLabel, label } = BENCHMARKS[bench];
+
+  // ── Metric label (top-left) ─────────────────────────────────────────────
+  ctx.fillStyle    = C.muted;
+  ctx.font         = "9px 'JetBrains Mono', monospace";
+  ctx.textAlign    = 'left';
+  ctx.textBaseline = 'top';
+  ctx.fillText(label, L.left, 4);
 
   // ── Y-axis grid + labels ────────────────────────────────────────────────
   [0, 20, 40, 60, 80, 100].forEach(sc => {
@@ -127,23 +142,29 @@ function drawChart(canvas, { bench, hovIdx, selIdx, showHuman, showCallouts, sho
   uniqueYears.forEach(yr => ctx.fillText(String(yr), toX(yr), axisY + 6));
 
   // ── Human baseline ──────────────────────────────────────────────────────
-  if (showHuman) {
+  if (showHuman && human != null) {
     const hy = toY(human);
     ctx.save();
     ctx.setLineDash([8, 5]);
     ctx.beginPath();
     ctx.moveTo(L.left, hy);
     ctx.lineTo(W - L.right, hy);
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.strokeStyle = humanComparable ? 'rgba(255,255,255,0.35)' : C.orange;
     ctx.lineWidth   = 1.5;
     ctx.stroke();
     ctx.restore();
 
-    ctx.fillStyle    = 'rgba(255,255,255,0.55)';
+    ctx.fillStyle    = humanComparable ? 'rgba(255,255,255,0.55)' : C.orange;
     ctx.font         = "9px 'JetBrains Mono', monospace";
     ctx.textAlign    = 'right';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`Human ~${human}%`, W - L.right - 3, hy - 3);
+    ctx.fillText(humanLabel, W - L.right - 3, hy - 3);
+  } else if (showHuman && human == null) {
+    ctx.fillStyle    = C.orange;
+    ctx.font         = "9px 'JetBrains Mono', monospace";
+    ctx.textAlign    = 'right';
+    ctx.textBaseline = 'top';
+    ctx.fillText(humanLabel, W - L.right - 3, 4);
   }
 
   // ── GLUE saturation marker ──────────────────────────────────────────────
@@ -315,7 +336,7 @@ function VSep() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function BenchmarkLeaderboard() {
+export default function BenchmarkLeaderboard({ tryThis }) {
   const [displayBenchmark, setDisplayBenchmark] = useState('ImageNet');
   const [hovIdx,           setHovIdx]           = useState(null);
   const [selIdx,           setSelIdx]           = useState(null);
@@ -426,9 +447,10 @@ export default function BenchmarkLeaderboard() {
   const delta    = (latest.score - first.score).toFixed(1);
   const yearSpan = latest.year - first.year;
   const avgPerYear  = yearSpan > 0 ? (parseFloat(delta) / yearSpan).toFixed(1) : '—';
-  const satYear  = getSaturationYear(data, bench.human);
-  const gapVal   = latest.score - bench.human;
-  const gapStr   = (gapVal >= 0 ? '+' : '') + gapVal.toFixed(1) + '%';
+  const satYear  = getSaturationYear(data, bench);
+  const hasComparableHuman = bench.humanComparable && bench.human != null;
+  const gapVal   = hasComparableHuman ? latest.score - bench.human : null;
+  const gapStr   = hasComparableHuman ? (gapVal >= 0 ? '+' : '') + gapVal.toFixed(1) + '%' : '—';
   const selectedModel = selIdx !== null ? data[selIdx] : null;
 
   // ── Tooltip position (CSS pixels within canvas container) ────────────────
@@ -449,7 +471,7 @@ export default function BenchmarkLeaderboard() {
   }
 
   return (
-    <WidgetCard title="Benchmark Progress — from AlexNet to frontier models" number="15.2">
+    <WidgetCard title="Benchmark Progress — from AlexNet to frontier models" number="21.2" tryThis={tryThis}>
 
       {/* ── Row 1: Tabs + Toggles on same line ──────────────────────────── */}
       <div style={{
@@ -565,13 +587,13 @@ export default function BenchmarkLeaderboard() {
         <VSep />
         <StripCell label="Avg / yr"  main={`+${avgPerYear}%/yr`}                                                 />
         <VSep />
-        <StripCell label="Human"     main={`~${bench.human}%`}                                                   />
+        <StripCell label="Human"     main={bench.human != null ? `~${bench.human}%` : 'uncited'} mainColor={bench.human == null || !bench.humanComparable ? C.orange : C.mid} />
         <VSep />
-        <StripCell label="Gap"       main={gapStr}                  mainColor={gapVal >= 0 ? C.green : C.red}   />
+        <StripCell label="Gap"       main={gapStr}                  mainColor={gapVal != null ? (gapVal >= 0 ? C.green : C.red) : C.muted}   />
         <VSep />
         <StripCell
           label="Surpassed"
-          main={satYear ? `Yes, ${satYear}` : 'Not yet'}
+          main={satYear ? `Yes, ${satYear}` : (hasComparableHuman ? 'Not yet' : 'N/A')}
           mainColor={satYear ? C.green : C.muted}
         />
         {!selectedModel && (
