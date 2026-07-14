@@ -36,7 +36,7 @@ function buildTrajectories() {
   const n   = (sigma) => rng() * 2 * sigma - sigma;
 
   const healthy     = { d: [], g: [] };
-  const collapse    = { d: [], g: [] };
+  const domination  = { d: [], g: [] };
   const oscillating = { d: [], g: [] };
 
   for (let t = 0; t < 100; t++) {
@@ -44,9 +44,15 @@ function buildTrajectories() {
     healthy.d.push(1.40 * Math.exp(-t / 25) + LN2 * (1 - Math.exp(-t / 25)) + n(0.04));
     healthy.g.push(2.00 * Math.exp(-t / 30) + LN2 * (1 - Math.exp(-t / 30)) + n(0.07));
 
-    // Collapse
-    collapse.d.push(t <= 35 ? 1.38 - t * 0.038 + n(0.03) : 0.05 + n(0.01));
-    collapse.g.push(t <= 20 ? 2.0  - t * 0.05  + n(0.06) : 0.15 + n(0.02));
+    // Discriminator dominance: D's cross-entropy loss collapses toward 0 as it
+    // becomes a confident, correct classifier. G's non-saturating loss
+    // −log(D(G(z))) does the OPPOSITE — it grows as D(G(z))→0, since G is
+    // getting no useful gradient. (Not mode collapse: sample diversity is a
+    // separate axis this loss-curve view can't see — see GANLossCurves.)
+    domination.d.push(t <= 35 ? 1.38 - t * 0.038 + n(0.03) : 0.05 + n(0.01));
+    domination.g.push(t <= 20
+      ? 2.0 - t * 0.03 + n(0.06)
+      : 1.4 + 2.6 * (1 - Math.exp(-(t - 20) / 25)) + n(0.08));
 
     // Oscillating — amplitude grows
     const amp = 1 + t * 0.006;
@@ -54,7 +60,7 @@ function buildTrajectories() {
     oscillating.g.push(1.5 + amp * (0.4 * Math.sin(t * 0.18 + 1.2) + 0.15 * Math.cos(t * 0.5))    + n(0.06));
   }
 
-  return { healthy, collapse, oscillating };
+  return { healthy, domination, oscillating };
 }
 
 const TRAJ = buildTrajectories();
@@ -64,15 +70,15 @@ const PAD = { L: 44, R: 16, T: 20, B: 36 };
 const Y_MIN = 0, Y_MAX = 2.5;
 
 const SCENARIOS = [
-  { key: 'healthy',     label: 'Healthy Training' },
-  { key: 'collapse',    label: 'Mode Collapse'    },
-  { key: 'oscillating', label: 'Oscillating'      },
+  { key: 'healthy',     label: 'Healthy Training'        },
+  { key: 'domination',  label: 'Discriminator Dominance' },
+  { key: 'oscillating', label: 'Oscillating'             },
 ];
 
 const DIAG = {
-  healthy:     { converged: 'yes', label: 'Healthy',     note: 'Both losses near ln(2). Nash equilibrium reached.'              },
-  collapse:    { converged: 'no',  label: 'Collapsed',   note: 'D_loss near 0. Discriminator dominates. Generator stuck.'       },
-  oscillating: { converged: 'no',  label: 'Oscillating', note: 'Losses cycle without settling. Training failed.'                },
+  healthy:     { converged: 'yes', label: 'Healthy',    note: 'Both losses near ln(2). Nash equilibrium reached.' },
+  domination:  { converged: 'no',  label: 'Dominated',  note: 'D_loss → 0, G_loss → high. D too strong; G gets no gradient. (This is not mode collapse — that failure is invisible in loss curves; see the panel above.)' },
+  oscillating: { converged: 'no',  label: 'Oscillating', note: 'Losses cycle without settling. Training failed.' },
 };
 
 // ── Canvas draw ────────────────────────────────────────────────────────────
@@ -106,7 +112,7 @@ function drawChart(canvas, { scenario, currentStep, showAnnotations, showEquilib
     if (scenario === 'healthy') {
       ctx.fillStyle = 'rgba(52,211,153,0.06)';
       ctx.fillRect(sx(60), PAD.T, sx(100) - sx(60), chartH);
-    } else if (scenario === 'collapse') {
+    } else if (scenario === 'domination') {
       ctx.fillStyle = 'rgba(248,113,113,0.07)';
       ctx.fillRect(sx(35), PAD.T, sx(100) - sx(35), chartH);
     } else {
@@ -210,7 +216,7 @@ function drawChart(canvas, { scenario, currentStep, showAnnotations, showEquilib
       ctx.fillText('Nash equilibrium region', (sx(60) + sx(100)) / 2, PAD.T + 3);
     }
 
-    if (scenario === 'collapse') {
+    if (scenario === 'domination') {
       ctx.save();
       ctx.strokeStyle = C.red;
       ctx.lineWidth = 1;
@@ -235,8 +241,8 @@ function drawChart(canvas, { scenario, currentStep, showAnnotations, showEquilib
         ctx.restore();
       };
 
-      evtLine(25, 'G exploits a mode');
-      evtLine(35, 'D wins');
+      evtLine(25, 'D pulls ahead');
+      evtLine(35, 'D saturates');
       ctx.restore();
 
       if (currentStep >= 35) {
@@ -291,7 +297,7 @@ function drawChart(canvas, { scenario, currentStep, showAnnotations, showEquilib
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function TrainingDynamics() {
+export default function TrainingDynamics({ tryThis } = {}) {
   const [scenario,           setScenario]           = useState('healthy');
   const [currentStep,        setCurrentStep]        = useState(0);
   const [isPlaying,          setIsPlaying]          = useState(false);
@@ -344,7 +350,7 @@ export default function TrainingDynamics() {
   const diag       = DIAG[scenario];
 
   return (
-    <WidgetCard title="GAN Training Dynamics — three scenarios" number="12.2">
+    <WidgetCard title="GAN Training Dynamics — three scenarios" number="19.2" tryThis={tryThis}>
 
       {/* ── Scenario tabs ─────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>

@@ -110,7 +110,7 @@ function Divider() {
   return <div style={{ height: 1, background: C.border, margin: '7px 0' }} />;
 }
 
-export default function MinimaxGame() {
+export default function MinimaxGame({ tryThis } = {}) {
   const [step, setStep]             = useState(0);
   const [displayStep, setDisplayStep] = useState(0);
   const [showD, setShowD]           = useState(true);
@@ -474,7 +474,7 @@ export default function MinimaxGame() {
   };
 
   return (
-    <WidgetCard ref={cardRef} title="GAN Minimax — generator chases the real distribution" number="12.1">
+    <WidgetCard ref={cardRef} title="GAN Minimax — generator chases the real distribution" number="19.1" tryThis={tryThis}>
 
       {/* Canvas + Stats panel */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>

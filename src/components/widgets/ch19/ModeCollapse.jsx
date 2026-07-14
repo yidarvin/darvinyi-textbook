@@ -150,7 +150,7 @@ function Divider() {
   return <div style={{ height: 1, background: C.border, margin: '7px 0' }} />;
 }
 
-export default function ModeCollapse() {
+export default function ModeCollapse({ tryThis } = {}) {
   const [mode, setMode]             = useState('healthy');
   const [showKDE, setShowKDE]       = useState(true);
   const [showReal, setShowReal]     = useState(true);
@@ -230,7 +230,7 @@ export default function ModeCollapse() {
   const GRID_YS = [-2, -1, 0, 1, 2];
 
   return (
-    <WidgetCard title="Mode Collapse — GAN covers 1 of 3 modes" number="12.3">
+    <WidgetCard title="Mode Collapse — GAN covers 1 of 3 modes" number="19.3" tryThis={tryThis}>
 
       {/* Mode tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 14 }}>

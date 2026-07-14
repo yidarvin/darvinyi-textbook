@@ -140,28 +140,33 @@ export default function PatchGANDiscriminator() {
           PatchGAN — many decisions
         </text>
 
-        {/* Input image with 4x4 grid overlay */}
+        {/* Input image with OVERLAPPING receptive-field boxes (not a disjoint grid) */}
         <g>
           <rect x={imgBotX} y={imgBotY} width={imgBotW} height={imgBotH} rx="4"
                 fill={C.bg3} stroke={C.accent} strokeWidth="1.3" />
           <ImageContent x={imgBotX + 1} y={imgBotY + 1} w={imgBotW - 2} h={imgBotH - 2} stroke={C.accent} />
-          {/* grid overlay */}
-          {[1, 2, 3].map(i => (
-            <g key={`gh-${i}`}>
-              <line
-                x1={imgBotX + (imgBotW * i) / 4} y1={imgBotY}
-                x2={imgBotX + (imgBotW * i) / 4} y2={imgBotY + imgBotH}
-                stroke={C.accent} strokeWidth="0.8" opacity="0.7" />
-              <line
-                x1={imgBotX} y1={imgBotY + (imgBotH * i) / 4}
-                x2={imgBotX + imgBotW} y2={imgBotY + (imgBotH * i) / 4}
-                stroke={C.accent} strokeWidth="0.8" opacity="0.7" />
-            </g>
-          ))}
+          {/* Three overlapping receptive-field squares, each shifted by less than
+              its own width — this is the actual PatchGAN geometry: a 70×70
+              receptive field slides across a 256×256 image with stride 2,
+              so adjacent output positions' receptive fields overlap heavily. */}
+          {[
+            { dx: 0,  dy: 0,  color: C.accent },
+            { dx: 14, dy: 10, color: '#f87171' },
+            { dx: 24, dy: -6, color: '#fbbf24' },
+          ].map((rf, i) => {
+            const rfW = imgBotW * 0.62;
+            const rx = imgBotX + 6 + rf.dx;
+            const ry = imgBotY + 6 + rf.dy;
+            return (
+              <rect key={`rf-${i}`} x={rx} y={ry} width={rfW} height={rfW}
+                    fill="none" stroke={rf.color} strokeWidth="1.2"
+                    strokeDasharray="3 2" opacity="0.85" />
+            );
+          })}
         </g>
         <text x={imgBotX + imgBotW / 2} y={imgBotY + imgBotH + 14}
               textAnchor="middle" fontFamily={mono} fontSize="9.5" fill={C.accent}>
-          generated image · 4×4 patches
+          70×70 receptive fields — heavily overlapping
         </text>
 
         {/* Arrow to shared D */}
@@ -185,7 +190,10 @@ export default function PatchGANDiscriminator() {
         <line x1="345" y1={BOT_Y_BAND} x2="395" y2={BOT_Y_BAND}
               stroke={C.accent} strokeWidth="1" markerEnd="url(#pg-arrow-accent)" />
 
-        {/* Output: 4x4 score grid */}
+        {/* Output: 4×4 illustrative sample of the true 30×30 score grid
+            (a 70×70-receptive-field PatchGAN on a 256×256 image produces a
+            30×30 output via strided convs — too fine to render cell-by-cell
+            here, so this shows a representative corner, not the actual size) */}
         <g>
           {GRID.map((row, ri) =>
             row.map((v, ci) => {
@@ -215,7 +223,7 @@ export default function PatchGANDiscriminator() {
         {/* Output grid label */}
         <text x="441" y={BOT_Y_BAND + 38}
               textAnchor="middle" fontFamily={mono} fontSize="9.5" fill={C.muted2}>
-          per-patch real/fake
+          4×4 corner of the 30×30 grid · per-patch real/fake
         </text>
 
         {/* Aggregate */}
@@ -232,15 +240,14 @@ export default function PatchGANDiscriminator() {
         {/* Bottom-half annotation */}
         <text x="320" y="320" textAnchor="middle"
               fontFamily={sans} fontSize="11" fill={C.muted} fontStyle="italic">
-          evaluates each patch independently — loss focuses on local texture
-          and high-frequency detail
+          70×70 RF on a 256×256 image → 30×30 output positions, via strided
+          convolutions — not 30×30 disjoint crops
         </text>
 
         {/* Bottom note */}
         <text x="320" y="346" textAnchor="middle"
               fontFamily={sans} fontSize="10.5" fill={C.muted}>
-          PatchGAN: D is a small fully-convolutional net — the patch structure
-          emerges from its receptive field, not from explicit cropping
+          Neighboring receptive fields overlap heavily — this is not a disjoint tiling
         </text>
       </svg>
 
@@ -254,9 +261,9 @@ export default function PatchGANDiscriminator() {
           lineHeight: 1.5,
         }}
       >
-        PatchGAN scores each receptive-field-sized patch of the output
-        independently — focusing the adversarial signal on high-frequency texture
-        while letting L1 loss handle low-frequency content.
+        PatchGAN scores every receptive-field-sized window of the output — for
+        the standard 70×70 configuration on a 256×256 image that's a 30×30 grid
+        of heavily overlapping windows, not 30×30 disjoint tiles.
       </figcaption>
     </figure>
   );

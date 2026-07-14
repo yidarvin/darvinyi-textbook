@@ -208,7 +208,7 @@ function StatCell({ label, val, sub, vc }) {
 }
 
 // ── Main widget ────────────────────────────────────────────────────────────────
-export default function CycleConsistency() {
+export default function CycleConsistency({ tryThis } = {}) {
   const [step,        setStep]        = useState(0);
   const [isRunning,   setIsRunning]   = useState(false);
   const [direction,   setDirection]   = useState('forward');
@@ -266,7 +266,7 @@ export default function CycleConsistency() {
   const b1Filter = box1Active ? 'drop-shadow(0 0 6px rgba(45,212,191,0.7))' : 'none';
 
   return (
-    <WidgetCard title="Cycle Consistency — F(G(x)) ≈ x" number="18.4">
+    <WidgetCard title="Cycle Consistency — F(G(x)) ≈ x" number="19.8" tryThis={tryThis}>
 
       {/* ── Main SVG diagram — full column width ── */}
       <div style={{ background: 'var(--code-bg)', borderRadius: '8px', padding: '4px', marginBottom: '12px' }}>

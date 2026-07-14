@@ -343,7 +343,7 @@ export default function GANArchitectureLineage() {
         <EntryLabels
           cx={ENTRY_CX[0]}
           title="DCGAN"
-          year="2015"
+          year="2016"
           lines={[
             'first stable architecture',
             '64×64',

@@ -56,7 +56,7 @@ export const PARTS = [
     color: "var(--orange)",
     chapters: [
       { num: "18", title: "Variational Autoencoders", widgets: 4, live: true },
-      { num: "19", title: "GANs & Image-to-Image Translation", widgets: 4, live: true },
+      { num: "19", title: "GANs & Image-to-Image Translation", widgets: 10, live: true },
       { num: "20", title: "Diffusion Models", widgets: 4, live: true },
     ],
   },

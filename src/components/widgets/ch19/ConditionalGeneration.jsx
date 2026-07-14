@@ -209,7 +209,7 @@ function ComparisonTable() {
 }
 
 // ── Main widget ────────────────────────────────────────────────────────────────
-export default function ConditionalGeneration() {
+export default function ConditionalGeneration({ tryThis } = {}) {
   const [sampleCount, setSampleCount] = useState(0);
   const [preset, setPreset]           = useState('sketch');
   const [showDInputs, setShowDInputs] = useState(true);
@@ -268,7 +268,8 @@ export default function ConditionalGeneration() {
   return (
     <WidgetCard
       title="Conditional vs Unconditional — image-to-image as a mapping problem"
-      number="18.1"
+      number="19.5"
+      tryThis={tryThis}
     >
       {/* ── Preset tabs ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px' }}>
@@ -546,7 +547,7 @@ export default function ConditionalGeneration() {
           <StatRow label="Relation"  val="none" />
           <Divider />
           <StatHead>Conditional</StatHead>
-          <StatRow label="G input"   val="x + z?" />
+          <StatRow label="G input"   val="x (+ z via dropout)" />
           <StatRow label="D input"   val="(x, y)" />
           <StatRow label="Diversity" val="constrained" color={C.green} />
           <StatRow label="Relation"  val="structural"  color={C.accent} />

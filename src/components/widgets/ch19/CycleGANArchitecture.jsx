@@ -367,9 +367,11 @@ function Callout() {
           {'  '}• D_X, D_Y: each ~3M params (PatchGAN)<br/>
           {'  '}• Total: ~25–30M parameters<br/>
           <br/>
-          pix2pix trains 2 networks (G + D) ≈ 15M total.<br/>
-          CycleGAN balances 4 losses vs pix2pix's 2 — more
-          delicate, but works on <em>unpaired</em> data.
+          pix2pix trains only 2 networks, but its U-Net-256 generator alone is
+          ~54M params — pix2pix's total (~57M) is more than double CycleGAN's.
+          CycleGAN's disadvantage isn't parameter count; it's balancing 4
+          losses across 4 networks instead of 2 — more delicate to train, but
+          it works on <em>unpaired</em> data.
         </p>
       </div>
       {/* Hyperparams */}
@@ -381,7 +383,7 @@ function Callout() {
   );
 }
 
-export default function CycleGANArchitecture() {
+export default function CycleGANArchitecture({ tryThis } = {}) {
   const [mode, setMode]           = useState('all');
   const [showCycle, setShowCycle] = useState(true);
   const [showDisc,  setShowDisc]  = useState(true);
@@ -393,7 +395,7 @@ export default function CycleGANArchitecture() {
   }
 
   return (
-    <WidgetCard title="CycleGAN Architecture — two generators, two discriminators, four losses" number="18.5">
+    <WidgetCard title="CycleGAN Architecture — two generators, two discriminators, four losses" number="19.9" tryThis={tryThis}>
 
       {/* ── Full-width diagram (616px → viewBox 580×460 scales to ~487px tall) ── */}
       <div style={{ background: C.codeBg, borderRadius: 6, padding: '6px 4px' }}>

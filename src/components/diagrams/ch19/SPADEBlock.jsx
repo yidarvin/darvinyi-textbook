@@ -138,12 +138,15 @@ export default function SPADEBlock() {
     [0.4, 0.5, 0.4, 0.4],
   ];
 
-  // SPADE output (sample values)
+  // SPADE output — exactly γ(M)·y_normed + β(M), cell by cell, so the
+  // diagram's numbers are internally consistent (y_normed = yVals × 0.9,
+  // rounded to 2 places before applying gammaMap/betaMap, then to 1 place
+  // for display, matching what's actually rendered above).
   const outVals = [
-    [0.4, 0.0, 1.2, 0.6],
-    [-0.5, 0.4, 0.0, -0.7],
-    [0.4, -0.1, -0.5, 1.1],
-    [0.8, -0.5, 1.0, 0.7],
+    [0.4, -0.2, 1.1, 0.6],
+    [-0.6, 0.3, -0.1, -0.6],
+    [0.3, -0.1, -0.5, 1.1],
+    [0.8, -0.4, 1.0, 0.6],
   ];
 
   // Layout

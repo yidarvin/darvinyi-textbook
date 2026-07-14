@@ -45,7 +45,7 @@ const PATCH_INFO = {
          focus: 'Pixel-level color statistics',        result: 'Artifacts — low quality' },
   16:  { label: '16×16',   outputN: 8, rfCells: 1,   positions: '~16×16',
          focus: 'Small local texture patches',         result: 'Fine texture, less coherence' },
-  70:  { label: '70×70',   outputN: 6, rfCells: 3,   positions: '~6×6',
+  70:  { label: '70×70',   outputN: 6, rfCells: 3,   positions: '30×30 (6×6 shown)',
          focus: 'Texture + structural context',        result: 'Best: sharp + coherent' },
   256: { label: '256×256', outputN: 1, rfCells: 8,   positions: '1×1 (global)',
          focus: 'Entire image (full image disc.)',     result: 'Tends to blur' },
@@ -502,7 +502,7 @@ function StatsPanel({ genMode, showSkips, patchSize }) {
 }
 
 // ── Main component ───────────────────────────────────────────────────────────
-export default function Pix2pixArchitecture() {
+export default function Pix2pixArchitecture({ tryThis } = {}) {
   const [genMode,   setGenMode]   = useState('unet');
   const [patchSize, setPatchSize] = useState(70);
   const [showSkips, setShowSkips] = useState(true);
@@ -510,7 +510,7 @@ export default function Pix2pixArchitecture() {
   const info = PATCH_INFO[patchSize];
 
   return (
-    <WidgetCard title="pix2pix Architecture — U-Net + PatchGAN" number="18.2">
+    <WidgetCard title="pix2pix Architecture — U-Net + PatchGAN" number="19.6" tryThis={tryThis}>
         {/* ── Main content ── */}
         <div>
 

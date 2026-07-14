@@ -404,7 +404,7 @@ const SVG_MAP = {
 };
 
 // ── Main widget ───────────────────────────────────────────────────────────────
-export default function PairedTranslation() {
+export default function PairedTranslation({ tryThis } = {}) {
   const [taskIdx,    setTaskIdx]    = useState(0);
   const [sliderPos,  setSliderPos]  = useState(50);
   const [isDragging, setIsDragging] = useState(false);
@@ -442,7 +442,7 @@ export default function PairedTranslation() {
   const ASPECT_PT = (260 / 480) * 100;
 
   return (
-    <WidgetCard title="Paired Translation — 5 pix2pix Tasks" number="18.3">
+    <WidgetCard title="Paired Translation — 5 pix2pix Tasks" number="19.7" tryThis={tryThis}>
 
       {/* Task selector tabs */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>

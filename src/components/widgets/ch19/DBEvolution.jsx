@@ -38,7 +38,15 @@ const WEIGHTS = [
   [0.5, 1.7,  1.3,  0.4,  0.3],
 ];
 
-const D_ACCURACY     = [58, 68, 76, 82, 87, 91];
+// Discriminator accuracy across training. Early on, the generator's output is
+// trivially separable from real data (wide random noise vs. two tight
+// clusters), so D starts confident. As G's distribution converges onto
+// p_data (see ALL_FAKE below — fakes end up centered almost exactly on the
+// real cluster means by epoch 20), a healthy adversarial trajectory pushes D
+// toward chance: accuracy trends DOWN toward 50%, not up. (A discriminator
+// that stayed at 90%+ accuracy the whole time would mean the generator never
+// improved — the opposite of what "G quality: realistic" below claims.)
+const D_ACCURACY     = [92, 81, 71, 63, 55, 51];
 const G_QUALITY_LBLS = [
   'random noise', 'vague structure', 'rough clusters',
   'improving', 'near-real', 'realistic',
@@ -109,6 +117,12 @@ function generateAllFakeEpochs() {
 // ── Module-level static data (computed once) ───────────────────────────────
 const REAL_PTS = generateRealPoints();
 const ALL_FAKE = generateAllFakeEpochs();
+// Actual weighted centroid of REAL_PTS (20 pts @ (1.2,1.0) + 10 pts @ (-0.8,0.5))
+// — used consistently below instead of an unrelated hardcoded anchor point.
+const REAL_CENTROID = REAL_PTS.reduce(
+  (acc, [x, y]) => [acc[0] + x / REAL_PTS.length, acc[1] + y / REAL_PTS.length],
+  [0, 0]
+);
 
 // ── Interpolation helpers ──────────────────────────────────────────────────
 function epochSegment(epoch) {
@@ -367,7 +381,7 @@ function drawEverything(canvas, { displayEpoch, showBoundary, showBackground, ho
 }
 
 // ── Component ──────────────────────────────────────────────────────────────
-export default function DBEvolution() {
+export default function DBEvolution({ tryThis } = {}) {
   const [epoch,          setEpoch]          = useState(0);
   const [displayEpoch,   setDisplayEpoch]   = useState(0);
   const [playing,        setPlaying]        = useState(false);
@@ -478,13 +492,13 @@ export default function DBEvolution() {
 
   const cFakeX = fakePts.reduce((s, p) => s + p[0], 0) / fakePts.length;
   const cFakeY = fakePts.reduce((s, p) => s + p[1], 0) / fakePts.length;
-  const dist   = Math.hypot(cFakeX - 1.0, cFakeY - 0.8);
+  const dist   = Math.hypot(cFakeX - REAL_CENTROID[0], cFakeY - REAL_CENTROID[1]);
   const approaching = dist < 0.5;
-  const dAtReal = discriminatorD(1.0, 0.8, w);
+  const dAtReal = discriminatorD(REAL_CENTROID[0], REAL_CENTROID[1], w);
   const dAtFake = discriminatorD(cFakeX, cFakeY, w);
 
   return (
-    <WidgetCard ref={cardRef} title="Decision Boundary Evolution — 20 epochs of adversarial training" number="12.4">
+    <WidgetCard ref={cardRef} title="Decision Boundary Evolution — 20 epochs of adversarial training" number="19.4" tryThis={tryThis}>
 
       {/* ── Canvas + Stats panel ────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
@@ -523,7 +537,7 @@ export default function DBEvolution() {
 
           <SLabel>Real centroid</SLabel>
           <div style={{ fontFamily: mono, fontSize: '10px', color: C.textMid, marginBottom: '8px' }}>
-            (1.0, 0.8)
+            ({REAL_CENTROID[0].toFixed(2)}, {REAL_CENTROID[1].toFixed(2)})
           </div>
 
           <SLabel>Distance</SLabel>

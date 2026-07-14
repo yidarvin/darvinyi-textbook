@@ -362,7 +362,7 @@ function Divider() {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function SPADESynthesis() {
+export default function SPADESynthesis({ tryThis } = {}) {
   const [viewMode, setViewMode]       = useState('paint');
   const [grid, setGrid]               = useState(makeBeach);
   const [activeClass, setActiveClass] = useState('sky');
@@ -470,7 +470,8 @@ export default function SPADESynthesis() {
   return (
     <WidgetCard
       title="SPADE — semantic synthesis via spatially-adaptive normalization"
-      number="18.6"
+      number="19.10"
+      tryThis={tryThis}
     >
       {/* View toggle */}
       <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
