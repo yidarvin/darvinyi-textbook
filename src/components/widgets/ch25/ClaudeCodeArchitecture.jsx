@@ -32,19 +32,19 @@ const SUBSYSTEMS = [
   {
     id: 'permissions', label: 'Permission System', color: '#fb923c',
     cx: 290, cy: 42,
-    items: ['7 permission modes', 'ML classifier for risk', 'Tool-level allow/deny'],
+    items: ['6 permission modes', 'ML classifier (auto mode)', 'Tool-level allow/deny'],
     connLabel: 'gate',
   },
   {
     id: 'extensibility', label: 'Extensibility', color: '#a78bfa',
     cx: 490, cy: 192,
-    items: ['MCP servers', 'Plugins & Skills', 'Hooks: 27 events'],
+    items: ['MCP servers', 'Plugins & Skills', 'Hooks: ~30 events'],
     connLabel: 'extend',
   },
   {
     id: 'compaction', label: 'Context Compaction', color: '#fbbf24',
     cx: 450, cy: 352,
-    items: ['Budget reduction', 'Snip / Microcompact', 'Context collapse', 'Auto-compact'],
+    items: ['Session memory compact', 'Snip / Microcompact', 'Context collapse', 'Auto-compact'],
     connLabel: 'compress',
   },
   {
@@ -65,16 +65,15 @@ const SUBSYSTEMS = [
 const DETAILS = {
   permissions: {
     color: '#fb923c', title: 'Permission System',
-    body: `Claude Code wraps every tool call in a 6-layer security gate. Each action is evaluated for risk before execution.
+    body: `Claude Code evaluates every tool call against the active permission mode before executing it. Six modes span fully manual to fully unattended:
 
-The 7 permission modes (least → most permissive):
-• default-deny — explicit approval per tool call
-• allow-list — pre-approved tools
-• allow-edit — file edits OK, shell needs approval
-• allow-bash — shell OK, only sensitive commands gated
-• allow-net — network requests OK
-• acceptEdits — auto-accept edits in a directory
-• bypassPermissions — no gating (research/CI only)
+The 6 permission modes (least → most autonomous):
+• default (Manual) — reads run freely; edits and commands ask first
+• plan — read-only research and proposal; nothing executes
+• acceptEdits — file edits and safe filesystem commands auto-approve
+• auto — an ML classifier blocks a denylist of risky actions; everything else runs unprompted
+• dontAsk — only pre-approved tools run at all (CI use)
+• bypassPermissions — no gating (isolated environments only)
 
 Permissions are session-scoped and never restored on resume — trust is re-established each session.`,
   },
@@ -83,15 +82,15 @@ Permissions are session-scoped and never restored on resume — trust is re-esta
     body: `Four extensibility mechanisms cover different use cases:
 
 • MCP (Model Context Protocol): standardized server interface for external tools. Plug in any MCP server and its tools become available.
-• Plugins: bundles of agents, commands, skills, hooks, and MCP servers. A plugin manifest declares 10 component types.
+• Plugins: bundles of agents, commands, skills, hooks, and MCP servers. A plugin manifest declares roughly 10 component types.
 • Skills: SKILL.md files with frontmatter injected into context when relevant. Project-level and user-level scopes.
-• Hooks: 27 event types across 5 categories (session, prompt, tool, compaction, exit). 4 execution types: shell, LLM-evaluated, webhook, subagent verifier.`,
+• Hooks: roughly 30 documented event types (session, prompt, tool, compaction, exit, and more). 5 execution types: command (shell), http (webhook), mcp_tool (call an already-connected MCP server), prompt (LLM-evaluated), agent (subagent verifier).`,
   },
   compaction: {
     color: '#fbbf24', title: 'Context Compaction',
     body: `Five layers run before every model call to manage context pressure. Each layer addresses a different bottleneck:
 
-• Budget reduction: truncate individual tool outputs that exceed limits.
+• Session memory compact: preserve durable extracted memory while compressing transcript history.
 • Snip: drop intermediate steps from temporal history.
 • Microcompact: reduce cache overhead in repeated structures.
 • Context collapse: aggressive summarization of long conversations.
@@ -226,11 +225,11 @@ function StatsStrip({ selected }) {
       {/* ③ Key numbers */}
       <div style={{ ...cell, ...cellBorder }}>
         <SectionLabel>Key numbers</SectionLabel>
-        <StatRow label="Perm modes"   val="7" />
-        <StatRow label="Perm gate"    val="6 layers" />
+        <StatRow label="Perm modes"   val="6" />
+        <StatRow label="Auto gate"    val="4 steps" />
         <StatRow label="Compaction"   val="5 layers" />
-        <StatRow label="Hook events"  val="27" />
-        <StatRow label="Plugin types" val="10" />
+        <StatRow label="Hook events"  val="~30" />
+        <StatRow label="Plugin types" val="~10" />
         <StatRow label="Tools"        val="~15" />
       </div>
 
@@ -267,7 +266,7 @@ function Pill({ label, active, onClick }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────
-export default function ClaudeCodeArchitecture() {
+export default function ClaudeCodeArchitecture({ tryThis }) {
   const [selectedSub, setSelectedSub] = useState(null);
   const [isAnimating, setIsAnimating]   = useState(true);
   const [showLabels,  setShowLabels]    = useState(true);
@@ -315,7 +314,8 @@ export default function ClaudeCodeArchitecture() {
   return (
     <WidgetCard
       title="Claude Code Architecture — agent loop plus five subsystems"
-      number="22.2"
+      number="25.2"
+      tryThis={tryThis}
     >
       <style>{`
         @keyframes cca-conn-pulse {

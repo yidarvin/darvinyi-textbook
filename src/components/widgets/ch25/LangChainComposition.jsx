@@ -44,7 +44,7 @@ const PRIMITIVES = [
     apiNote: '@tool decorator or Tool() class' },
   { id: 'memory',    name: 'Memory',             icon: '💾', color: C.green,
     desc: 'Stores conversation history, summaries, or other state.',
-    apiNote: 'ConversationBufferMemory, etc.' },
+    apiNote: 'MemorySaver / checkpointers (LangGraph)' },
   { id: 'chain',     name: 'Chain / Runnable',   icon: '⛓',  color: C.blue,
     desc: 'Composes other primitives into a runnable sequence.',
     apiNote: 'primitive | primitive | ... (LCEL syntax)' },
@@ -342,7 +342,7 @@ const CODE = {
   ),
   toolAgent: (
     <>
-      {cm('# Tool-using agent')}{'\n'}
+      {cm('# Tool-using agent (legacy langchain_classic API — current idiom is create_agent)')}{'\n'}
       {v('tools')} {'= ['}{v('search_tool')}{', '}{v('calculator_tool')}{']'}{'\n'}
       {v('memory')} {'= '}{fn('ConversationBufferMemory')}{'()'}{'\n'}
       {v('agent')} {'= '}{fn('create_tool_calling_agent')}{'('}{'\n'}
@@ -357,7 +357,7 @@ const CODE = {
   ),
   convRagTools: (
     <>
-      {cm('# Conversational RAG with tools')}{'\n'}
+      {cm('# Conversational RAG with tools (legacy langchain_classic API)')}{'\n'}
       {v('retriever')} {'= '}{fn('vectorstore.as_retriever')}{'()'}{'\n'}
       {v('tools')} {'= ['}{v('retriever_tool')}{', '}{v('search_tool')}{', '}{v('calc_tool')}{']'}{'\n'}
       {v('memory')} {'= '}{fn('ConversationSummaryMemory')}{'(llm='}{v('llm')}{')'}{'\n'}
@@ -553,7 +553,7 @@ function StatsStrip({ preset }) {
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
-export default function LangChainComposition() {
+export default function LangChainComposition({ tryThis }) {
   const [preset, setPreset]             = useState('basicRag');
   const [showCode, setShowCode]         = useState(true);
   const [highlightUsed, setHighlight]   = useState(true);
@@ -583,7 +583,7 @@ export default function LangChainComposition() {
   );
 
   return (
-    <WidgetCard title="LangChain — composing primitives into agents" number="22.4">
+    <WidgetCard title="LangChain — composing primitives into agents" number="25.4" tryThis={tryThis}>
 
       {/* ── Main row: palette + canvas section ── */}
       <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>

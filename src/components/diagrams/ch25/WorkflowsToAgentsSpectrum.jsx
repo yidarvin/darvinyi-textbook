@@ -22,11 +22,11 @@ const SKETCH_H = 68;
 const LABEL_Y = SKETCH_Y + SKETCH_H + 12;
 
 const PATTERNS = [
-  { idx: 0, name: 'Augmented LLM',        desc: 'single enhanced LLM call' },
-  { idx: 1, name: 'Prompt Chaining',      desc: 'sequential LLM calls — each step depends on previous' },
-  { idx: 2, name: 'Routing',              desc: 'classifier dispatches to specialized handler' },
-  { idx: 3, name: 'Parallelization',      desc: 'independent LLM calls run concurrently, results merged' },
-  { idx: 4, name: 'Orchestrator-Workers', desc: 'orchestrator decomposes, workers execute, orchestrator synthesizes' },
+  { idx: 0, name: 'Prompt Chaining',      desc: 'sequential LLM calls — each step depends on previous' },
+  { idx: 1, name: 'Routing',              desc: 'classifier dispatches to specialized handler' },
+  { idx: 2, name: 'Parallelization',      desc: 'independent LLM calls run concurrently, results merged' },
+  { idx: 3, name: 'Orchestrator-Workers', desc: 'orchestrator decomposes, workers execute, orchestrator synthesizes' },
+  { idx: 4, name: 'Evaluator-Optimizer',  desc: 'an evaluator critiques output, an optimizer revises it' },
   { idx: 5, name: 'Autonomous Agent',     desc: 'model decides its own next step in a loop' },
 ];
 
@@ -97,10 +97,10 @@ export default function WorkflowsToAgentsSpectrum() {
                     fill={isAuto ? C.accentDim : C.bg3}
                     stroke={isAuto ? C.accent : C.borderLt}
                     strokeWidth={isAuto ? 1.2 : 1} />
-              {/* block name */}
+              {/* block name — shrink long titles so adjacent blocks don't collide */}
               <text x={cx(p.idx)} y={ROW_TITLE_Y - 6}
                     textAnchor="middle"
-                    fontFamily={mono} fontSize="9.5"
+                    fontFamily={mono} fontSize={p.name.length > 14 ? '7.8' : '9.5'}
                     fill={isAuto ? C.accent : C.text}
                     fontWeight="600">
                 {p.name}
@@ -109,49 +109,9 @@ export default function WorkflowsToAgentsSpectrum() {
           );
         })}
 
-        {/* Sketch 0: Augmented LLM — single box with arrows to tools/memory/retrieval */}
+        {/* Sketch 0: Prompt Chaining — three boxes connected */}
         {(() => {
           const i = 0;
-          const x0 = blockX(i);
-          const y0 = SKETCH_Y;
-          // central LLM at center
-          const llmX = x0 + BLOCK_W / 2 - 14;
-          const llmY = y0 + 26;
-          return (
-            <g key={`sketch-${i}`}>
-              <SmallBox x={llmX} y={llmY} w={28} h={14} label="LLM"
-                        stroke={C.muted2} textFill={C.text} fontSize={7.5} />
-              {/* tools above */}
-              <text x={x0 + BLOCK_W / 2} y={y0 + 12}
-                    textAnchor="middle" fontFamily={mono}
-                    fontSize="7" fill={C.muted2}>tools</text>
-              <line x1={x0 + BLOCK_W / 2} y1={y0 + 14}
-                    x2={x0 + BLOCK_W / 2} y2={llmY}
-                    stroke={C.muted2} strokeWidth="0.8"
-                    markerEnd="url(#wfa-arrow-sm)" />
-              {/* memory left */}
-              <text x={x0 + 12} y={llmY + 10}
-                    textAnchor="middle" fontFamily={mono}
-                    fontSize="7" fill={C.muted2}>mem</text>
-              <line x1={x0 + 22} y1={llmY + 7}
-                    x2={llmX - 1} y2={llmY + 7}
-                    stroke={C.muted2} strokeWidth="0.8"
-                    markerEnd="url(#wfa-arrow-sm)" />
-              {/* retrieval right */}
-              <text x={x0 + BLOCK_W - 14} y={llmY + 10}
-                    textAnchor="middle" fontFamily={mono}
-                    fontSize="7" fill={C.muted2}>RAG</text>
-              <line x1={x0 + BLOCK_W - 24} y1={llmY + 7}
-                    x2={llmX + 29} y2={llmY + 7}
-                    stroke={C.muted2} strokeWidth="0.8"
-                    markerStart="url(#wfa-arrow-sm)" />
-            </g>
-          );
-        })()}
-
-        {/* Sketch 1: Prompt Chaining — three boxes connected */}
-        {(() => {
-          const i = 1;
           const x0 = blockX(i);
           const y0 = SKETCH_Y + 22;
           const w = 22, h = 12, gap = 6;
@@ -173,9 +133,9 @@ export default function WorkflowsToAgentsSpectrum() {
           );
         })()}
 
-        {/* Sketch 2: Routing — input → diamond → 3 branches */}
+        {/* Sketch 1: Routing — input → diamond → 3 branches */}
         {(() => {
-          const i = 2;
+          const i = 1;
           const x0 = blockX(i);
           const y0 = SKETCH_Y;
           const cxr = x0 + BLOCK_W / 2;
@@ -211,9 +171,9 @@ export default function WorkflowsToAgentsSpectrum() {
           );
         })()}
 
-        {/* Sketch 3: Parallelization — input → 3 parallel → aggregator → output */}
+        {/* Sketch 2: Parallelization — input → 3 parallel → aggregator → output */}
         {(() => {
-          const i = 3;
+          const i = 2;
           const x0 = blockX(i);
           const y0 = SKETCH_Y;
           return (
@@ -250,9 +210,9 @@ export default function WorkflowsToAgentsSpectrum() {
           );
         })()}
 
-        {/* Sketch 4: Orchestrator-Workers — top box with arrows to 3 workers, back arrows */}
+        {/* Sketch 3: Orchestrator-Workers — top box with arrows to 3 workers, back arrows */}
         {(() => {
-          const i = 4;
+          const i = 3;
           const x0 = blockX(i);
           const y0 = SKETCH_Y;
           const cx4 = x0 + BLOCK_W / 2;
@@ -277,6 +237,36 @@ export default function WorkflowsToAgentsSpectrum() {
                     x2={cx4 + 28} y2={y0 + 43}
                     stroke={C.muted2} strokeWidth="0.7"
                     markerEnd="url(#wfa-arrow-sm)" />
+            </g>
+          );
+        })()}
+
+        {/* Sketch 4: Evaluator-Optimizer — generator produces, evaluator critiques, revise loop back to generator */}
+        {(() => {
+          const i = 4;
+          const x0 = blockX(i);
+          const y0 = SKETCH_Y;
+          const cx4 = x0 + BLOCK_W / 2;
+          return (
+            <g key={`sketch-${i}`}>
+              <SmallBox x={cx4 - 17} y={y0 + 8} w={34} h={12} label="gen" fontSize={7.5} />
+              <SmallBox x={cx4 - 17} y={y0 + 42} w={34} h={12} label="eval" fontSize={7.5} />
+              {/* down arrow: generator -> evaluator */}
+              <line x1={cx4} y1={y0 + 20} x2={cx4} y2={y0 + 41}
+                    stroke={C.muted2} strokeWidth="0.8"
+                    markerEnd="url(#wfa-arrow-sm)" />
+              {/* revise loop: evaluator -> generator, curved to the left */}
+              <path d={`M ${cx4 - 17} ${y0 + 48} C ${cx4 - 36} ${y0 + 32}, ${cx4 - 36} ${y0 + 18}, ${cx4 - 17} ${y0 + 14}`}
+                    fill="none" stroke={C.muted2} strokeWidth="0.8"
+                    markerEnd="url(#wfa-arrow-sm)" />
+              <text x={cx4 - 40} y={y0 + 32} textAnchor="middle" fontFamily={mono}
+                    fontSize="6.5" fill={C.muted2}>revise?</text>
+              {/* ok arrow out to the right */}
+              <line x1={cx4 + 17} y1={y0 + 48} x2={cx4 + 30} y2={y0 + 48}
+                    stroke={C.muted2} strokeWidth="0.8"
+                    markerEnd="url(#wfa-arrow-sm)" />
+              <text x={cx4 + 20} y={y0 + 58} textAnchor="middle" fontFamily={mono}
+                    fontSize="6.5" fill={C.muted2}>ok</text>
             </g>
           );
         })()}

@@ -16,25 +16,25 @@ const DIMENSIONS = [
     id: 'reasoning-location',
     title: 'Where reasoning lives',
     claudeCode: 'Mostly in the model. The harness loads minimal scaffolding into context (CLAUDE.md as user-context, not system prompt). Skills and subagents inject task-specific reasoning only when relevant.',
-    codex: 'Mostly in the model. Even less harness-level scaffolding than Claude Code — Codex trusts the underlying model to handle most decisions with raw shell access.',
+    codex: 'Also mostly in the model, with less harness-level scaffolding than Claude Code — but safety is enforced by an OS-level sandbox rather than by the harness reasoning about risk.',
     claudeHL: ['minimal scaffolding', 'task-specific reasoning only when relevant'],
-    codexHL: ['Even less harness-level scaffolding', 'trusts the underlying model'],
+    codexHL: ['less harness-level scaffolding', 'OS-level sandbox'],
   },
   {
     id: 'iteration-loop',
     title: 'Iteration loop structure',
     claudeCode: 'Single queryLoop async generator drives all sessions. Loop steps: gather context → decide → use tool → observe → continue?',
-    codex: 'Similar tight loop, but with looser permission gating between steps. Faster iteration cadence by default.',
+    codex: 'Similar tight loop, gated by sandbox policy rather than step-by-step permission prompts — commands run immediately inside the sandbox; only sandbox-escaping actions pause for approval.',
     claudeHL: ['queryLoop async generator'],
-    codexHL: ['looser permission gating', 'Faster iteration cadence'],
+    codexHL: ['gated by sandbox policy', 'pause for approval'],
   },
   {
     id: 'safety-posture',
     title: 'Safety posture',
-    claudeCode: 'Deny-first with 7 permission modes. Every tool call passes through a 6-layer security gate. ML-based risk classifier evaluates novel actions.',
-    codex: 'Approve-by-default for shell access with opt-out. Less granular permission system. Faster but trusts the model more.',
-    claudeHL: ['Deny-first', '6-layer security gate', 'ML-based risk classifier'],
-    codexHL: ['Approve-by-default', 'Less granular permission system'],
+    claudeCode: 'Six permission modes span fully manual to fully unattended. The auto mode routes novel actions through an ML-based risk classifier that blocks a specific denylist and allows everything else.',
+    codex: 'OS-level sandbox by default — Seatbelt on macOS, bubblewrap + Landlock + seccomp on Linux — blocking network access and confining writes to the workspace, with an approval policy for anything that needs to escape it.',
+    claudeHL: ['Six permission modes', 'ML-based risk classifier'],
+    codexHL: ['OS-level sandbox by default', 'approval policy'],
   },
   {
     id: 'extensibility',
@@ -47,7 +47,7 @@ const DIMENSIONS = [
   {
     id: 'context-management',
     title: 'Context management',
-    claudeCode: 'Five-layer compaction pipeline runs before every model call. Budget reduction → snip → microcompact → context collapse → auto-compact.',
+    claudeCode: 'Five-layer compaction pipeline runs before every model call. Session memory compact → snip → microcompact → context collapse → auto-compact.',
     codex: "Simpler context handling: truncate from the start when limit is approached. Relies on the model's long-context capability.",
     claudeHL: ['Five-layer compaction pipeline'],
     codexHL: ['truncate from the start', 'long-context capability'],
@@ -180,7 +180,7 @@ const btnBase = {
   transition: 'all 150ms',
 };
 
-export default function ClaudeCodeVsCodex() {
+export default function ClaudeCodeVsCodex({ tryThis }) {
   const [expandedId, setExpandedId] = useState(null);
   const [highlight, setHighlight] = useState(false);
 
@@ -193,7 +193,7 @@ export default function ClaudeCodeVsCodex() {
   }
 
   return (
-    <WidgetCard title="Claude Code vs Codex CLI — seven design dimensions" number="22.3">
+    <WidgetCard title="Claude Code vs Codex CLI — seven design dimensions" number="25.3" tryThis={tryThis}>
 
       {/* Column headers */}
       <div style={{ display: 'flex', marginBottom: '10px' }}>
@@ -299,7 +299,7 @@ export default function ClaudeCodeVsCodex() {
           Claude Code bets on structured harness logic: explicit permissions, layered context management, formal subagents, append-only audit trail.
           This adds complexity but produces predictable, auditable behavior.
           <br /><br />
-          Codex CLI bets on the model: minimal scaffolding, trust the model to navigate ambiguity, fewer harness-level constraints. Simpler to understand but more variable in behavior.
+          Codex CLI bets on the model inside an OS-level sandbox: minimal harness scaffolding, trust the model to navigate ambiguity, fewer harness-level constraints — with safety enforced by the sandbox rather than by permission prompts.
           <br /><br />
           Neither bet is obviously correct. The right answer depends on the deployment context and the user's tolerance for surprise.
         </div>

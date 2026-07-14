@@ -546,7 +546,7 @@ function Btn({ active, accent, disabled, children, onClick }) {
 }
 
 // ── Main widget ──────────────────────────────────────────────────────────
-export default function CrewAIvsAutoGPT() {
+export default function CrewAIvsAutoGPT({ tryThis }) {
   // applied event counts (drives all derived state)
   const [crewApplied, setCrewApplied] = useState(0);
   const [autoApplied, setAutoApplied] = useState(0);
@@ -687,7 +687,7 @@ export default function CrewAIvsAutoGPT() {
 
   // ── Render ────────────────────────────────────────────────────────────
   return (
-    <WidgetCard title="CrewAI vs AutoGPT — role-based vs autonomous multi-agent" number="22.6">
+    <WidgetCard title="CrewAI vs AutoGPT — role-based vs autonomous multi-agent" number="25.6" tryThis={tryThis}>
 
       {/* Shared task banner */}
       <div style={{

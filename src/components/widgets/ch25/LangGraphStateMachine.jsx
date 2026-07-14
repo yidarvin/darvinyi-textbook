@@ -217,7 +217,7 @@ function StatsPanel({ preset, stepIdx, takenPath, totalPath }) {
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '14px' }}>
       <Section title="LangGraph" titleColor={C.accent}>
         <Row label="Style" value="state-mach" />
-        <Row label="Built on" value="LangChain" />
+        <Row label="Built on" value="Standalone (same maintainer)" />
         <Row label="Language" value="Python, JS" />
       </Section>
 
@@ -255,7 +255,7 @@ function StatsPanel({ preset, stepIdx, takenPath, totalPath }) {
 }
 
 // --- Main component ---
-export default function LangGraphStateMachine() {
+export default function LangGraphStateMachine({ tryThis }) {
   const [preset, setPreset] = useState('simple');
   const [stepIdx, setStepIdx] = useState(-1);
   const [isAnimating, setIsAnimating] = useState(false);
@@ -492,7 +492,7 @@ export default function LangGraphStateMachine() {
   const canCompleteStep = !isAnimating && stepIdx < currentPath.length - 1;
 
   return (
-    <WidgetCard title="LangGraph — agent control as a state machine" number="22.5">
+    <WidgetCard title="LangGraph — agent control as a state machine" number="25.5" tryThis={tryThis}>
 
       {/* Row 1: preset tabs + speed */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', alignItems: 'center', flexWrap: 'wrap' }}>

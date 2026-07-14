@@ -65,7 +65,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | C20 | Ch20 Diffusion Models — deep pass + video/world-models closing section (Appendix A: ch19→20) | DONE |
 | C21 | Ch21 Datasets & Benchmarks — deep pass (Appendix A: ch20→21) | DONE |
 | C24 | Ch24 AI Agents — deep pass, owns multi-agent concepts (Appendix A: ch21→24) | DONE |
-| C25 | Ch25 Agent Harnesses — deep pass (Appendix A: ch22→25) | PENDING |
+| C25 | Ch25 Agent Harnesses — deep pass (Appendix A: ch22→25) | DONE |
 
 ### Phase N — New chapters (specs in `context/V2_PLAN.md` Appendix C)
 

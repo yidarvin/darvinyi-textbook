@@ -44,7 +44,7 @@ const FRAMEWORKS = [
   },
   {
     name: 'CrewAI',
-    year: '2024',
+    year: '2023',
     xn: 0.58, yn: 0.62,
     annotation: ['role-based,', 'hierarchical or', 'sequential processes'],
     teal: false,

@@ -39,8 +39,8 @@ const HARNESSES = {
     pos: [0.2, 0.45],
     interaction: "Terminal-based, minimal harness, model-led",
     primaryUse: "Coding assistance with direct shell access",
-    strength: "Lightweight abstractions, minimal opinions",
-    weakness: "Less safety scaffolding; trusts model judgement more",
+    strength: "Lightweight abstractions, OS-level sandbox by default",
+    weakness: "No harness-level permission system; approvals depend on the sandbox's escape hatches",
     structure: 2, autonomy: 5, reusability: 4, learningCurve: 9,
     quadrant: "Interactive helper",
     labelOffset: [-14, -14],
@@ -273,7 +273,7 @@ function StatsStrip({ selected, filter, showing }) {
   );
 }
 
-export default function HarnessTaxonomy() {
+export default function HarnessTaxonomy({ tryThis }) {
   const canvasRef = useRef(null);
   const animRef   = useRef(null);
   const tickRef   = useRef(0);
@@ -502,7 +502,7 @@ export default function HarnessTaxonomy() {
   };
 
   return (
-    <WidgetCard title="The Harness Design Space — six tools, four quadrants" number="22.1">
+    <WidgetCard title="The Harness Design Space — six tools, four quadrants" number="25.1" tryThis={tryThis}>
 
       {/* Filter controls */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '12px', flexWrap: 'wrap' }}>
