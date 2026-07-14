@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { useIsVisible } from '../../../hooks/useIsVisible';
+import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
 // ── Constants ───────────────────────────────────────────────────────────────────
 const C = {
@@ -146,15 +148,16 @@ function drawHeatmap(canvas, data, m, n) {
 }
 
 // ── Sub-components ──────────────────────────────────────────────────────────────
-function Btn({ children, onClick, active, disabled }) {
+function Btn({ children, onClick, active, disabled, title }) {
   return (
-    <button onClick={onClick} disabled={disabled} style={{
+    <button onClick={onClick} disabled={disabled} title={title} style={{
       fontFamily: mono, fontSize: '10px', padding: '4px 10px',
       background: active ? C.accentDim : C.bg4,
       border: `1px solid ${active ? C.accent : C.borderLt}`,
       color: disabled ? C.muted : active ? C.accent : C.textMid,
       borderRadius: '4px', cursor: disabled ? 'default' : 'pointer',
       flexShrink: 0, lineHeight: 1,
+      opacity: disabled ? 0.5 : 1,
     }}>
       {children}
     </button>
@@ -243,12 +246,22 @@ function FreqSpectrum({ thetas, dimI }) {
   const W = 260, H = 88;
   const lp = 12, rp = 10, tp = 14, bp = 16;
   const cW = W - lp - rp, cH = H - tp - bp;
-  const logMin = -4, logMax = 0;
+
+  // theta_i = base^(-2i/d) is monotonically decreasing in i, so theta_0 = 1 (log 0)
+  // is always the max, but the min (theta_31) shrinks fast as base grows: at
+  // base=10000 it bottoms out around 1.3e-4 (log10 ≈ -3.9), but at base=500000 it's
+  // ≈3.0e-6 (log10 ≈ -5.5) and at base=1000000 it's ≈1.5e-6 (log10 ≈ -5.8). A fixed
+  // logMin=-4 clips those larger bases, so size the axis to the live data instead.
+  const minTheta = Math.min(...thetas);
+  const maxTheta = Math.max(...thetas);
+  const logMin = Math.floor(Math.log10(Math.max(minTheta, 1e-300)));
+  const logMax = Math.ceil(Math.log10(Math.max(maxTheta, 1e-300)));
+  const logRange = (logMax - logMin) || 1; // guard degenerate zero-height range
 
   const pts = thetas.map((t, i) => {
     const x = lp + (i / 31) * cW;
-    const logT = Math.log10(Math.max(t, 1e-5));
-    const y = tp + (1 - (logT - logMin) / (logMax - logMin)) * cH;
+    const logT = Math.log10(Math.max(t, 1e-300));
+    const y = tp + (1 - (logT - logMin) / logRange) * cH;
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(' ');
 
@@ -301,12 +314,16 @@ function SDivider() {
 }
 
 // ── Main widget ─────────────────────────────────────────────────────────────────
-export default function RoPE() {
+export default function RoPE({ tryThis }) {
   const [m,         setM]         = useState(8);
   const [n,         setN]         = useState(5);
   const [dimI,      setDimI]      = useState(0);
   const [base,      setBase]      = useState(10000);
   const [animating, setAnimating] = useState(false);
+
+  // Pause the animation loop when scrolled off-screen; never auto-run for reduced motion.
+  const [cardRef, isVisible] = useIsVisible();
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const heatmapRef   = useRef(null);
   const animTimerRef = useRef(null);
@@ -331,17 +348,20 @@ export default function RoPE() {
     return () => cancelAnimationFrame(id);
   }, [heatData, m, n]);
 
-  // Animation: increment m 0→15 at 400ms per step
+  // Animation: increment m 0→15 at 400ms per step.
+  // Paused (not cancelled) while off-screen — resumes automatically once `isVisible`
+  // flips back to true, since that dependency change re-runs the effect.
   useEffect(() => {
-    if (!animating) return;
+    if (!animating || !isVisible) return;
     if (m >= 15) { setAnimating(false); return; }
     animTimerRef.current = setTimeout(() => setM(p => p + 1), 400);
     return () => clearTimeout(animTimerRef.current);
-  }, [animating, m]);
+  }, [animating, m, isVisible]);
 
   useEffect(() => () => clearTimeout(animTimerRef.current), []);
 
   function toggleAnimate() {
+    if (prefersReducedMotion) return; // reduced motion: no continuous auto-play
     if (animating) {
       setAnimating(false);
     } else {
@@ -353,7 +373,7 @@ export default function RoPE() {
   const baseLabels = { 10000: '10k (std)', 500000: '500k (Llama3)', 1000000: '1M (ultra)' };
 
   return (
-    <WidgetCard title="RoPE — rotating query and key vectors to encode relative position" number="9.4">
+    <WidgetCard ref={cardRef} title="RoPE — rotating query and key vectors to encode relative position" number="11.4" tryThis={tryThis}>
       <style>{`
         .rope-range { -webkit-appearance: none; height: 2px; background: #2e2e2e;
           border-radius: 2px; cursor: pointer; outline: none; }
@@ -372,9 +392,12 @@ export default function RoPE() {
 
         {/* CENTER: heatmap + score display */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontFamily: inter, fontSize: '10px', color: C.text, marginBottom: '4px', lineHeight: 1.35 }}>
+          <div style={{ fontFamily: inter, fontSize: '10px', color: C.text, marginBottom: '2px', lineHeight: 1.35 }}>
             cos((m−n) × theta_i)
             <span style={{ color: C.muted }}> — depends only on offset (m−n)</span>
+          </div>
+          <div style={{ fontFamily: inter, fontSize: '8.5px', color: C.muted, fontStyle: 'italic', marginBottom: '4px' }}>
+            Assumes q = k = unit vector in this dimension pair — this is the relative-position property, not the general q·k dot product.
           </div>
 
           <canvas ref={heatmapRef}
@@ -433,6 +456,9 @@ export default function RoPE() {
 
           <SDivider />
           <SH>RoPE Score</SH>
+          <div style={{ fontFamily: inter, fontSize: '8px', color: C.muted, fontStyle: 'italic', lineHeight: 1.4, marginBottom: '4px' }}>
+            Assumes q = k = unit vector here
+          </div>
           <div style={{ fontFamily: mono, fontSize: '9px', color: C.muted, marginBottom: '3px' }}>
             cos((m−n)×theta):
           </div>
@@ -504,8 +530,9 @@ export default function RoPE() {
             </Btn>
           ))}
           <div style={{ flex: 1 }} />
-          <Btn active={animating} onClick={toggleAnimate}>
-            {animating ? 'Pause' : 'Animate rotation'}
+          <Btn active={animating} onClick={toggleAnimate} disabled={prefersReducedMotion}
+            title={prefersReducedMotion ? 'Disabled — your system prefers reduced motion' : undefined}>
+            {prefersReducedMotion ? 'Animate (disabled)' : animating ? 'Pause' : 'Animate rotation'}
           </Btn>
         </div>
       </div>

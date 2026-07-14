@@ -280,7 +280,7 @@ function Btn({ children, onClick, disabled, active }) {
 }
 
 // ── Main widget ────────────────────────────────────────────────────────────────
-export default function KVCache() {
+export default function KVCache({ tryThis }) {
   const [step,      setStep]      = useState(0);
   const [playing,   setPlaying]   = useState(false);
   const [fastMode,  setFastMode]  = useState(false);
@@ -332,7 +332,7 @@ export default function KVCache() {
   const pairs  = t * LAYERS * 4 * 2;
 
   return (
-    <WidgetCard title="KV Cache — linear vs quadratic inference cost" number="9.2">
+    <WidgetCard title="KV Cache — linear vs quadratic inference cost" number="11.2" tryThis={tryThis}>
       <style>{`
         @keyframes kvcAppear {
           0%   { transform: scale(1);    }
@@ -362,7 +362,7 @@ export default function KVCache() {
           <div style={{ marginTop: '6px', fontFamily: mono, fontSize: '10px', color: C.textMid }}>
             Demo: <span style={{ color: C.math }}>{kvKB} KB</span>
             <span style={{ color: C.muted, fontSize: '8px', marginLeft: '10px' }}>
-              Real 70B · 128K ctx ≈ 140 GB
+              Real 70B · 128K ctx ≈ 40 GB
             </span>
           </div>
         </div>

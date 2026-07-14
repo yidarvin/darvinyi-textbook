@@ -34,11 +34,24 @@ export const CITATIONS = {
     year: "2020",
     tag: "seminal",
   },
+  "llama2": {
+    // Previously cited as separate inconsistent inline objects in ch11
+    // (truncated) and ch13 (full ~70-author list) — consolidated here.
+    title: "Llama 2: Open Foundation and Fine-Tuned Chat Models",
+    authors: "Touvron, Martin, Stone, Albert, Almahairi, Babaei, Bashlykov, Batra, Bhargava, Bhosale, et al.",
+    venue: "arXiv",
+    year: "2023",
+    tag: "paper",
+  },
   "roformer": {
     // Published version preferred over the 2021 arXiv preprint — previously
-    // cited both ways in different chapters.
+    // cited both ways in different chapters. Author order/surnames verified
+    // against dblp's record key SuALPBL24 (Su, Ahmed, Lu, Pan, Bo, Liu) for
+    // the Neurocomputing version specifically — this differs from the arXiv
+    // preprint's author order, which is a separate, expected discrepancy.
+    // Do not "fix" this back to the arXiv order without re-checking dblp.
     title: "RoFormer: Enhanced Transformer with Rotary Position Embedding",
-    authors: "Su, Murtadha, Lu, Pan, Wen, Liu",
+    authors: "Su, Ahmed, Lu, Pan, Bo, Liu",
     venue: "Neurocomputing",
     year: "2024",
     tag: "paper",

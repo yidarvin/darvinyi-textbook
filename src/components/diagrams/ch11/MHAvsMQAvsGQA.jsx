@@ -414,7 +414,8 @@ export default function MHAvsMQAvsGQA() {
         }}
       >
         GQA is the practical middle ground: most of MHA's representational
-        capacity, a fraction of MQA's cache.
+        capacity, at a fraction of MHA's cache — though still a multiple of
+        MQA's smaller cache.
       </figcaption>
     </figure>
   );

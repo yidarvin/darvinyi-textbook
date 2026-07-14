@@ -128,10 +128,14 @@ function drawMemChart(canvas, h, G) {
     ctx.lineTo(mhaEnd - 1, y2 - bH / 2);
     ctx.stroke();
     ctx.setLineDash([]);
+    const gqaSmallerFactor = h / G;
     ctx.font      = `8px ${mono}`;
     ctx.fillStyle = C.math;
     ctx.textAlign = 'right';
-    ctx.fillText(`${G}× smaller`, mhaEnd - 4, (y1 + y2) / 2 + 3);
+    ctx.fillText(
+      `${Number.isInteger(gqaSmallerFactor) ? gqaSmallerFactor : gqaSmallerFactor.toFixed(1)}× smaller`,
+      mhaEnd - 4, (y1 + y2) / 2 + 3
+    );
   }
 
   if (h > 1) {
@@ -205,7 +209,7 @@ function Toggle({ label, value, onChange }) {
   );
 }
 
-export default function AttentionVariants() {
+export default function AttentionVariants({ tryThis }) {
   const [h,            setH]            = useState(8);
   const [G,            setG]            = useState(2);
   const [showLines,    setShowLines]    = useState(true);
@@ -243,7 +247,7 @@ export default function AttentionVariants() {
   }
 
   return (
-    <WidgetCard title="Attention Variants — MHA vs GQA vs MQA" number="9.3">
+    <WidgetCard title="Attention Variants — MHA vs GQA vs MQA" number="11.3" tryThis={tryThis}>
       <style>{`
         .av-range { -webkit-appearance: none; height: 2px;
           background: ${C.borderLt}; border-radius: 2px; cursor: pointer; }
@@ -448,7 +452,7 @@ export default function AttentionVariants() {
           <HR />
           <SectionLabel>Cache ratio vs MHA</SectionLabel>
           <StatRow label="GQA"
-            val={`1/${G_eff} = ${(1 / G_eff).toFixed(1)}×`}
+            val={`${G_eff}/${h} = ${(G_eff / h).toFixed(2)}×`}
             vc={C.orange} />
           <StatRow label="MQA"
             val={`1/${h} = ${(1 / h).toFixed(2)}×`}

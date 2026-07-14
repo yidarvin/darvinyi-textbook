@@ -55,7 +55,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | C8 | Ch08 RNNs & LSTMs — deep pass (Appendix A: ch06→08) | DONE |
 | C9 | Ch09 Attention — deep pass + cross-attention/masking material (Appendix A: ch07→09) | DONE |
 | C10 | Ch10 Transformers — deep pass (Appendix A: ch08→10) | DONE |
-| C11 | Ch11 LLM Architectures — deep pass, owns RoPE (Appendix A: ch09→11) | PENDING |
+| C11 | Ch11 LLM Architectures — deep pass, owns RoPE (Appendix A: ch09→11) | DONE |
 | C12 | Ch12 Reinforcement Learning — deep pass, owns PPO derivation (Appendix A: ch14→12) | PENDING |
 | C13 | Ch13 LLM Training & Alignment — deep pass + Reasoning/Test-Time-Compute section (Appendix A: ch10→13) | PENDING |
 | C15 | Ch15 Multimodal Networks — deep pass + Audio-as-a-Modality section (Appendix A: ch11→15) | PENDING |

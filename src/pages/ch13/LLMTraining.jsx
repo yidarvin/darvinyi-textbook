@@ -33,7 +33,7 @@ const CITATIONS = buildCitations([
   { title: "Self-Instruct: Aligning Language Models with Self-Generated Instructions", authors: "Wang, Kordi, Mishra, Liu, Smith, Khashabi, Hajishirzi", venue: "ACL", year: "2023", tag: "paper" },
   "toolformer",
   { title: "LIMA: Less Is More for Alignment", authors: "Zhou, Liu, Xu, Iyer, Du, Zhou, Lu, Wang, Pampari, Manjunatha, Mishra, Wang, Sukhbaatar, Pisarski, Ross, Steel, Auli, Ramanathan, Sharma, Levy, Lewis", venue: "NeurIPS", year: "2023", tag: "paper" },
-  { title: "Llama 2: Open Foundation and Fine-Tuned Chat Models", authors: "Touvron, Martin, Stone, Albert, Almahairi, Babaei, Bashlykov, Batra, Bhargava, Bhosale, Bikel, Blecher, Ferrer, Chen, Cucurull, Esiobu, Fernandes, Fu, Fu, Fuller, Gao, Goswami, Goyal, Hartshorn, Hosseini, Hou, Inan, Kardas, Kerkez, Khabsa, Kloumann, Korenev, Koura, Lachaux, Lavril, Lee, Liskovich, Lu, Mao, Martinet, Mihaylov, Mishra, Molybog, Nie, Poulton, Reizenstein, Rungta, Saladi, Schelten, Silva, Smith, Subramanian, Tan, Tang, Taylor, Williams, Kuan, Xu, Yan, Zarov, Zhang, Fan, Kambadur, Narang, Rodriguez, Stojnic, Edunov, Scialom", venue: "arXiv", year: "2023", tag: "paper" },
+  "llama2",
   { title: "Red Teaming Language Models with Language Models", authors: "Perez, Huang, Song, Cai, Ring, Aslanides, Glaese, McAleese, Irving", venue: "EMNLP", year: "2022", tag: "paper" },
 ]);
 

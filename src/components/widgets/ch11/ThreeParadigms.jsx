@@ -34,11 +34,11 @@ const DESCRIPTIONS = {
   },
   'input-emb': {
     name: 'Input Embeddings',
-    text: "Token embeddings plus positional encodings (sinusoidal in the original T5, RoPE in most modern models). The only difference between input and target embeddings is which sequence they represent.",
+    text: "Token embeddings. Position isn't added to them here — the original T5 instead injects a learned, bucketed relative-position bias directly into the attention logits, while RoPE (used by most modern models) rotates the query/key vectors inside attention. The only difference between input and target embeddings is which sequence they represent.",
   },
   'target-emb': {
     name: 'Target Embeddings',
-    text: "Token embeddings plus positional encodings (sinusoidal in the original T5, RoPE in most modern models). The only difference between input and target embeddings is which sequence they represent.",
+    text: "Token embeddings. Position isn't added to them here — the original T5 instead injects a learned, bucketed relative-position bias directly into the attention logits, while RoPE (used by most modern models) rotates the query/key vectors inside attention. The only difference between input and target embeddings is which sequence they represent.",
   },
   'ffn': {
     name: 'Feed-Forward Network',
@@ -327,7 +327,12 @@ function StatSection({ title, rows }) {
 // ── Main widget ────────────────────────────────────────────────────────────────
 // Layout: full-width 3-column diagrams, heatmaps below, stats strip below that.
 // 616px ÷ 3 columns = ~200px each — ample for labeled content.
-export default function ThreeParadigms() {
+const DEFAULT_TRY_THIS = {
+  do: 'Reveal the attention masks below the diagrams, then click the causal attention block in the Decoder-Only column.',
+  notice: "The decoder's mask is lower-triangular — each query row can only see itself and the columns before it — while the Encoder-Only mask is completely filled in, since bidirectional attention has no such restriction.",
+};
+
+export default function ThreeParadigms({ tryThis = DEFAULT_TRY_THIS }) {
   const [selected, setSelected] = useState(null);
   const [showMasks, setShowMasks] = useState(true);
 
@@ -337,7 +342,7 @@ export default function ThreeParadigms() {
   const hmSvgH = TH + RO + (TOKENS.length * (CELL + GAP) - GAP) + 10;
 
   return (
-    <WidgetCard title="Three Paradigms — encoder, decoder, encoder-decoder" number="9.1">
+    <WidgetCard title="Three Paradigms — encoder, decoder, encoder-decoder" number="11.1" tryThis={tryThis}>
 
       {/* ── Diagram row ─────────────────────────────────────────────────── */}
       <div style={{ display:'flex', gap:'10px', alignItems:'flex-start' }}>

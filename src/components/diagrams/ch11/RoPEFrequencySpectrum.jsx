@@ -52,7 +52,7 @@ const SAMPLES = [
     label: 'i = 0',
     theta: 'θ₀ = 1.0',
     sub: 'one rotation per ~6 positions',
-    note: 'sensitive to coarse position',
+    note: 'sensitive to fine-grained local position',
     r: 30,
     sweep: 300,
   },
@@ -68,7 +68,7 @@ const SAMPLES = [
     label: 'i = d/2',
     theta: 'θ_{d/2} ≈ 0.0001',
     sub: 'one rotation per ~60K positions',
-    note: 'sensitive to fine-grained local position',
+    note: 'sensitive to coarse position',
     r: 18,
     sweep: 14,
   },
@@ -200,7 +200,7 @@ export default function RoPEFrequencySpectrum() {
           fontSize="10.5"
           fill={C.muted}
         >
-          longest wavelength ≈ 6K positions  ·  LLaMA 1, 2K context
+          longest wavelength ≈ 60K positions  ·  LLaMA 1, 2K context
         </text>
         <text
           x={AXIS_LEFT}
@@ -218,7 +218,7 @@ export default function RoPEFrequencySpectrum() {
           fontSize="10.5"
           fill={C.accent}
         >
-          longest wavelength ≈ 300K positions  ·  LLaMA 3, 128K context
+          longest wavelength ≈ 3M positions  ·  LLaMA 3, 128K context
         </text>
       </svg>
 

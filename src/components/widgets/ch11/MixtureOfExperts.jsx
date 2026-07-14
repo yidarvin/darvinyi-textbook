@@ -52,7 +52,7 @@ const TOKENS_DATA = {
   'code':    { weights: [0.05, 0.06, 0.61, 0.04, 0.07, 0.03, 0.09, 0.05], top2: [2, 6] },
   'Paris':   { weights: [0.06, 0.05, 0.04, 0.08, 0.62, 0.04, 0.06, 0.05], top2: [4, 3] },
   'however': { weights: [0.04, 0.09, 0.03, 0.05, 0.06, 0.61, 0.07, 0.05], top2: [5, 1] },
-  '3.14':    { weights: [0.05, 0.04, 0.07, 0.67, 0.04, 0.03, 0.05, 0.05], top2: [3, 6] },
+  '3.14':    { weights: [0.05, 0.04, 0.07, 0.67, 0.04, 0.03, 0.05, 0.05], top2: [3, 2] },
 };
 const PRESET_TOKENS = ['the', 'code', 'Paris', 'however', '3.14'];
 
@@ -82,27 +82,41 @@ function ePos(i) {
   return { x, y, cx: x + BOX_W / 2, cy: y + BOX_H / 2, left: x, right: x + BOX_W };
 }
 
+// ── Shared-expert lane (DeepSeek-style) ────────────────────────────────────────
+// Only drawn when moeStyle === 'shared'. Lives in an extra strip appended below
+// the base diagram so it never overlaps the router/expert-grid/sum boxes above.
+const SHARED_COLOR = '#22d3ee';
+const SHR_EXTRA_H  = 56;                       // extra viewBox height for the lane
+const SHR_H        = 34;
+const SHR_X        = ROU_X;                    // 128 — aligns under the router column
+const SHR_W        = (SUM_X + SUM_W) - ROU_X;  // spans router → end of weighted-sum box
+const SHR_Y        = VH + 6;                   // sits in the extra strip below the base diagram
+const SHR_CY       = SHR_Y + SHR_H / 2;
+
 // ── Bar chart SVG layout ──────────────────────────────────────────────────────
 // Display container: 616 - 160(util) - 12(gap) = 444px
-// viewBox 540×161, scale ≈ 444/540 = 0.822 → 10px font ≈ 8.2px display
-const BAR_VW = 540, BAR_VH = 161;
+// viewBox 540×161 (8 rows; taller when the shared-expert row is added),
+// scale ≈ 444/540 = 0.822 → 10px font ≈ 8.2px display
+const BAR_VW = 540;
 const BAR_L  = 100, BAR_TOP = 22;
 const BAR_MAX = BAR_VW - BAR_L - 36;   // 404 SVG units
 const BAR_H  = 12,  BAR_GAP = 5;
 
 // ── MainDiagram ───────────────────────────────────────────────────────────────
-function MainDiagram({ displayToken, routerActive, activeExperts, showWeightedSum, showSpec }) {
+function MainDiagram({ displayToken, routerActive, activeExperts, showWeightedSum, showSpec, moeStyle }) {
   const td = displayToken ? TOKENS_DATA[displayToken] : null;
+  const isShared = moeStyle === 'shared';
+  const vh = isShared ? VH + SHR_EXTRA_H : VH;
 
   return (
-    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
-      <rect width={VW} height={VH} fill={C.codeBg} rx={6} />
+    <svg viewBox={`0 0 ${VW} ${vh}`} width="100%" style={{ display: 'block' }}>
+      <rect width={VW} height={vh} fill={C.codeBg} rx={6} />
 
       {/* Column headers */}
       {[
         { x: TOK_CX,           t: 'Input' },
         { x: ROU_CX,           t: 'Router W_g' },
-        { x: GRD_X + BOX_W + GAP_X / 2, t: 'Experts (E=8, k=2)' },
+        { x: GRD_X + BOX_W + GAP_X / 2, t: isShared ? 'Routed experts (E=8, k=2)' : 'Experts (E=8, k=2)' },
         { x: SUM_CX,           t: 'Weighted Sum' },
       ].map(({ x, t }) => (
         <text key={t} x={x} y={16} textAnchor="middle"
@@ -204,6 +218,49 @@ function MainDiagram({ displayToken, routerActive, activeExperts, showWeightedSu
         );
       })}
 
+      {/* Shared expert lane (DeepSeek-style): always-on path, parallel to routing */}
+      {isShared && (
+        <>
+          <line
+            x1={TOK_CX} y1={TOK_Y + TOK_H} x2={SHR_X} y2={SHR_CY}
+            strokeWidth={displayToken ? 1.5 : 1}
+            style={{
+              stroke:     displayToken ? SHARED_COLOR : C.borderLt,
+              opacity:    displayToken ? 0.9 : 0.3,
+              transition: 'stroke 300ms ease, opacity 300ms ease',
+            }}
+          />
+          <line
+            x1={SHR_X + SHR_W} y1={SHR_CY} x2={SUM_CX} y2={SUM_Y + SUM_H}
+            strokeWidth={1.5}
+            style={{
+              stroke:     SHARED_COLOR,
+              opacity:    displayToken && showWeightedSum ? 0.85 : 0.25,
+              transition: 'opacity 300ms ease',
+            }}
+          />
+          <rect
+            x={SHR_X} y={SHR_Y} width={SHR_W} height={SHR_H} rx={4}
+            strokeWidth={displayToken ? 1.5 : 1}
+            strokeDasharray="4 3"
+            style={{
+              fill:       displayToken ? rgba(SHARED_COLOR, 0.14) : C.bg3,
+              stroke:     displayToken ? SHARED_COLOR : C.borderLt,
+              transition: 'fill 300ms ease, stroke 300ms ease',
+            }}
+          />
+          <text x={SHR_X + 14} y={SHR_CY - 5} textAnchor="start" dominantBaseline="middle"
+            fontFamily={mono} fontSize="10" fontWeight={700}
+            style={{ fill: displayToken ? SHARED_COLOR : C.textMid, transition: 'fill 300ms ease' }}>
+            E_s
+          </text>
+          <text x={SHR_X + 14} y={SHR_CY + 10} textAnchor="start" dominantBaseline="middle"
+            fontFamily={mono} fontSize="7.5" fill={C.muted}>
+            shared · always active (weight 1.0)
+          </text>
+        </>
+      )}
+
       {/* Token input box */}
       <rect
         x={TOK_X} y={TOK_Y} width={TOK_W} height={TOK_H} rx={4}
@@ -257,21 +314,31 @@ function MainDiagram({ displayToken, routerActive, activeExperts, showWeightedSu
 
       {showWeightedSum && td && activeExperts.length === 2 ? (
         <>
-          <text x={SUM_CX} y={SUM_Y + 36} textAnchor="middle"
+          <text x={SUM_CX} y={SUM_Y + (isShared ? 26 : 36)} textAnchor="middle"
             fontFamily={mono} fontSize="9" fill={EXPERT_COLORS[activeExperts[0]]}>
             {td.weights[activeExperts[0]].toFixed(2)}·E{activeExperts[0]}(x)
           </text>
-          <text x={SUM_CX} y={SUM_Y + 53} textAnchor="middle"
+          <text x={SUM_CX} y={SUM_Y + (isShared ? 39 : 53)} textAnchor="middle"
             fontFamily={mono} fontSize="8.5" fill={C.muted}>+</text>
-          <text x={SUM_CX} y={SUM_Y + 70} textAnchor="middle"
+          <text x={SUM_CX} y={SUM_Y + (isShared ? 52 : 70)} textAnchor="middle"
             fontFamily={mono} fontSize="9" fill={EXPERT_COLORS[activeExperts[1]]}>
             {td.weights[activeExperts[1]].toFixed(2)}·E{activeExperts[1]}(x)
           </text>
+          {isShared && (
+            <>
+              <text x={SUM_CX} y={SUM_Y + 65} textAnchor="middle"
+                fontFamily={mono} fontSize="8.5" fill={C.muted}>+</text>
+              <text x={SUM_CX} y={SUM_Y + 78} textAnchor="middle"
+                fontFamily={mono} fontSize="9" fill={SHARED_COLOR}>
+                1.00·E_s(x)
+              </text>
+            </>
+          )}
         </>
       ) : (
         <text x={SUM_CX} y={SUM_Y + 53} textAnchor="middle"
           fontFamily={mono} fontSize="8.5" fill={rgba(C.muted, 0.5)}>
-          α₁E₁ + α₂E₂
+          {isShared ? 'α₁E₁ + α₂E₂ + E_s' : 'α₁E₁ + α₂E₂'}
         </text>
       )}
 
@@ -290,26 +357,55 @@ function MainDiagram({ displayToken, routerActive, activeExperts, showWeightedSu
         fontFamily={mono} fontSize="9" fill={C.muted}>output</text>
 
       {/* Footer note */}
-      <text x={GRD_X + BOX_W + GAP_X / 2} y={VH - 8} textAnchor="middle"
+      <text x={GRD_X + BOX_W + GAP_X / 2} y={vh - 8} textAnchor="middle"
         fontFamily={inter} fontSize="8" fill={rgba(C.muted, 0.4)}>
-        Each token routes to exactly 2 of 8 experts
+        {isShared
+          ? 'Each token routes to 2 of 8 experts, plus the shared expert (always active)'
+          : 'Each token routes to exactly 2 of 8 experts'}
       </text>
     </svg>
   );
 }
 
 // ── RouterBarChart ────────────────────────────────────────────────────────────
-function RouterBarChart({ barWeights, activeExperts }) {
+function RouterBarChart({ barWeights, activeExperts, moeStyle }) {
+  const isShared = moeStyle === 'shared';
+  const rows     = isShared ? 9 : 8;
+  const vh       = BAR_TOP + rows * (BAR_H + BAR_GAP) + 3;
+
   return (
-    <svg viewBox={`0 0 ${BAR_VW} ${BAR_VH}`} width="100%" style={{ display: 'block' }}>
-      <rect width={BAR_VW} height={BAR_VH} fill={C.codeBg} rx={4} />
+    <svg viewBox={`0 0 ${BAR_VW} ${vh}`} width="100%" style={{ display: 'block' }}>
+      <rect width={BAR_VW} height={vh} fill={C.codeBg} rx={4} />
       <text x={BAR_VW / 2} y={14} textAnchor="middle"
         fontFamily={inter} fontSize="10" fill={C.textMid}>
-        Router probabilities — all 8 experts
+        {isShared ? 'Router probabilities — 8 routed + 1 shared (always on)' : 'Router probabilities — all 8 experts'}
       </text>
 
+      {isShared && (
+        <g key="shared">
+          <rect x={BAR_L} y={BAR_TOP} width={3} height={BAR_H} rx={1}
+            style={{ fill: SHARED_COLOR }} />
+          <text x={BAR_L - 5} y={BAR_TOP + BAR_H / 2}
+            textAnchor="end" dominantBaseline="middle"
+            fontFamily={mono} fontSize="10"
+            style={{ fill: SHARED_COLOR, fontWeight: 700 }}>
+            E_s shared
+          </text>
+          <rect x={BAR_L} y={BAR_TOP} width={BAR_MAX} height={BAR_H} fill={C.bg4} rx={2} />
+          <rect x={BAR_L} y={BAR_TOP} width={BAR_MAX} height={BAR_H}
+            fill={SHARED_COLOR} rx={2} style={{ opacity: 0.85 }} />
+          <text x={BAR_L + BAR_MAX + 5} y={BAR_TOP + BAR_H / 2}
+            textAnchor="start" dominantBaseline="middle"
+            fontFamily={mono} fontSize="10"
+            style={{ fill: SHARED_COLOR }}>
+            always
+          </text>
+        </g>
+      )}
+
       {Array.from({ length: 8 }, (_, i) => {
-        const y      = BAR_TOP + i * (BAR_H + BAR_GAP);
+        const rowIdx = isShared ? i + 1 : i;
+        const y      = BAR_TOP + rowIdx * (BAR_H + BAR_GAP);
         const isTop2 = activeExperts.includes(i);
         const color  = EXPERT_COLORS[i];
         const w      = barWeights[i] || 0;
@@ -354,11 +450,13 @@ function RouterBarChart({ barWeights, activeExperts }) {
 
 // ── UtilizationHeatmap ────────────────────────────────────────────────────────
 // Width: 160px fixed. Inner: 160-24=136px. Bar: flex:1 ≈ 89px.
-function UtilizationHeatmap({ counts }) {
-  const total  = counts.reduce((a, b) => a + b, 0);
-  const maxC   = Math.max(1, ...counts);
-  const tokPro = total / 2;
-  const idleN  = counts.filter(c => c === 0).length;
+function UtilizationHeatmap({ counts, moeStyle }) {
+  const isShared    = moeStyle === 'shared';
+  const total       = counts.reduce((a, b) => a + b, 0);
+  const tokPro      = total / 2;
+  const sharedCount = isShared ? tokPro : 0;
+  const maxC        = Math.max(1, ...counts, sharedCount);
+  const idleN       = counts.filter(c => c === 0).length;
 
   return (
     <div style={{
@@ -368,6 +466,34 @@ function UtilizationHeatmap({ counts }) {
       <div style={{ fontFamily: inter, fontSize: '10px', color: C.muted, marginBottom: '9px' }}>
         Expert Utilization
       </div>
+
+      {isShared && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '5px',
+          marginBottom: '8px', paddingBottom: '6px', borderBottom: `1px solid ${C.border}`,
+        }}>
+          <span style={{
+            fontFamily: mono, fontSize: '8.5px', color: SHARED_COLOR,
+            width: '16px', flexShrink: 0, fontWeight: 700,
+          }}>E_s</span>
+          <div style={{
+            flex: 1, height: '13px', background: C.bg4,
+            borderRadius: '2px', position: 'relative', overflow: 'hidden',
+          }}>
+            <div style={{
+              position: 'absolute', top: 0, left: 0, height: '100%',
+              width: `${(sharedCount / maxC) * 100}%`, background: SHARED_COLOR,
+              borderRadius: '2px', transition: 'width 300ms ease',
+            }} />
+          </div>
+          <span style={{
+            fontFamily: mono, fontSize: '8.5px', color: SHARED_COLOR,
+            width: '18px', flexShrink: 0, textAlign: 'right',
+          }}>
+            {sharedCount}
+          </span>
+        </div>
+      )}
 
       {counts.map((count, i) => {
         const color  = EXPERT_COLORS[i];
@@ -411,6 +537,11 @@ function UtilizationHeatmap({ counts }) {
             ? <span style={{ color: C.red }}>{idleN} idle — dead expert risk</span>
             : <span>Load balance looks uniform</span>
           }
+          {isShared && (
+            <div style={{ color: SHARED_COLOR, marginTop: '2px' }}>
+              E_s fires on all {tokPro} token{tokPro === 1 ? '' : 's'} — never idle
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -418,7 +549,24 @@ function UtilizationHeatmap({ counts }) {
 }
 
 // ── DenseVsMoEPanel ───────────────────────────────────────────────────────────
-function DenseVsMoEPanel() {
+// FFN_PARAMS = d_model × d_ffn × 2 = 256 × 1024 × 2 = 524,288
+const FFN_PARAMS = 524288;
+
+function DenseVsMoEPanel({ moeStyle }) {
+  const isShared = moeStyle === 'shared';
+
+  // Classic top-k (Mixtral/Switch-style): E=8 routed experts, k=2 active, none shared.
+  // DeepSeek-style: same 8 routed experts (top-2 gated) plus 1 always-on shared
+  // expert of identical size — the shared expert adds to both the param count
+  // (it's a 9th expert) and the active compute (it fires on every token, on
+  // top of whichever 2 routed experts the router picks).
+  const totalExperts   = isShared ? 9 : 8;
+  const activeExperts  = isShared ? 3 : 2; // top-2 routed (+1 shared if enabled)
+  const totalParams    = totalExperts  * FFN_PARAMS;
+  const activeFlops    = activeExperts * FFN_PARAMS;
+  const paramsMult     = totalExperts;
+  const flopsMult      = activeExperts;
+
   return (
     <div style={{
       marginTop: '10px', background: C.bg4, border: `1px solid ${C.border}`,
@@ -429,7 +577,7 @@ function DenseVsMoEPanel() {
         fontFamily: mono, fontSize: '8px', color: rgba(C.muted, 0.7),
         marginBottom: '10px', letterSpacing: '0.02em',
       }}>
-        d_model=256 · d_ffn=1024 · E=8 experts · k=2 active/token
+        d_model=256 · d_ffn=1024 · E={totalExperts} experts{isShared ? ' (8 routed + 1 shared)' : ''} · k={activeExperts} active/token
         · 1 FFN=524,288 params · router W_g=2,048 params
       </div>
 
@@ -452,12 +600,14 @@ function DenseVsMoEPanel() {
           <div style={{
             fontFamily: mono, fontSize: '9.5px', color: C.accent,
             fontWeight: 600, letterSpacing: '0.05em', marginBottom: '6px',
-          }}>MoE (E=8, k=2)</div>
+          }}>{isShared ? 'MoE (8 routed + 1 shared)' : 'MoE (E=8, k=2)'}</div>
           <div style={{ fontFamily: mono, fontSize: '8.5px', color: C.textMid, lineHeight: 1.9 }}>
-            <div>8 × 524,288 params =</div>
-            <div style={{ color: C.math }}>4,194,304 total params (8× dense)</div>
-            <div style={{ marginTop: '3px' }}>Compute/token: top-2 × 524,288</div>
-            <div style={{ color: C.accent }}>= 1,048,576 FLOPs (only 2× dense)</div>
+            <div>{totalExperts} × 524,288 params =</div>
+            <div style={{ color: C.math }}>{totalParams.toLocaleString()} total params ({paramsMult}× dense)</div>
+            <div style={{ marginTop: '3px' }}>
+              Compute/token: {isShared ? 'top-2 + shared' : 'top-2'} × 524,288
+            </div>
+            <div style={{ color: C.accent }}>= {activeFlops.toLocaleString()} FLOPs (only {flopsMult}× dense)</div>
           </div>
         </div>
       </div>
@@ -466,9 +616,11 @@ function DenseVsMoEPanel() {
         textAlign: 'center', fontFamily: crimson, fontSize: '13px', color: C.text,
         borderTop: `1px solid ${C.border}`, paddingTop: '10px', lineHeight: 1.6,
       }}>
-        MoE: 8× more parameters, yet only 2× the compute of a single dense FFN.
+        MoE: {paramsMult}× more parameters, yet only {flopsMult}× the compute of a single dense FFN.
         <div style={{ fontFamily: inter, fontSize: '12px', color: C.textMid, marginTop: '3px' }}>
-          Parameters store knowledge. Compute is the bottleneck — MoE decouples the two.
+          {isShared
+            ? 'The shared expert always fires, capturing common knowledge every token needs, while the routed experts still specialize — the DeepSeek-style split between "always-on" and "sometimes-on" capacity.'
+            : 'Parameters store knowledge. Compute is the bottleneck — MoE decouples the two.'}
         </div>
       </div>
     </div>
@@ -478,12 +630,15 @@ function DenseVsMoEPanel() {
 // ── StatStrip ─────────────────────────────────────────────────────────────────
 // 6 cells × ~102px each in 616px container. Content area ≈ 82px per cell.
 // Widest value: "E5, E1" = 6 chars × 9px(15px mono) = 54px < 82px. ✓
-function StatStrip({ counts, activeExperts }) {
+function StatStrip({ counts, activeExperts, moeStyle }) {
   const total   = counts.reduce((a, b) => a + b, 0);
   const tokPro  = total / 2;
   const maxC    = Math.max(...counts);
   const idleC   = counts.filter(c => c === 0).length;
   const mostIdx = counts.indexOf(maxC);
+  const isShared = moeStyle === 'shared';
+  const totalExperts  = isShared ? 9 : 8;
+  const activeExpertN = isShared ? 3 : 2;
 
   const activeStr = activeExperts.length === 2
     ? `E${activeExperts[0]}, E${activeExperts[1]}`
@@ -513,13 +668,13 @@ function StatStrip({ counts, activeExperts }) {
     },
     {
       label: 'Total params',
-      val:   '~4.2M',
-      note:  '8× dense FFN',
+      val:   isShared ? '~4.7M' : '~4.2M',
+      note:  `${totalExperts}× dense FFN`,
       vc:    C.math,
     },
     {
       label: 'Compute',
-      val:   '2×',
+      val:   `${activeExpertN}×`,
       note:  'vs dense FFN',
       vc:    C.accent,
     },
@@ -562,7 +717,7 @@ function StatStrip({ counts, activeExperts }) {
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function MixtureOfExperts() {
+export default function MixtureOfExperts({ tryThis }) {
   const [displayToken,    setDisplayToken]    = useState(null);
   const [routerActive,    setRouterActive]    = useState(false);
   const [activeExperts,   setActiveExperts]   = useState([]);
@@ -573,6 +728,7 @@ export default function MixtureOfExperts() {
   const [isAnimating,     setIsAnimating]     = useState(false);
   const [showSpec,        setShowSpec]        = useState(true);
   const [showComparison,  setShowComparison]  = useState(true);
+  const [moeStyle,        setMoeStyle]        = useState('classic'); // 'classic' | 'shared'
   const [utilStep,        setUtilStep]        = useState(0);
 
   const utilizationCounts = useRef(Array(8).fill(0));
@@ -648,7 +804,7 @@ export default function MixtureOfExperts() {
   const counts = [...utilizationCounts.current];
 
   return (
-    <WidgetCard title="Mixture of Experts — sparse activation, dense knowledge" number="9.5">
+    <WidgetCard title="Mixture of Experts — sparse activation, dense knowledge" number="11.5" tryThis={tryThis}>
 
       {/* ── 1. Full-width flow diagram ────────────────────────────── */}
       <MainDiagram
@@ -657,24 +813,25 @@ export default function MixtureOfExperts() {
         activeExperts={activeExperts}
         showWeightedSum={showWeightedSum}
         showSpec={showSpec}
+        moeStyle={moeStyle}
       />
 
       {/* ── 2. Router bar chart + utilization heatmap ────────────── */}
       {/* Bar chart: flex:1 (≈444px), utilization: 160px fixed       */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'stretch', marginTop: '8px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <RouterBarChart barWeights={barWeights} activeExperts={activeExperts} />
+          <RouterBarChart barWeights={barWeights} activeExperts={activeExperts} moeStyle={moeStyle} />
         </div>
         <div style={{ width: 160, flexShrink: 0 }}>
-          <UtilizationHeatmap counts={counts} />
+          <UtilizationHeatmap counts={counts} moeStyle={moeStyle} />
         </div>
       </div>
 
       {/* ── 3. Dense vs MoE comparison (optional, full width) ─────── */}
-      {showComparison && <DenseVsMoEPanel />}
+      {showComparison && <DenseVsMoEPanel moeStyle={moeStyle} />}
 
       {/* ── 4. Live stat strip ───────────────────────────────────── */}
-      <StatStrip counts={counts} activeExperts={activeExperts} />
+      <StatStrip counts={counts} activeExperts={activeExperts} moeStyle={moeStyle} />
 
       {/* ── 5. Controls ──────────────────────────────────────────── */}
       <div style={{
@@ -730,8 +887,9 @@ export default function MixtureOfExperts() {
 
         <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
           {[
-            { label: 'Specializations', val: showSpec,       set: () => setShowSpec(s => !s) },
-            { label: 'Dense vs MoE',    val: showComparison, set: () => setShowComparison(s => !s) },
+            { label: 'Specializations',       val: showSpec,             set: () => setShowSpec(s => !s) },
+            { label: 'Dense vs MoE',          val: showComparison,       set: () => setShowComparison(s => !s) },
+            { label: 'Shared expert (DeepSeek)', val: moeStyle === 'shared', set: () => setMoeStyle(s => s === 'shared' ? 'classic' : 'shared') },
           ].map(({ label, val, set }) => (
             <button key={label} onClick={set} style={{
               fontFamily: mono, fontSize: '9px', padding: '4px 10px',
