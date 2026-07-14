@@ -25,11 +25,16 @@ const BLOCK_H = 150;
 const BLOCK_TOP_FIRST = 100;
 
 function Block({ index, topY }) {
-  // Two components in each block: Attention (upper) and FFN (lower).
-  // Each component has read (in) and write (out) connections to the stream.
-  const ATTN_Y = topY + 24;
+  // Two components in each block: Attention and FFN. The stream flows
+  // bottom → top through the whole diagram, so within a single block the
+  // entry edge is the block's bottom (topY + BLOCK_H) and the exit edge is
+  // the block's top (topY). Attention runs first on the incoming stream, so
+  // it sits nearer the entry edge (larger offset); FFN runs second, so it
+  // sits nearer the exit edge (smaller offset), handing off to the next
+  // block/unembedding above.
+  const ATTN_Y = topY + 84;
   const ATTN_H = 36;
-  const FFN_Y  = topY + 84;
+  const FFN_Y  = topY + 24;
   const FFN_H  = 36;
 
   // Tap positions on stream — read enters lower edge of component, write exits upper edge.
@@ -240,9 +245,13 @@ export default function ResidualStreamHighway() {
           ← token + position embedding
         </text>
 
-        {/* The 3 blocks */}
+        {/* The 3 blocks.
+            Data flows bottom → top (embedding enters at STREAM_BOT, logits exit at
+            STREAM_TOP), so block 1 must sit nearest the bottom (embedding) and the
+            highest-numbered block nearest the top (unembedding), matching that
+            direction — the topY slot closest to STREAM_TOP gets the highest index. */}
         {[0, 1, 2].map((i) => (
-          <Block key={i} index={i} topY={BLOCK_TOP_FIRST + i * (BLOCK_H + 10)} />
+          <Block key={i} index={N_BLOCKS - 1 - i} topY={BLOCK_TOP_FIRST + i * (BLOCK_H + 10)} />
         ))}
 
         {/* Bottom annotation */}

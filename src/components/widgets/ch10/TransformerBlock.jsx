@@ -79,7 +79,7 @@ const STEPS = [
     skip2:    { pre: 0,                   post: 1 },
     desc: {
       pre:  "A second normalization before the feed-forward sub-layer. Using separate layer norms for attention and FFN sub-layers lets each develop independently calibrated scale parameters (gamma, beta). In practice this matters most in very deep models where small numerical differences compound across hundreds of layers.",
-      post: "Two linear layers with a nonlinearity between them, applied identically to each token: FFN(x) = max(0, xW₁ + b₁)W₂ + b₂. In Post-LN the FFN receives a layer-normalized input from LN1. The intermediate dimension is typically 4× the model dimension. Unlike attention, there is no cross-token interaction — each position is processed independently.",
+      post: "Two linear layers with a nonlinearity between them, applied identically to each token: σ(xW₁ + b₁)W₂ + b₂ (shown here with ReLU, the original transformer's choice; modern models typically use GELU or SwiGLU). In Post-LN the FFN receives a layer-normalized input from LN1. The intermediate dimension is typically 4× the model dimension. Unlike attention, there is no cross-token interaction — each position is processed independently.",
     },
   },
   {
@@ -89,7 +89,7 @@ const STEPS = [
     skip1:    { pre: 0,                   post: 0 },
     skip2:    { pre: 1,                   post: 2 },
     desc: {
-      pre:  "Two linear layers with a nonlinearity between them, applied identically to each token: FFN(x) = max(0, xW₁ + b₁)W₂ + b₂. The intermediate dimension is typically 4× the model dimension (e.g. d=512 → inner=2048). Unlike attention, this has no interaction between tokens — each position is processed independently. The FFN is thought to store factual associations learned during training.",
+      pre:  "Two linear layers with a nonlinearity between them, applied identically to each token: σ(xW₁ + b₁)W₂ + b₂ (shown here with ReLU, the original transformer's choice; modern models typically use GELU or SwiGLU). The intermediate dimension is typically 4× the model dimension (e.g. d=512 → inner=2048). Unlike attention, this has no interaction between tokens — each position is processed independently. The FFN is thought to store factual associations learned during training.",
       post: "The FFN output is added to the stream — the second residual connection. In Post-LN this add comes before Layer Norm 2, mirroring the first sub-block's (Attn → Add → LN) pattern. The symmetric structure means both sub-blocks normalize their outputs before passing them on, keeping activations bounded throughout the stack.",
     },
   },
@@ -126,7 +126,7 @@ function btnStyle(disabled, primary = false) {
   };
 }
 
-export default function TransformerBlock() {
+export default function TransformerBlock({ tryThis }) {
   const [step,      setStep]      = useState(1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [normMode,  setNormMode]  = useState('pre');
@@ -214,7 +214,7 @@ export default function TransformerBlock() {
   }
 
   return (
-    <WidgetCard title="Transformer Block — step through the architecture" number="8.1">
+    <WidgetCard title="Transformer Block — step through the architecture" number="10.1" tryThis={tryThis}>
       <style>{`@keyframes tb-fadein { from { opacity:0 } to { opacity:1 } }`}</style>
 
       <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start' }}>

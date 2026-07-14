@@ -113,7 +113,7 @@ const CANVAS_W    = 560;
 const LEFT_MARGIN = 40;
 const BOT_MARGIN  = 32;
 
-export default function PositionalEncoding() {
+export default function PositionalEncoding({ tryThis }) {
   const [seqLen,      setSeqLen]      = useState(32);
   const [dModel,      setDModel]      = useState(64);
   const [viewMode,    setViewMode]    = useState('heatmap'); // 'heatmap' | 'slice'
@@ -338,7 +338,7 @@ export default function PositionalEncoding() {
   const midDim    = Math.floor(dModel / 2);
 
   return (
-    <WidgetCard title="Positional Encoding — sinusoidal position fingerprints" number="8.2">
+    <WidgetCard title="Positional Encoding — sinusoidal position fingerprints" number="10.2" tryThis={tryThis}>
 
       {/* ── Controls row ──────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: '14px' }}>

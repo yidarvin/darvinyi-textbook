@@ -38,7 +38,7 @@ export const CITATIONS = {
     // Published version preferred over the 2021 arXiv preprint — previously
     // cited both ways in different chapters.
     title: "RoFormer: Enhanced Transformer with Rotary Position Embedding",
-    authors: "Su, Lu, Pan, Murtadha, Wen, Liu",
+    authors: "Su, Murtadha, Lu, Pan, Wen, Liu",
     venue: "Neurocomputing",
     year: "2024",
     tag: "paper",

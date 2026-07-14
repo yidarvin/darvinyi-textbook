@@ -15,26 +15,32 @@ const C = {
   white:    '#ffffff',
 };
 
+// NOTE: These per-token, per-layer numbers are an invented toy example, not
+// measurements from any real forward pass. Real per-layer attention/FFN
+// contributions are model- and context-specific; there is no general finding
+// that "nouns" or "verbs" as a class behave this way in every transformer.
+// The point of the illustration is the *shape* of the accumulation (each
+// layer adds a bounded update to the stream), not the specific values.
 const STREAM_DATA = {
   the: {
     attn: [0.12, 0.09, 0.11, 0.08, 0.10, 0.09],
     ffn:  [0.08, 0.06, 0.07, 0.09, 0.06, 0.08],
-    desc: 'Function words accumulate small, distributed contributions. They carry mostly syntactic information which is established early.',
+    desc: 'Illustrative only: in this toy example, "the" gets small, fairly even updates at every layer — a stand-in for words whose role is mostly fixed by position rather than by what else is in the sentence.',
   },
   cat: {
     attn: [0.18, 0.31, 0.14, 0.22, 0.12, 0.09],
     ffn:  [0.14, 0.12, 0.28, 0.16, 0.10, 0.11],
-    desc: 'Content nouns show large contributions at mid-layers where semantic binding happens. Layer 2 attention and layer 3 FFN are dominant.',
+    desc: 'Illustrative only: here "cat" is drawn with its largest updates in the middle layers, to show what a bigger mid-stack update could look like — not a measurement of what any trained model actually does with this word.',
   },
   sat: {
     attn: [0.11, 0.14, 0.19, 0.34, 0.21, 0.15],
     ffn:  [0.10, 0.11, 0.14, 0.12, 0.29, 0.13],
-    desc: 'Verbs show increasing contribution magnitude at deeper layers as argument structure and tense are resolved.',
+    desc: 'Illustrative only: "sat" is drawn with growing updates toward the later layers, to show what a back-loaded accumulation pattern could look like — again, invented for this demo rather than measured.',
   },
   mat: {
     attn: [0.22, 0.10, 0.12, 0.10, 0.13, 0.28],
     ffn:  [0.16, 0.09, 0.10, 0.11, 0.12, 0.22],
-    desc: 'The final noun accumulates positional and semantic information early, then gets a late burst as cross-sentence relationships resolve.',
+    desc: 'Illustrative only: "mat" is drawn with an early update and a second, separate late update, to show that accumulation need not be smooth or monotonic — a synthetic pattern, not data from a real model.',
   },
 };
 
@@ -361,7 +367,7 @@ function paintCanvas(ctx, { attn, ffn }, { showAttn, showFFN, showNorm, normaliz
 
 // ── Main component ──────────────────────────────────────────────────────────
 
-export default function ResidualStream() {
+export default function ResidualStream({ tryThis }) {
   const [token,     setToken]     = useState('cat');
   const [showAttn,  setShowAttn]  = useState(true);
   const [showFFN,   setShowFFN]   = useState(true);
@@ -436,7 +442,7 @@ export default function ResidualStream() {
   const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
   return (
-    <WidgetCard title="Residual Stream — accumulated representations across layers" number="8.3">
+    <WidgetCard title="Residual Stream — a synthetic illustration of accumulation" number="10.3" tryThis={tryThis}>
 
       {/* ── Controls ──────────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: '16px', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap' }}>

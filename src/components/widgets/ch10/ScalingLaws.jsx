@@ -29,12 +29,14 @@ const optimalN = (C_val) => {
 const optimalD = (C_val, N) => C_val / (6 * N);
 
 // ── Real models ───────────────────────────────────────────────────────────────
+// C (training compute) is derived as 6*N*D rather than hardcoded, so it can
+// never drift out of sync with the N/D values used everywhere else below.
 const MODELS = [
-  { name: 'GPT-3',      N: 175e9,  D: 300e9,  C: 3.14e23, color: '#fb923c' },
-  { name: 'Chinchilla', N: 70e9,   D: 1.4e12, C: 5.76e23, color: '#2dd4bf' },
-  { name: 'LLaMA-7B',   N: 7e9,    D: 1e12,   C: 4.2e22,  color: '#a78bfa' },
-  { name: 'LLaMA-65B',  N: 65e9,   D: 1.4e12, C: 5.46e23, color: '#a78bfa' },
-  { name: 'PaLM-540B',  N: 540e9,  D: 780e9,  C: 2.52e24, color: '#f472b6' },
+  { name: 'GPT-3',      N: 175e9,  D: 300e9,  C: 6 * 175e9 * 300e9,  color: '#fb923c' },
+  { name: 'Chinchilla', N: 70e9,   D: 1.4e12, C: 6 * 70e9  * 1.4e12, color: '#2dd4bf' },
+  { name: 'LLaMA-7B',   N: 7e9,    D: 1e12,   C: 6 * 7e9   * 1e12,   color: '#a78bfa' },
+  { name: 'LLaMA-65B',  N: 65e9,   D: 1.4e12, C: 6 * 65e9  * 1.4e12, color: '#a78bfa' },
+  { name: 'PaLM-540B',  N: 540e9,  D: 780e9,  C: 6 * 540e9 * 780e9,  color: '#f472b6' },
 ];
 
 // ── Fixed reference curves ────────────────────────────────────────────────────
@@ -302,7 +304,7 @@ const D_X_LABELS = [
   { val: 1e14, label: '100T' },
 ];
 
-export default function ScalingLaws() {
+export default function ScalingLaws({ tryThis }) {
   const [sliderVal,    setSliderVal]    = useState(60);
   const [showIso,      setShowIso]      = useState(true);
   const [showModels,   setShowModels]   = useState(true);
@@ -334,6 +336,18 @@ export default function ScalingLaws() {
     }
     return best;
   }, [lossStar, modelPts]);
+
+  // Loss the nearest model *itself* could have reached at its OWN training
+  // compute (6*N*D) — not at the slider's arbitrary C. Comparing a real
+  // model's loss to the optimum of a different compute budget is a category
+  // error, so "vs optimal" below is always computed at the model's own C.
+  const nearestOwnLossStar = useMemo(() => {
+    if (!nearest) return null;
+    const ownC = 6 * nearest.N * nearest.D;
+    const ownN = optimalN(ownC);
+    const ownD = optimalD(ownC, ownN);
+    return lossNd(ownN, ownD);
+  }, [nearest]);
 
   // Draw left chart
   useEffect(() => {
@@ -397,10 +411,12 @@ export default function ScalingLaws() {
 
   const tokensPerParam = dStar / nStar;
   const nearestLoss    = nearest ? nearest.loss : null;
-  const lossOverOptimal = nearest ? nearest.loss - lossStar : null;
+  const lossOverOptimal = (nearest && nearestOwnLossStar != null)
+    ? nearest.loss - nearestOwnLossStar
+    : null;
 
   return (
-    <WidgetCard title="Scaling Laws — Chinchilla optimal compute allocation" number="8.4">
+    <WidgetCard title="Scaling Laws — Chinchilla optimal compute allocation" number="10.4" tryThis={tryThis}>
 
       {/* ── Compute slider ──────────────────────────────────────────────── */}
       <div style={{ marginBottom: '14px' }}>
@@ -436,8 +452,7 @@ export default function ScalingLaws() {
         <StatDivider />
         <Stat label="Optimal N*" val={fmtN(nStar)} />
         <Stat label="Optimal D*" val={fmtN(dStar)} />
-        <Stat label="Tokens / param" val={`${tokensPerParam.toFixed(1)}×`}
-              color={tokensPerParam > 15 && tokensPerParam < 25 ? '#34d399' : C.accent} />
+        <Stat label="Tokens / param" val={`${tokensPerParam.toFixed(1)}×`} />
         <StatDivider />
         <Stat label="Predicted loss L*" val={lossStar.toFixed(3)} />
         {nearest && (
@@ -445,11 +460,25 @@ export default function ScalingLaws() {
             <StatDivider />
             <Stat label="Nearest model" val={nearest.name} color={nearest.color} />
             <Stat label="Model loss"    val={nearestLoss.toFixed(3)} />
-            <Stat label="vs optimal"
-              val={`+${lossOverOptimal.toFixed(3)}`}
+            <Stat label="vs its own optimum"
+              val={`${lossOverOptimal >= 0 ? '+' : ''}${lossOverOptimal.toFixed(3)}`}
               color={lossOverOptimal < 0.05 ? '#34d399' : lossOverOptimal < 0.2 ? C.accent : '#f87171'} />
           </>
         )}
+      </div>
+
+      {/* ── Caption ──────────────────────────────────────────────────────── */}
+      <div style={{
+        fontFamily: "'Inter', sans-serif", fontSize: '10.5px', color: C.textMid,
+        fontStyle: 'italic', lineHeight: 1.5, marginBottom: '10px',
+      }}>
+        This fitted power law's compute-optimal ratio (D*/N*) grows with the
+        compute budget — from roughly 30× at the slider's low end to 150×+ at
+        the high end — rather than sitting fixed at 20×. The "~20 tokens/param"
+        figure above describes the real, fixed-compute Chinchilla model itself;
+        "vs its own optimum" compares each historical model's loss to the
+        optimum <em>at that model's own training compute</em>, not the
+        slider's.
       </div>
 
       {/* ── Toggles ──────────────────────────────────────────────────────── */}
