@@ -22,8 +22,18 @@ const OUT_X     = 548;
 // Row centers for k1..k4 / v1..v4
 const ROWS = [70, 130, 190, 250];
 
-const SCORES  = ['0.4', '4.1', '1.8', '0.7'];
-const WEIGHTS = ['0.02', '0.74', '0.18', '0.06'];
+// WEIGHTS is derived from RAW_SCORES via an actual softmax so the two arrays
+// can never drift out of sync (previously they were hand-picked separately).
+const RAW_SCORES = [0.4, 4.1, 1.8, 0.7];
+const SCORES = RAW_SCORES.map((v) => v.toFixed(1));
+const _max = Math.max(...RAW_SCORES);
+const _exp = RAW_SCORES.map((v) => Math.exp(v - _max));
+const _sum = _exp.reduce((a, b) => a + b, 0);
+const WEIGHTS_NUM = _exp.map((v) => v / _sum);
+const WEIGHTS = WEIGHTS_NUM.map((v) => v.toFixed(2));
+// Index of the true softmax argmax, derived from the actual computed weights
+// (not hardcoded) so the visual emphasis always tracks the data.
+const HI_IDX = WEIGHTS_NUM.indexOf(Math.max(...WEIGHTS_NUM));
 
 const BOX_W = 44;
 const BOX_H = 26;
@@ -179,7 +189,7 @@ export default function QKVMechanism() {
 
         {/* arrows softmax → weights, and × values */}
         {ROWS.map((y, i) => {
-          const isHi = i === 1;
+          const isHi = i === HI_IDX;
           const color = isHi ? C.accent : C.text;
           return (
             <g key={`w-${i}`}>
@@ -225,9 +235,9 @@ export default function QKVMechanism() {
             y1={y}
             x2={SIGMA_X + 12}
             y2={160}
-            stroke={i === 1 ? C.accent : C.muted}
-            strokeWidth={i === 1 ? '1.5' : '1'}
-            opacity={i === 1 ? 1 : 0.5}
+            stroke={i === HI_IDX ? C.accent : C.muted}
+            strokeWidth={i === HI_IDX ? '1.5' : '1'}
+            opacity={i === HI_IDX ? 1 : 0.5}
           />
         ))}
 

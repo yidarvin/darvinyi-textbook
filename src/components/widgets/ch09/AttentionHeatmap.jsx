@@ -84,7 +84,7 @@ function calcEntropy(row) {
   return -row.reduce((s, p) => (p > 1e-10 ? s + p * Math.log(p) : s), 0);
 }
 
-export default function AttentionHeatmap() {
+export default function AttentionHeatmap({ tryThis }) {
   const [sentence, setSentence]     = useState('A');
   const [pinnedRow, setPinnedRow]   = useState(null);
   const [hoveredRow, setHoveredRow] = useState(null);
@@ -283,7 +283,7 @@ export default function AttentionHeatmap() {
   const barTokenName = displayPinned !== null ? tokens[displayPinned] : '';
 
   return (
-    <WidgetCard title="Attention Heatmap — token-to-token attention weights" number="7.1">
+    <WidgetCard title="Attention Heatmap — token-to-token attention weights" number="9.1" tryThis={tryThis}>
 
       {/* Controls — sentence tabs on row 1, toggles on row 2 */}
       <div style={{ marginBottom: '12px' }}>

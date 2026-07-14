@@ -191,13 +191,14 @@ function renderStep(step, q) {
     const xS  = xKt + sW + gap;
     const y   = yF;
     const opY = y + LH + 2 * SM;
+    const maxSIdx = S_RAW[q].indexOf(Math.max(...S_RAW[q]));
     return (
       <g>
         <MatGrid M={Q_MAT} cs={SM} lw={LS} x={x0}  y={y} rowLbls={T} colLbls={T} hlRow={q} title="Q" />
         <OpText text="×" x={x0 + sW + gap / 2} y={opY} />
-        <MatGrid M={Kt}    cs={SM} lw={LS} x={xKt} y={y} rowLbls={T} colLbls={T} hlRow={null} hlCol={2} title="Kᵀ" />
+        <MatGrid M={Kt}    cs={SM} lw={LS} x={xKt} y={y} rowLbls={T} colLbls={T} hlRow={null} hlCol={maxSIdx} title="Kᵀ" />
         <OpText text="=" x={xKt + sW + gap / 2} y={opY} />
-        <MatGrid M={S_RAW} cs={F}  lw={LF} x={xS}  y={y} rowLbls={T} colLbls={T} hlRow={q} hlCells={[[q, 2]]} title="S" />
+        <MatGrid M={S_RAW} cs={F}  lw={LF} x={xS}  y={y} rowLbls={T} colLbls={T} hlRow={q} hlCells={[[q, maxSIdx]]} title="S" />
       </g>
     );
   }
@@ -283,13 +284,17 @@ function getDesc(step, q) {
   const maxAIdx = attnRow.indexOf(Math.max(...attnRow));
   const maxAT   = TOKENS[maxAIdx];
   const ent     = rowEntropy(attnRow);
-  const focus   = ent < 1.2 ? 'sharp focus' : ent < 1.6 ? 'moderate spread' : 'diffuse';
+  // With a fixed 4-token vocabulary, max row entropy is ln(4) ≈ 1.386 nats, and the
+  // 4 query rows actually span ~1.157–1.288 nats (traced: learning 1.157, love 1.187,
+  // deep 1.220, I 1.288) — thresholds are calibrated to that real range so all three
+  // labels are reachable (a >1.6 "diffuse" cutoff is unreachable for 4 outcomes).
+  const focus   = ent < 1.17 ? 'sharp focus' : ent < 1.25 ? 'moderate spread' : 'diffuse';
 
   switch (step) {
     case 1: return `Each token's embedding is linearly projected into three separate spaces: queries (what I'm looking for), keys (what I offer to others), and values (what I contribute if attended to). These projections are learned during training.`;
     case 2: return `The dot product Q[i]·K[j] measures how much token i should attend to token j. For "${t}", the strongest raw score is with "${TOKENS[maxSIdx]}" (${Math.max(...scores).toFixed(2)}). Raw scores are unbounded and can be large for high-dimensional keys.`;
     case 3: return `Without scaling, dot products grow with dimension dk — high values push softmax into saturation where gradients are near zero. Dividing by √dk = ${Math.sqrt(4)} keeps the variance of dot products near 1.0 regardless of model dimension.`;
-    case 4: return `Softmax normalizes each row to a probability distribution. "${t}" attends most to "${maxAT}" (weight ${Math.max(...attnRow).toFixed(2)}, entropy H=${ent.toFixed(2)} — ${focus}).`;
+    case 4: return `Softmax normalizes each row to a probability distribution. "${t}" attends most to "${maxAT}" (weight ${Math.max(...attnRow).toFixed(2)}, entropy H=${ent.toFixed(2)} nats — ${focus}).`;
     case 5: return `Each output row is a weighted sum of value rows, using attention weights as coefficients. The output for "${t}" is dominated by "${maxAT}" (weight ${Math.max(...attnRow).toFixed(2)}).`;
     default: return '';
   }
@@ -318,8 +323,6 @@ function StatsBar({ step, q }) {
   const maxAIdx = attnRow.indexOf(Math.max(...attnRow));
   const maxAT   = TOKENS[maxAIdx];
   const outRow  = OUT[q];
-  const maxOIdx = outRow.indexOf(Math.max(...outRow));
-  const maxOT   = TOKENS[maxOIdx];
   const maxRaw  = Math.max(...S_RAW.map(r => Math.max(...r))).toFixed(2);
   const maxSc   = Math.max(...S_SC.map(r => Math.max(...r))).toFixed(2);
 
@@ -355,7 +358,7 @@ function StatsBar({ step, q }) {
         <>
           <StatItem label={`‖out[${t}]‖₂`} val={l2norm(outRow).toFixed(3)} />
           {divider}
-          <StatItem label="Max contribution" val={`"${maxOT}"  (${Math.max(...outRow).toFixed(2)})`} />
+          <StatItem label="Max contribution" val={`"${maxAT}"  (${Math.max(...attnRow).toFixed(2)})`} />
         </>
       )}
       {step === 1 && (
@@ -373,7 +376,7 @@ function StatsBar({ step, q }) {
 // ── main component ────────────────────────────────────────────────────────────
 const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
-export default function QKVInspector() {
+export default function QKVInspector({ tryThis }) {
   const [step, setStep]       = useState(1);
   const [q, setQ]             = useState(1); // default: love
   const [descKey, setDescKey] = useState(0);
@@ -400,7 +403,7 @@ export default function QKVInspector() {
   }, [descKey, descOpacity]);
 
   return (
-    <WidgetCard title="QKV Inspector — inside scaled dot-product attention" number="7.2">
+    <WidgetCard title="QKV Inspector — inside scaled dot-product attention" number="9.2" tryThis={tryThis}>
 
       {/* Equation label */}
       <div style={{

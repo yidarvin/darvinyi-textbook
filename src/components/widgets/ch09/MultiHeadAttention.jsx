@@ -244,7 +244,7 @@ function Toggle({ checked, onChange, label }) {
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function MultiHeadAttention() {
+export default function MultiHeadAttention({ tryThis }) {
   const [expandedHead, setExpandedHead] = useState(null);
   const [showValues,   setShowValues]   = useState(false);
   const [showDescs,    setShowDescs]    = useState(true);
@@ -288,7 +288,7 @@ export default function MultiHeadAttention() {
   });
 
   return (
-    <WidgetCard title="Multi-Head Attention — 4 heads, 4 different patterns" number="7.3">
+    <WidgetCard title="Multi-Head Attention — 4 heads, 4 different patterns" number="9.3" tryThis={tryThis}>
 
       {/* ── Controls ─────────────────────────────────────────────────── */}
       <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '14px', marginBottom: '16px' }}>
@@ -403,7 +403,7 @@ export default function MultiHeadAttention() {
                 </div>
                 <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
                   <div style={{ ...mono, fontSize: '11px', color: C.textMid }}>
-                    Attention entropy:{' '}
+                    Attention entropy (bits):{' '}
                     <span style={{ color: HEAD_COLORS[expandedHead] }}>
                       {avgEntropies[expandedHead].toFixed(2)}
                     </span>
