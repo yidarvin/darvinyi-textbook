@@ -57,11 +57,11 @@ const OP3 = 78;   // process text line 3 (optional)
 const STAGES = [
   {
     short: 'SFT',
-    header: 'Supervised Fine-Tuning (SFT)',
-    title:  'Stage 1: Supervised Fine-Tuning (SFT)',
-    desc:   "The base pretrained LLM is fine-tuned on human-written demonstrations using standard supervised learning. Cross-entropy loss minimizes the gap between the model's predictions and demonstration text, token by token.",
-    key:    'Teaches the model the format and style of helpful responses.',
-    metrics:'Data: ~10K–100K demos\nLoss: cross-entropy\nMethod: supervised learning',
+    header: 'SFT — recap (Ch. 13)',
+    title:  'Stage 1: Supervised Fine-Tuning — recap',
+    desc:   "Chapter 13 covers SFT in full. In the RL view, all that matters here is the output: a policy π_SFT fine-tuned on human demonstrations via ordinary cross-entropy loss. Stage 3's PPO both starts from π_SFT and is penalized (via KL) for drifting too far from it.",
+    key:    'Produces π_SFT — the starting point and KL reference for the RL stage.',
+    metrics:'Full derivation: Chapter 13',
   },
   {
     short: 'Reward Model',
@@ -83,7 +83,7 @@ const STAGES = [
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export default function RLHFPipeline() {
+export default function RLHFPipeline({ tryThis }) {
   const [stage,    setStage]    = useState(0);
   const [autoPlay, setAutoPlay] = useState(false);
   const [flash,    setFlash]    = useState(false);
@@ -118,7 +118,7 @@ export default function RLHFPipeline() {
   const sd   = stage > 0 ? STAGES[stage - 1] : null;
 
   return (
-    <WidgetCard title="RLHF Pipeline — from human preferences to model behavior" number="16.5">
+    <WidgetCard title="RLHF Pipeline — from human preferences to model behavior" number="12.5" tryThis={tryThis}>
 
       {/* ── Full-width SVG flowchart ── */}
       <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
@@ -314,10 +314,9 @@ export default function RLHFPipeline() {
           <SRow k="Current stage" v={stage === 0 ? 'idle' : `${stage} / 3`}
             vc={stage === 0 ? C.muted : C.accent} />
           <Hr />
-          <SLbl>Stage 1 — SFT</SLbl>
-          <SRow k="Method" v="Supervised"    vc={stage === 1 ? C.accent : C.mid} />
-          <SRow k="Data"   v="Demos"          vc={stage === 1 ? C.text   : C.mid} />
-          <SRow k="Loss"   v="Cross-ent."    vc={stage === 1 ? C.math   : C.mid} />
+          <SLbl>Stage 1 — SFT (recap)</SLbl>
+          <SRow k="Detail" v="see Ch. 13"    vc={stage === 1 ? C.accent : C.mid} />
+          <SRow k="Output" v="π_SFT"          vc={stage === 1 ? C.text   : C.mid} />
           <Hr />
           <SLbl>Stage 2 — Reward</SLbl>
           <SRow k="Method" v="Bradley-Terry"  vc={stage === 2 ? C.accent : C.mid} />

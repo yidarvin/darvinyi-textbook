@@ -24,6 +24,7 @@ const CLR = {
   redLt:    '#fca5a5',
   orange:   '#fb923c',
   green:    '#34d399',
+  violet:   '#c084fc',
   math:     '#fbbf24',
   muted:    '#555555',
   bg:       '#0a0a0a',
@@ -39,6 +40,12 @@ const DIR_NAMES = ['U', 'D', 'L', 'R'];
 const DIR_DELTA = { U: [-1, 0], D: [1, 0], L: [0, -1], R: [0, 1] };
 const DIR_LABEL = { U: 'Up', D: 'Down', L: 'Left', R: 'Right' };
 
+// perpendicular directions for each intended action — used to spread "slip"
+// probability when the environment's transition dynamics P(s'|s,a) are
+// stochastic rather than deterministic (mirrors MDPExplorer's PERP table so
+// both widgets model the same grid-world physics).
+const PERP = { U: ['L', 'R'], D: ['L', 'R'], L: ['U', 'D'], R: ['U', 'D'] };
+
 // ── pure helpers ───────────────────────────────────────────────────────────────
 
 const makeQ = () =>
@@ -52,12 +59,33 @@ const cellCXY = (r, c) => ({
   cy: MRG + r * (CELL + GAP) + CELL / 2,
 });
 
-const nextCell = (r, c, a) => {
-  const [dr, dc] = DIR_DELTA[a];
+// deterministic single-step move in a given heading, clipped by walls/bounds
+const nextCell = (r, c, dir) => {
+  const [dr, dc] = DIR_DELTA[dir];
   const nr = r + dr, nc = c + dc;
   if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || GRID[nr][nc] === 'wall')
     return [r, c];
   return [nr, nc];
+};
+
+// Samples the environment's actual transition for an intended action a,
+// under the dynamics P(s'|s,a). With slipProb = 0 the environment is
+// deterministic — the chosen action always succeeds. With slipProb > 0 the
+// agent's actual heading slips to one of the two directions perpendicular
+// to the one it chose, splitting the slip probability evenly between them
+// (mirrors MDPExplorer's transitionOutcomes so both widgets share the same
+// grid-world physics). The Q-update below still indexes Q(s, a) by the
+// action the agent *chose*, not the heading it ended up moving in — that is
+// what makes model-free Q-learning work without ever knowing P(s'|s,a)
+// explicitly: it only needs sampled (s, a, r, s') transitions.
+const sampleTransition = (r, c, a, slipProb) => {
+  let actual = a;
+  if (slipProb > 0 && Math.random() < slipProb) {
+    const [p1, p2] = PERP[a];
+    actual = Math.random() < 0.5 ? p1 : p2;
+  }
+  const [nr, nc] = nextCell(r, c, actual);
+  return { nr, nc, actual, slipped: actual !== a };
 };
 
 const cellReward = (r, c) =>
@@ -125,7 +153,7 @@ function QArrows({ r, c, qs, flashDir }) {
 
 // ── component ──────────────────────────────────────────────────────────────────
 
-export default function QLearning() {
+export default function QLearning({ tryThis }) {
   const [Q, setQ]                   = useState(makeQ);
   const [agentPos, setAgentPos]     = useState([0, 0]);
   const [agentVis, setAgentVis]     = useState(false);
@@ -134,6 +162,7 @@ export default function QLearning() {
   const [isAnim, setIsAnim]         = useState(false);
   const [isPaused, setIsPaused]     = useState(false);
   const [rewardPop, setRewardPop]   = useState(null);
+  const [slipPop, setSlipPop]       = useState(null);
   const [flashCell, setFlashCell]   = useState(null);
   const [statusMsg, setStatusMsg]   = useState('');
   const [epCount, setEpCount]       = useState(0);
@@ -148,6 +177,7 @@ export default function QLearning() {
   const [epsilon, setEpsilon]       = useState(0.30);
   const [alpha, setAlpha]           = useState(0.10);
   const [gamma, setGamma]           = useState(0.90);
+  const [slip, setSlip]             = useState(0.15);
   const [fast, setFast]             = useState(false);
 
   const QRef      = useRef(makeQ());
@@ -156,6 +186,7 @@ export default function QLearning() {
   const epsRef    = useRef(0.30);
   const alpRef    = useRef(0.10);
   const gamRef    = useRef(0.90);
+  const slipRef   = useRef(0.15);
   const fastRef   = useRef(false);
   const epCntRef  = useRef(0);
   const bestRef   = useRef(null);
@@ -178,6 +209,7 @@ export default function QLearning() {
   useEffect(() => { epsRef.current = epsilon; }, [epsilon]);
   useEffect(() => { alpRef.current = alpha; }, [alpha]);
   useEffect(() => { gamRef.current = gamma; }, [gamma]);
+  useEffect(() => { slipRef.current = slip; }, [slip]);
   useEffect(() => { fastRef.current = fast; }, [fast]);
 
   // ── reset ──────────────────────────────────────────────────────────────────
@@ -190,6 +222,7 @@ export default function QLearning() {
     bestRef.current = null;
     setQ(makeQ()); setAgentVis(false); setTrail([]);
     setIsAnim(false); setIsPaused(false); setRewardPop(null);
+    setSlipPop(null);
     setFlashCell(null); setStatusMsg(''); setEpCount(0);
     setLastRew(null); setLastSteps(null); setBestRew(null);
     setCurAction(null); setCurType(null); setStepsEp(0);
@@ -231,15 +264,21 @@ export default function QLearning() {
       await msDelay(isFast ? 20 : 60);
       if (!animRef.current || !aliveRef.current) break;
 
-      // move agent
-      const [nr, nc] = nextCell(r, c, a);
+      // move agent — the environment samples the actual transition from
+      // P(s'|s,a); with slip probability > 0 this may differ from the
+      // heading the agent chose
+      const { nr, nc, slipped } = sampleTransition(r, c, a, slipRef.current);
       setAgentPos([nr, nc]);
       setAgentFlash(null);
+      if (slipped) setSlipPop({ r: nr, c: nc, key: Date.now() });
 
       await msDelay(movMs);
       if (!animRef.current || !aliveRef.current) break;
 
-      // Q update
+      // Q update — indexed by the action a the agent chose, not the heading
+      // it actually slipped into; this is what lets Q-learning stay
+      // model-free while still learning correct values under stochastic
+      // dynamics, purely from sampled (s, a, r, s') transitions
       const rew = cellReward(nr, nc);
       totalRew += rew;
       const maxNQ = Math.max(...Object.values(QRef.current[nr][nc]));
@@ -259,6 +298,7 @@ export default function QLearning() {
 
       setFlashCell(null);
       setRewardPop(null);
+      setSlipPop(null);
 
       if (GRID[r][c] === 'goal' || GRID[r][c] === 'penalty') break;
 
@@ -272,7 +312,7 @@ export default function QLearning() {
 
     setLastRew(totalRew); setLastSteps(steps); setBestRew(nb);
     setCurAction(null); setCurType(null);
-    setFlashCell(null); setRewardPop(null);
+    setFlashCell(null); setRewardPop(null); setSlipPop(null);
     setQ(cloneQ(QRef.current));
 
     if (animRef.current) {
@@ -307,7 +347,7 @@ export default function QLearning() {
       epCntRef.current++;
       while (s < 50) {
         const { a } = pickAction(r, c, epsRef.current, QRef.current);
-        const [nr, nc] = nextCell(r, c, a);
+        const { nr, nc } = sampleTransition(r, c, a, slipRef.current);
         const rew = cellReward(nr, nc);
         const mnq = Math.max(...Object.values(QRef.current[nr][nc]));
         QRef.current[r][c][a] += alpRef.current * (rew + gamRef.current * mnq - QRef.current[r][c][a]);
@@ -366,7 +406,7 @@ export default function QLearning() {
   // ── render ─────────────────────────────────────────────────────────────────
 
   return (
-    <WidgetCard title="Q-Learning — epsilon-greedy exploration in a grid world" number="16.2">
+    <WidgetCard title="Q-Learning — epsilon-greedy exploration in a grid world" number="12.2" tryThis={tryThis}>
 
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
@@ -472,6 +512,24 @@ export default function QLearning() {
               {rewardPop.reward > 0 ? '+10' : '−5'}
             </text>
           )}
+
+          {/* Slip popup — flags when the environment's sampled transition
+              landed the agent on a heading other than the one it chose */}
+          {slipPop && (
+            <text
+              key={slipPop.key}
+              className="ql-pop"
+              x={cellCXY(slipPop.r, slipPop.c).cx}
+              y={cellCXY(slipPop.r, slipPop.c).cy - (rewardPop ? 44 : 28)}
+              textAnchor="middle"
+              fill={CLR.violet}
+              fontSize={10}
+              fontFamily="JetBrains Mono,monospace"
+              fontWeight="bold"
+            >
+              ↯ slipped
+            </text>
+          )}
         </svg>
 
         {/* ── Stats panel ───────────────────────────────────────────────── */}
@@ -513,6 +571,12 @@ export default function QLearning() {
             <div style={sL}>ε / α / γ</div>
             <div style={{ ...mono, fontSize: '11px', color: 'var(--math-color)', lineHeight: 1.7 }}>
               {epsilon.toFixed(2)} / {alpha.toFixed(2)} / {gamma.toFixed(2)}
+            </div>
+          </div>
+          <div>
+            <div style={sL}>p(slip)</div>
+            <div style={sV(slip > 0 ? CLR.violet : 'var(--text-muted)')}>
+              {slip.toFixed(2)}
             </div>
           </div>
 
@@ -640,6 +704,23 @@ export default function QLearning() {
           />
           <span style={{ ...mono, fontSize: '9px', color: 'var(--text-muted)', flexShrink: 0, width: '60px', textAlign: 'right' }}>
             discount
+          </span>
+        </div>
+
+        {/* Slip probability */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ ...mono, fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0, width: '72px' }}>
+            slip = {slip.toFixed(2)}
+          </span>
+          <input
+            type="range" min="0" max="0.40" step="0.05" value={slip}
+            title="Probability the environment's transition P(s'|s,a) slips the agent sideways instead of the chosen direction — 0.0 is the deterministic case"
+            onChange={e => { const v = +e.target.value; slipRef.current = v; setSlip(v); }}
+            disabled={isAnim}
+            style={{ flex: 1, minWidth: '80px' }}
+          />
+          <span style={{ ...mono, fontSize: '9px', color: 'var(--text-muted)', flexShrink: 0, width: '60px', textAlign: 'right' }}>
+            {slip <= 0 ? 'deterministic' : 'stochastic'}
           </span>
         </div>
 

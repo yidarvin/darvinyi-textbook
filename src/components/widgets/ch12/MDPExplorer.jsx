@@ -16,6 +16,18 @@ const DIRS = [
   { r:  0, c:  1, name: 'R' },
 ];
 
+const DIRS_BY_NAME = Object.fromEntries(DIRS.map(d => [d.name, d]));
+
+// perpendicular directions for each intended action — used to spread "slip"
+// probability when the environment's transition dynamics P(s'|s,a) are
+// stochastic rather than deterministic.
+const PERP = {
+  U: ['L', 'R'],
+  D: ['L', 'R'],
+  L: ['U', 'D'],
+  R: ['U', 'D'],
+};
+
 const CLR = {
   bg:       '#0a0a0a',
   bg3:      '#161616',
@@ -41,29 +53,55 @@ const makeGrid = () => {
   return g;
 };
 
-const initV = (g) =>
-  Array.from({ length: ROWS }, (_, r) =>
-    Array.from({ length: COLS }, (_, c) => g[r][c] === 'goal' ? 10 : 0));
+// The goal is a true absorbing/terminal state: once the environment lands
+// you there, the episode is over and no further return is earned. Its own
+// held value must therefore be 0, not the +10 reward — that reward is
+// credited exactly once, as the transition reward on the step that enters
+// the goal. Pinning V(goal) to +10 as well would double-count it: a
+// neighboring cell's backup would add the +10 transition reward AND
+// gamma * 10 from the frozen goal value.
+const initV = () =>
+  Array.from({ length: ROWS }, () => Array(COLS).fill(0));
 
 const nullPi = () =>
   Array.from({ length: ROWS }, () => Array(COLS).fill(null));
 
-const viStep = (g, V, gamma) => {
+// Expands one intended action into the environment's transition
+// distribution P(s'|s,a). With slipProb = 0 the environment is
+// deterministic (the classic case). With slipProb > 0 the agent's actual
+// heading slips to one of the two directions perpendicular to the one it
+// chose, splitting the slip probability evenly between them — so the
+// Bellman backup below genuinely sums over multiple s' outcomes instead of
+// following a single deterministic successor.
+const transitionOutcomes = (d, slipProb) => {
+  if (!slipProb) return [{ dir: d, prob: 1 }];
+  const [p1, p2] = PERP[d.name].map(n => DIRS_BY_NAME[n]);
+  return [
+    { dir: d,  prob: 1 - slipProb },
+    { dir: p1, prob: slipProb / 2 },
+    { dir: p2, prob: slipProb / 2 },
+  ];
+};
+
+const viStep = (g, V, gamma, slipProb = 0) => {
   const nV  = V.map(row => [...row]);
   const nPi = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   let delta = 0;
   for (let r = 0; r < ROWS; r++) {
     for (let c = 0; c < COLS; c++) {
       if (g[r][c] === 'wall') continue;
-      if (g[r][c] === 'goal') { nV[r][c] = 10; continue; }
+      if (g[r][c] === 'goal') { nV[r][c] = 0; continue; }
       let best = -Infinity, bd = 'U';
       for (const d of DIRS) {
-        let nr = r + d.r, nc = c + d.c;
-        if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || g[nr][nc] === 'wall') {
-          nr = r; nc = c;
+        let q = 0;
+        for (const { dir, prob } of transitionOutcomes(d, slipProb)) {
+          let nr = r + dir.r, nc = c + dir.c;
+          if (nr < 0 || nr >= ROWS || nc < 0 || nc >= COLS || g[nr][nc] === 'wall') {
+            nr = r; nc = c;
+          }
+          const rew = g[nr][nc] === 'goal' ? 10 : g[nr][nc] === 'penalty' ? -5 : 0;
+          q += prob * (rew + gamma * V[nr][nc]);
         }
-        const rew = g[nr][nc] === 'goal' ? 10 : g[nr][nc] === 'penalty' ? -5 : 0;
-        const q   = rew + gamma * V[nr][nc];
         if (q > best) { best = q; bd = d.name; }
       }
       delta = Math.max(delta, Math.abs(best - nV[r][c]));
@@ -220,7 +258,7 @@ const paintGrid = (ctx, g, V, pi, iters, showA, showV) => {
 
 // ── component ─────────────────────────────────────────────────────────────────
 
-export default function MDPExplorer() {
+export default function MDPExplorer({ tryThis }) {
   const [grid,   setGrid]   = useState(makeGrid);
   const [values, setValues] = useState(() => initV(makeGrid()));
   const [policy, setPolicy] = useState(nullPi);
@@ -228,6 +266,7 @@ export default function MDPExplorer() {
   const [msg,    setMsg]    = useState('');
   const [anim,   setAnim]   = useState(false);
   const [gamma,  setGamma]  = useState(0.90);
+  const [slip,   setSlip]   = useState(0);
   const [arrows, setArrows] = useState(true);
   const [vals,   setVals]   = useState(true);
   const [fast,   setFast]   = useState(false);
@@ -242,6 +281,7 @@ export default function MDPExplorer() {
   const pRef   = useRef(policy);
   const nRef   = useRef(0);
   const gamR   = useRef(0.90);
+  const slpR   = useRef(0);
   const arR    = useRef(true);
   const vlR    = useRef(true);
   const ftR    = useRef(false);
@@ -269,6 +309,7 @@ export default function MDPExplorer() {
 
   // keep control refs in sync
   useEffect(() => { gamR.current = gamma;  }, [gamma]);
+  useEffect(() => { slpR.current = slip;   }, [slip]);
   useEffect(() => { arR.current  = arrows; }, [arrows]);
   useEffect(() => { vlR.current  = vals;   }, [vals]);
   useEffect(() => { ftR.current  = fast;   }, [fast]);
@@ -323,7 +364,7 @@ export default function MDPExplorer() {
 
     const tick = () => {
       if (!live.current) return;
-      const { nV, nPi, delta } = viStep(gRef.current, vRef.current, gamR.current);
+      const { nV, nPi, delta } = viStep(gRef.current, vRef.current, gamR.current, slpR.current);
       vRef.current = nV; pRef.current = nPi; nRef.current++;
 
       paintGrid(ctxRef.current, gRef.current, nV, nPi, nRef.current, arR.current, vlR.current);
@@ -345,7 +386,7 @@ export default function MDPExplorer() {
 
   const stepVI = useCallback(() => {
     if (live.current) return;
-    const { nV, nPi } = viStep(gRef.current, vRef.current, gamR.current);
+    const { nV, nPi } = viStep(gRef.current, vRef.current, gamR.current, slpR.current);
     vRef.current = nV; pRef.current = nPi; nRef.current++;
     setValues(nV); setPolicy(nPi); setIters(nRef.current); setMsg('');
     paintGrid(ctxRef.current, gRef.current, nV, nPi, nRef.current, arR.current, vlR.current);
@@ -426,7 +467,7 @@ export default function MDPExplorer() {
   // ── render ─────────────────────────────────────────────────────────────────
 
   return (
-    <WidgetCard title="MDP Explorer — grid world value iteration" number="16.1">
+    <WidgetCard title="MDP Explorer — grid world value iteration" number="12.1" tryThis={tryThis}>
       {/* canvas + stats panel */}
       <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         <canvas
@@ -466,6 +507,13 @@ export default function MDPExplorer() {
             <div style={statVal('var(--math-color)')}>{gamma.toFixed(2)}</div>
           </div>
 
+          <div>
+            <div style={statLabel}>slip prob.</div>
+            <div style={statVal(slip > 0 ? 'var(--math-color)' : 'var(--text-muted)')}>
+              {slip.toFixed(2)}
+            </div>
+          </div>
+
           <div style={divider} />
 
           <div>
@@ -476,7 +524,7 @@ export default function MDPExplorer() {
           </div>
 
           <div>
-            <div style={statLabel}>V*(goal)</div>
+            <div style={statLabel}>goal reward</div>
             <div style={statVal('var(--green)')}>{goalCell ? '10.00' : '—'}</div>
           </div>
 
@@ -569,6 +617,39 @@ export default function MDPExplorer() {
             flexShrink: 0,
           }}>
             discount
+          </span>
+        </div>
+
+        {/* slip probability slider — makes P(s'|s,a) genuinely stochastic */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{
+            fontFamily: "'JetBrains Mono',monospace",
+            fontSize: '11px',
+            color: 'var(--text-muted)',
+            flexShrink: 0,
+            width: '72px',
+          }}>
+            slip = {slip.toFixed(2)}
+          </span>
+          <input
+            type="range"
+            min="0" max="0.40" step="0.05"
+            value={slip}
+            title="Chance the agent slips sideways instead of moving where intended — makes P(s'|s,a) a real distribution over multiple next states."
+            onChange={e => {
+              const v = parseFloat(e.target.value);
+              slpR.current = v;
+              setSlip(v);
+            }}
+            style={{ flex: 1, minWidth: '80px' }}
+          />
+          <span style={{
+            fontFamily: "'JetBrains Mono',monospace",
+            fontSize: '9px',
+            color: 'var(--text-muted)',
+            flexShrink: 0,
+          }}>
+            P(s'|s,a)
           </span>
         </div>
 

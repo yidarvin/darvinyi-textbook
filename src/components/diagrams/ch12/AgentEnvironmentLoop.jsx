@@ -224,8 +224,8 @@ export default function AgentEnvironmentLoop() {
           fontFamily={mono} fontSize="11.5"
           fill={C.text}
         >
-          <tspan>V^π(s)</tspan>
-          <tspan fill={C.muted2}>{"   = expected return starting from s, following π"}</tspan>
+          <tspan>V*(s)</tspan>
+          <tspan fill={C.muted2}>{"   = best possible return starting from s"}</tspan>
         </text>
         <text
           x={INSET.x + 14}
@@ -233,8 +233,8 @@ export default function AgentEnvironmentLoop() {
           fontFamily={mono} fontSize="11.5"
           fill={C.text}
         >
-          <tspan>Q^π(s, a)</tspan>
-          <tspan fill={C.muted2}>{" = expected return after taking a in s, then following π"}</tspan>
+          <tspan>Q*(s, a)</tspan>
+          <tspan fill={C.muted2}>{" = best possible return after taking a in s"}</tspan>
         </text>
       </svg>
 

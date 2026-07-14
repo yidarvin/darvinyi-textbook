@@ -71,6 +71,16 @@ export const CITATIONS = {
     year: "2022",
     tag: "seminal",
   },
+  "dpo": {
+    // Previously duplicated as inline objects in ch12 and ch13 with a
+    // title mismatch ("...Reward Model" vs "...Reward Model (DPO)") —
+    // consolidated here per the llama2 entry's precedent.
+    title: "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+    authors: "Rafailov, Sharma, Mitchell, Ermon, Manning, Finn",
+    venue: "NeurIPS",
+    year: "2023",
+    tag: "seminal",
+  },
   "toolformer": {
     title: "Toolformer: Language Models Can Teach Themselves to Use Tools",
     authors: "Schick, Dwivedi-Yu, Dessì, Raileanu, Lomeli, Zettlemoyer, Cancedda, Scialom",

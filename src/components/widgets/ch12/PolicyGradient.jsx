@@ -32,7 +32,7 @@ const sampleGaussian = (mu, sigma) => {
 };
 
 // ── component ─────────────────────────────────────────────────────────────────
-export default function PolicyGradient() {
+export default function PolicyGradient({ tryThis }) {
   // policy & training state (for stats panel)
   const [mu, setMu]                     = useState(INIT_MU);
   const [sigma, setSigma]               = useState(INIT_SIGMA);
@@ -417,7 +417,7 @@ export default function PolicyGradient() {
   const vdiv = <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch' }} />;
 
   return (
-    <WidgetCard title="Policy Gradient — REINFORCE shifts the distribution toward reward" number="16.3">
+    <WidgetCard title="Policy Gradient — REINFORCE shifts the distribution toward reward" number="12.3" tryThis={tryThis}>
 
       {/* full-width canvas */}
       <div style={{ position: 'relative' }}>

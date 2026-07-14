@@ -28,7 +28,7 @@ const prose = {
 
 const CITATIONS = buildCitations([
   "instructgpt",
-  { title: "Direct Preference Optimization: Your Language Model is Secretly a Reward Model (DPO)", authors: "Rafailov, Sharma, Mitchell, Ermon, Manning, Finn", venue: "NeurIPS", year: "2023", tag: "seminal" },
+  "dpo",
   "constitutional-ai",
   { title: "Self-Instruct: Aligning Language Models with Self-Generated Instructions", authors: "Wang, Kordi, Mishra, Liu, Smith, Khashabi, Hajishirzi", venue: "ACL", year: "2023", tag: "paper" },
   "toolformer",

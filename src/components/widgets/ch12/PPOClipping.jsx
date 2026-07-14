@@ -22,7 +22,7 @@ const Lpp = (r, eps, A) => Math.min(Lu(r, A), Lc(r, eps, A));
 
 // ── component ─────────────────────────────────────────────────────────────────
 
-export default function PPOClipping() {
+export default function PPOClipping({ tryThis }) {
   const [eps, setEps]           = useState(0.20);
   const [A, setA]               = useState(1.0);
   const [rCurrent, setRCurrent] = useState(1.0);
@@ -329,7 +329,7 @@ export default function PPOClipping() {
   const wallR = rToR(Math.max(1 - eps, 0.51));
 
   return (
-    <WidgetCard title="PPO Clipping — constrained policy updates" number="16.4">
+    <WidgetCard title="PPO Clipping — constrained policy updates" number="12.4" tryThis={tryThis}>
 
       {/* full-width canvas */}
       <canvas
@@ -418,7 +418,7 @@ export default function PPOClipping() {
             {/* shared note */}
             <text x="140" y="68" textAnchor="middle" fill="#444"
                   fontSize="7" fontFamily={MONO}>
-              gradient zeroed outside [1-ε, 1+ε]
+              gradient zeroed only past its wall
             </text>
           </svg>
         </div>

@@ -362,9 +362,9 @@ function ExamplePanel() {
             <span style={{ color: C.mid }}>→ reward =&nbsp;</span>
             <span style={{ color: C.red }}>0</span>
           </div>
-          {PL('No ambiguity. Ground truth is ground truth.')}
+          {PL('No ambiguity on this answer. But R1-Zero shows the policy can still game how it gets there.')}
           <div style={{ fontFamily: MONO, fontSize: '10px', color: C.green, lineHeight: 1.65 }}>
-            Hacking risk: ☆☆☆☆☆
+            Hacking risk: ★☆☆☆☆
           </div>
         </div>
 
@@ -414,7 +414,7 @@ function SummaryStrip() {
       <div style={{ flex: 1, padding: '12px 14px' }}>
         <Lbl>Key results</Lbl>
         <div style={{ fontFamily: INTER, fontSize: '10px', color: C.mid, lineHeight: 1.65, marginBottom: '4px' }}>
-          <span style={{ color: C.math }}>DeepSeek-R1:</span> RLVR alone produced strong
+          <span style={{ color: C.math }}>DeepSeek-R1-Zero:</span> RLVR alone produced strong
           chain-of-thought reasoning without any SFT warm-up.
         </div>
         <div style={{ fontFamily: INTER, fontSize: '10px', color: C.mid, lineHeight: 1.65 }}>
@@ -441,7 +441,7 @@ function SummaryStrip() {
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
-export default function RLVRvsRLHF() {
+export default function RLVRvsRLHF({ tryThis }) {
   const [showExample, setShowExample] = useState(true);
   const [showChart,   setShowChart]   = useState(true);
   const chartRef = useRef(null);
@@ -471,7 +471,7 @@ export default function RLVRvsRLHF() {
   const sub  = (color = C.muted) => ({ fontFamily: MONO, fontSize: '8px', color, marginTop: '2px' });
 
   return (
-    <WidgetCard title="RLVR vs RLHF — verifiable rewards vs human feedback" number="16.6">
+    <WidgetCard title="RLVR vs RLHF — verifiable rewards vs human feedback" number="12.6" tryThis={tryThis}>
 
       {/* ── Controls ── */}
       <div style={{ display: 'flex', gap: '8px', padding: '0 0 10px', borderBottom: `1px solid ${C.border}` }}>
@@ -561,12 +561,12 @@ export default function RLVRvsRLHF() {
         </div>
         <ColDiv />
         <div style={col}>
-          <div style={main}>Cannot hack a correct verifier.</div>
-          <div style={note}>Only genuinely correct answers receive reward = 1. No learned weaknesses to exploit.</div>
+          <div style={main}>Can't hack the verifier's judgment of the final answer — but can still game how it gets there.</div>
+          <div style={note}>Only genuinely correct answers receive reward = 1. But DeepSeek-R1-Zero (pure RLVR) still showed real reward hacking: language mixing and poor readability that satisfied the verifier's letter without the readability its designer implicitly wanted.</div>
           <div style={{ marginTop: '6px' }}>
-            <ProgressMeter pct={15} color={C.red} />
+            <ProgressMeter pct={20} color={C.red} />
           </div>
-          <div style={sub(C.green)}>low — verifier is ground truth</div>
+          <div style={sub(C.green)}>low but nonzero — degenerate solutions still possible</div>
         </div>
       </RowWrap>
 
@@ -584,7 +584,7 @@ export default function RLVRvsRLHF() {
         <ColDiv />
         <div style={col}>
           <div style={main}>Objective tasks with deterministic ground truth.</div>
-          <div style={note}>DeepSeek-R1 used RLVR on math/code to achieve frontier reasoning — no SFT warm-up needed.</div>
+          <div style={note}>DeepSeek-R1-Zero used RLVR alone on math/code to achieve frontier reasoning — no SFT warm-up needed (DeepSeek-R1 later added a small cold-start SFT phase back in).</div>
           <div style={{ marginTop: '7px' }}>
             {['math reasoning', 'code generation', 'proof checking'].map(t => (
               <Tag key={t} label={t} color={C.math} />

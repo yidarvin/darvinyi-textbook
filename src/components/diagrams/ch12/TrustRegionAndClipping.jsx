@@ -88,7 +88,19 @@ export default function TrustRegionAndClipping() {
         </text>
 
         {/* ════════════════ LEFT PANEL: TRPO GEOMETRY ════════════════ */}
-        <PanelFrame p={PL} title="Geometry: hard KL ball in θ-space" />
+        <PanelFrame p={PL} title="Geometry: KL constraint region" />
+
+        {/* Clarifying subtitle: the axes plot θ, but KL is not a θ-distance */}
+        <text
+          x={PL.x + PL.w / 2}
+          y={PL.y + 42}
+          textAnchor="middle"
+          fontFamily={sans} fontSize="9.5"
+          fill={C.muted2}
+          fontStyle="italic"
+        >
+          (θ plotted for intuition — KL acts on π(·|s))
+        </text>
 
         {/* θ_1, θ_2 axes (drawn as faint cross at center) */}
         <line
@@ -214,7 +226,7 @@ export default function TrustRegionAndClipping() {
           fill={C.muted2}
           fontStyle="italic"
         >
-          KL ball lives in policy-parameter space
+          constraint is on action distributions,
         </text>
         <text
           x={PL.x + PL.w / 2}
@@ -223,7 +235,7 @@ export default function TrustRegionAndClipping() {
           fontFamily={mono} fontSize="10"
           fill={C.muted}
         >
-          all updates must stay inside the ball
+          not on distance in θ-space
         </text>
 
         {/* ════════════════ RIGHT PANEL: ALGORITHMIC SIMPLIFICATION ════════ */}
@@ -375,9 +387,11 @@ export default function TrustRegionAndClipping() {
           lineHeight: 1.5,
         }}
       >
-        TRPO enforces a hard KL constraint geometrically in parameter space; PPO
-        replaces the constraint with a clamp on the probability ratio — almost
-        the same stability for a fraction of the code.
+        TRPO enforces a hard KL constraint on the policies' action distributions,
+        not on raw distance in parameter space — nearby θ can behave very
+        differently, which is why the constraint is distributional. PPO replaces
+        it with a clamp on the probability ratio — almost the same stability for
+        a fraction of the code.
       </figcaption>
     </figure>
   );

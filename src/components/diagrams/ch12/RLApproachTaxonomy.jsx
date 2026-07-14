@@ -509,7 +509,7 @@ export default function RLApproachTaxonomy() {
           fontFamily={mono} fontSize="10.5"
           fill={C.text}
         >
-          PPO, GRPO
+          PPO
         </text>
 
         {/* Bottom annotation */}
@@ -535,7 +535,11 @@ export default function RLApproachTaxonomy() {
       >
         Value-based methods learn Q and derive a policy; policy-based methods
         learn π directly; actor-critic combines both, using the value function as
-        a variance-reducing baseline.
+        a variance-reducing baseline. GRPO (Section 4) is not listed under
+        Actor-Critic above: it drops the learned critic entirely and estimates
+        advantage via group-relative reward normalization, so it doesn't fit
+        this box's literal actor/critic computation graph despite otherwise
+        replacing PPO in modern LLM RL pipelines.
       </figcaption>
     </figure>
   );
