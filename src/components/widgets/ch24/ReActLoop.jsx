@@ -343,7 +343,7 @@ const btnDisabled = {
   cursor: 'not-allowed',
 };
 
-export default function ReActLoop() {
+export default function ReActLoop({ tryThis }) {
   const [selectedTask, setSelectedTask] = useState('curie');
   // 0..N: steps shown; N+1: final answer shown
   const [shownSteps, setShownSteps] = useState(0);
@@ -400,7 +400,7 @@ export default function ReActLoop() {
   const stepsShown = Math.min(shownSteps, N);
 
   return (
-    <WidgetCard title="ReAct Loop — Thought, Action, Observation" number="17.1">
+    <WidgetCard title="ReAct Loop — Thought, Action, Observation" number="24.1" tryThis={tryThis}>
       <style>{`
         @keyframes reactSlideIn {
           from { opacity: 0; transform: translateY(-12px); }

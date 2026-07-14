@@ -43,9 +43,8 @@ const CODE_V2 = `from collections import Counter
 import re
 
 def top_n_words(text: str, n: int) -> list[tuple[str, int]]:
-    if not text:
-        return []
-    words = re.findall(r'\\b[a-z]+\\b', text.lower())
+    # [^\\W\\d_]+ matches any letter, not just ASCII a-z
+    words = re.findall(r'[^\\W\\d_]+', text.lower())
     return Counter(words).most_common(n)`;
 
 const CODE_BUGGY = `from collections import Counter
@@ -58,9 +57,9 @@ const CODE_V3 = `from collections import Counter
 import re
 
 def top_n_words(text: str, n: int) -> list[tuple[str, int]]:
-    if not text or n <= 0:
+    if n <= 0:
         return []
-    words = re.findall(r'\\b[a-z]+\\b', text.lower())
+    words = re.findall(r'[^\\W\\d_]+', text.lower())
     return Counter(words).most_common(n)`;
 
 const SCENARIOS = {
@@ -75,17 +74,17 @@ const SCENARIOS = {
       { sender: 1, receiver: 2, type: 'prose',
         message: 'Please review this implementation for correctness.' },
       { sender: 2, receiver: 1, type: 'review-rejection',
-        message: "Issue: the regex '\\b[a-z]+\\b' is applied via findall after text.lower(), so lowercasing is correct — but there is no guard for empty input. Add an explicit empty string check before findall." },
+        message: "Issue: '\\b[a-z]+\\b' only matches ASCII lowercase letters. A word with an accented character (e.g. 'café') has no [a-z]+ run bounded by \\b on both sides, so re.findall silently drops it instead of matching the ASCII part. Use a Unicode-aware word pattern." },
       { sender: 1, receiver: null, type: 'code', isRevision: true,
         message: CODE_V2 },
       { sender: 2, receiver: 3, type: 'review-approval',
-        message: 'Approved. Lowercase applied before findall. Empty string handled explicitly.' },
+        message: 'Approved. Unicode-aware pattern correctly counts accented words instead of silently dropping them.' },
       { sender: 3, receiver: null, type: 'result',
         message: `Tests passed.
 Input: 'the quick brown fox the the fox'
 top_n_words(text, 2) → [('the', 3), ('fox', 2)] ✓
-Input: ''
-top_n_words('', 3) → [] ✓
+Input: 'café naïve café résumé café'
+top_n_words(text, 2) → [('café', 3), ('naïve', 1)] ✓
 All tests pass.` },
     ],
   },
@@ -124,7 +123,7 @@ Hallucinated method call breaks the entire pipeline.` },
       { sender: 1, receiver: 2, type: 'prose',
         message: 'Please review this implementation for correctness.' },
       { sender: 2, receiver: 1, type: 'review-rejection',
-        message: 'Cycle 1/3 — Issue: missing explicit empty string guard. The function should return [] for empty input rather than relying on Counter behavior.' },
+        message: "Cycle 1/3 — Issue: '\\b[a-z]+\\b' only matches ASCII lowercase letters, so words containing accented characters are silently dropped from the count entirely. Use a Unicode-aware word pattern instead." },
       { sender: 1, receiver: null, type: 'code', isRevision: true,
         message: CODE_V2 },
       { sender: 2, receiver: 1, type: 'review-rejection',
@@ -335,7 +334,7 @@ function StatsStrip({ scenarioKey, steps, shownMessages, activeAgent, isDone }) 
   const statuses      = getAgentStatuses(shownMessages, activeAgent, scenarioKey, isDone);
   const codeRevisions = shownMessages.filter(m => m.type === 'code' && m.isRevision).length;
   const reviewCycles  = shownMessages.filter(m => m.type === 'review-rejection').length;
-  const scenarioLabel = { normal: 'Normal', hallucinated: 'Hallucinated', reviewLoop: 'Review Loop' }[scenarioKey];
+  const scenarioLabel = scenario.label;
 
   const mono  = { fontFamily: "'JetBrains Mono', monospace" };
   const lbl   = { ...mono, fontSize: '8px', color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '4px' };
@@ -427,7 +426,7 @@ const BTN_OFF = { ...BTN, opacity: 0.35, cursor: 'not-allowed' };
 
 const DOT_RESET = { show: false, x: 0, sender: null, receiver: null, color: C.accent };
 
-export default function MultiAgent() {
+export default function MultiAgent({ tryThis }) {
   const [scenarioKey,   setScenarioKey]   = useState('normal');
   const [shownMessages, setShownMessages] = useState([]);
   const [activeAgent,   setActiveAgent]   = useState(null);
@@ -582,7 +581,7 @@ export default function MultiAgent() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <WidgetCard title="Multi-Agent System — plan, code, review, execute" number="17.4">
+    <WidgetCard title="Multi-Agent System — plan, code, review, execute" number="24.4" tryThis={tryThis}>
       <style>{`
         @keyframes maSlideUp {
           from { opacity: 0; transform: translateY(8px); }

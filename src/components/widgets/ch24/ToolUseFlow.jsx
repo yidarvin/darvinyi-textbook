@@ -82,13 +82,13 @@ const SCENARIOS = {
     label: 'Web Search', toolName: 'web_search',
     query: 'What is the current population of Japan?',
     json: '{\n  "query": "current population of Japan 2024"\n}',
-    result: 'Japan population ≈ 124.5 million (2024).',
+    result: 'Japan population ≈ 123.8 million (2024).',
   },
   B: {
     label: 'Code', toolName: 'code_interpreter',
     query: 'What is 347 factorial?',
     json: '{\n  "code": "import math\\nprint(math.factorial(347))"\n}',
-    result: '5.148…×10^750 (very large number)',
+    result: '2.907…×10^732 (733-digit number)',
   },
   C: {
     label: 'Database', toolName: 'database_query',
@@ -390,7 +390,7 @@ function FlowDiagram({ animStep, jsonContent, query, result, activeToolObj }) {
   );
 }
 
-export default function ToolUseFlow() {
+export default function ToolUseFlow({ tryThis }) {
   const [scenarioKey, setScenarioKey]   = useState('A');
   const [animStep,    setAnimStep]       = useState(-1);
   const [isPlaying,   setIsPlaying]      = useState(false);
@@ -533,7 +533,7 @@ export default function ToolUseFlow() {
   const btnOff = { ...btnBase, opacity: 0.35, cursor: 'not-allowed' };
 
   return (
-    <WidgetCard title="Tool Use Flow — from query to function call to result" number="17.2">
+    <WidgetCard title="Tool Use Flow — from query to function call to result" number="24.2" tryThis={tryThis}>
 
       {/* Scenario tabs */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '10px' }}>

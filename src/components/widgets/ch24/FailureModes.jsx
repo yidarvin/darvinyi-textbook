@@ -328,8 +328,22 @@ function FailureCard({ failure, isExpanded, onToggle, expandKey }) {
 
 // ── StatsPanel ────────────────────────────────────────────────────────────────
 
+const RISK_ROW_META = {
+  critical: { risk: 'Critical', color: '#f87171' },
+  high:     { risk: 'High',     color: '#fb923c' },
+  medium:   { risk: 'Medium',   color: '#fbbf24' },
+};
+
 function StatsPanel({ expandedId }) {
   const selected = FAILURES.find(f => f.id === expandedId) || null;
+
+  // Derived from FAILURES directly, not a second hand-maintained summary,
+  // so the counts and names here can't drift out of sync with the data.
+  const byRisk = Object.keys(RISK_ORDER).map(risk => ({
+    ...RISK_ROW_META[risk],
+    count: FAILURES.filter(f => f.risk === risk).length,
+    names: FAILURES.filter(f => f.risk === risk).map(f => f.title).join(', '),
+  }));
 
   return (
     <div style={{
@@ -348,7 +362,7 @@ function StatsPanel({ expandedId }) {
         fontWeight: 500,
         lineHeight: 1,
         marginBottom: '3px',
-      }}>5</div>
+      }}>{FAILURES.length}</div>
       <div style={{
         fontFamily: "'Inter', sans-serif",
         fontSize: '9px',
@@ -368,11 +382,7 @@ function StatsPanel({ expandedId }) {
         marginBottom: '6px',
       }}>By risk level</div>
 
-      {[
-        { risk: 'Critical',  count: 1, names: 'Prompt Injection',                    color: '#f87171' },
-        { risk: 'High',      count: 2, names: 'Error Compounding, Reward Hacking',   color: '#fb923c' },
-        { risk: 'Medium',    count: 2, names: 'Infinite Loops, Context Overflow',     color: '#fbbf24' },
-      ].map(row => (
+      {byRisk.map(row => (
         <div key={row.risk} style={{ marginBottom: '7px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px' }}>
             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: '9px', color: row.color }}>{row.risk}:</span>
@@ -450,7 +460,7 @@ function StatsPanel({ expandedId }) {
         lineHeight: 1.55,
         margin: 0,
       }}>
-        "These failure modes do not occur in single-pass LLM inference. Agents introduce new risk surfaces."
+        "Most of these have no analogue in single-pass LLM inference. Prompt injection is the exception — it exists wherever untrusted text reaches a model's context; only an agent can act on it."
       </p>
     </div>
   );
@@ -458,7 +468,7 @@ function StatsPanel({ expandedId }) {
 
 // ── FailureModes (main) ───────────────────────────────────────────────────────
 
-export default function FailureModes() {
+export default function FailureModes({ tryThis }) {
   const [expandedIds, setExpandedIds] = useState(new Set());
   const [expandKeys, setExpandKeys]   = useState({});
   const [sortByRisk, setSortByRisk]   = useState(false);
@@ -511,7 +521,7 @@ export default function FailureModes() {
   };
 
   return (
-    <WidgetCard title="Agent Failure Modes — what goes wrong in the real world" number="17.5">
+    <WidgetCard title="Agent Failure Modes — what goes wrong in the real world" number="24.5" tryThis={tryThis}>
       <style>{`
         @keyframes failureTraceFadeIn {
           from { opacity: 0; transform: translateX(-4px); }

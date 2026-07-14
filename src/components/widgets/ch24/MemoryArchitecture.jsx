@@ -18,16 +18,19 @@ const C = {
   prose:     '#b8c4cc',
 };
 
+// logVal is an order-of-magnitude capacity rank (each +1 ~= 10x more capacity),
+// used by both the diagram glow ordering and CapacityChart below — kept on MEM
+// itself so the two can't drift out of sync with each other or with capStat.
 const MEM = {
   context: {
     name: 'In-Context',
     color: C.accent,
-    capacity: '128K – 1M tokens',
+    capacity: '200K – 2M tokens',
     speed: 'Instant (0ms)',
-    capStat: '128K – 1M tokens',
+    capStat: '200K – 2M tokens',
     speedStat: '0ms (already loaded)',
     persistStat: 'No (session)',
-    logVal: 0,
+    logVal: 1,
   },
   external: {
     name: 'External / Vector',
@@ -57,9 +60,12 @@ const MEM = {
     capStat: '~10K tokens',
     speedStat: '0ms (in scratchpad)',
     persistStat: 'Task only',
-    logVal: 1,
+    logVal: 0,
   },
 };
+
+// logVal -> a human-readable "order of magnitude" label for the capacity chart.
+const LOG_VAL_LABEL = { 0: '1 unit', 1: '10 units', 3: '1K units', 6: '1M units' };
 
 const SCENARIOS = {
   context: {
@@ -325,12 +331,15 @@ function DetailPanel({ active }) {
 }
 
 function CapacityChart() {
-  const entries = [
-    { key: 'context',  label: 'In-Context',       valueLabel: '1 unit',   logVal: 0 },
-    { key: 'working',  label: 'Working',           valueLabel: '10 units', logVal: 1 },
-    { key: 'episodic', label: 'Episodic',          valueLabel: '1K units', logVal: 3 },
-    { key: 'external', label: 'External / Vector', valueLabel: '1M units', logVal: 6 },
-  ];
+  // Derived from MEM's own logVal (not a second hand-maintained ranking) so
+  // this chart can't silently drift out of sync with MEM's capStat figures.
+  const order = ['context', 'working', 'episodic', 'external'];
+  const entries = order.map(key => ({
+    key,
+    label: MEM[key].name,
+    logVal: MEM[key].logVal,
+    valueLabel: LOG_VAL_LABEL[MEM[key].logVal],
+  }));
 
   return (
     <div style={{
@@ -418,7 +427,7 @@ function StatsPanel({ active }) {
 
 // ── Main component ────────────────────────────────────────────────────────────
 
-export default function MemoryArchitecture() {
+export default function MemoryArchitecture({ tryThis }) {
   const [active, setActive] = useState(null);
   const [showCap, setShowCap] = useState(false);
 
@@ -451,7 +460,7 @@ export default function MemoryArchitecture() {
   };
 
   return (
-    <WidgetCard title="Memory Architecture — four types of agent memory" number="17.3">
+    <WidgetCard title="Memory Architecture — four types of agent memory" number="24.3" tryThis={tryThis}>
       {/* Scenario tabs */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', flexWrap: 'wrap' }}>
         {Object.entries(SCENARIOS).map(([key, sc]) => (

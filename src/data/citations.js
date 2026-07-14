@@ -82,8 +82,10 @@ export const CITATIONS = {
     tag: "seminal",
   },
   "toolformer": {
+    // Author list previously dropped Hambro between Lomeli and Zettlemoyer —
+    // verified against the NeurIPS 2023 oral proceedings.
     title: "Toolformer: Language Models Can Teach Themselves to Use Tools",
-    authors: "Schick, Dwivedi-Yu, Dessì, Raileanu, Lomeli, Zettlemoyer, Cancedda, Scialom",
+    authors: "Schick, Dwivedi-Yu, Dessì, Raileanu, Lomeli, Hambro, Zettlemoyer, Cancedda, Scialom",
     venue: "NeurIPS",
     year: "2023",
     tag: "paper",

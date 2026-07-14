@@ -176,11 +176,11 @@ export default function MultiAgentTopologies() {
         </text>
         <text x={CX[0]} y={P_Y + 366} textAnchor="middle"
               fontFamily={mono} fontSize="9" fill={C.text}>
-          Claude Code · Cursor
+          coding agents often
         </text>
         <text x={CX[0]} y={P_Y + 380} textAnchor="middle"
               fontFamily={mono} fontSize="9" fill={C.text}>
-          most coding agents
+          expose this decomposition
         </text>
 
         <text x={CX[0]} y={P_Y + 414} textAnchor="middle"

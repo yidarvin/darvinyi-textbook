@@ -81,7 +81,7 @@ export default function PromptInjectionMechanism() {
         <text x="320" y="40" textAnchor="middle"
               fontFamily={sans} fontSize="10.5" fill={C.muted2}
               fontStyle="italic">
-          the failure mode unique to agents
+          not unique to agents — but only agents can act on it
         </text>
 
         {/* ── Normal setup row ── */}
