@@ -159,7 +159,7 @@ export default function RLHFThreeStep() {
         <VArrow x={P1_X + PANEL_W / 2} y1={arrowY1} y2={outBoxY} />
         <Box x={P1_X + 28} y={outBoxY} w={PANEL_W - 56} h={outBoxH} label="π_SFT" sub="SFT policy" />
         <text x={P1_X + PANEL_W / 2} y={noteY} textAnchor="middle" fontFamily={mono} fontSize="10" fill={C.muted}>
-          ~10K–1M examples
+          ~1K–100K examples
         </text>
 
         {/* ── Panel 2: Reward Model ── */}

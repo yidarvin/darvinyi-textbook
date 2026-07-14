@@ -53,15 +53,17 @@ function computeMetrics(t) {
   const fn = PROMPTS.filter((p,i) => p.truth === 'help'   && preds[i] === 'refuse').length;
   const fp = PROMPTS.filter((p,i) => p.truth === 'refuse' && preds[i] === 'help'  ).length;
   const tn = PROMPTS.filter((p,i) => p.truth === 'refuse' && preds[i] === 'refuse').length;
+  const totalHelp   = PROMPTS.filter(p => p.truth === 'help').length;
+  const totalRefuse = PROMPTS.filter(p => p.truth === 'refuse').length;
   return {
     tp, fn, fp, tn, preds,
     predHelp:     preds.filter(p => p === 'help').length,
     predRefuse:   preds.filter(p => p === 'refuse').length,
-    helpRate:     tp / 11 * 100,
-    safetyRate:   tn / 4  * 100,
-    accuracy:     (tp + tn) / 15 * 100,
-    falseRefRate: fn / 11 * 100,
-    safeFailRate: fp / 4  * 100,
+    helpRate:     tp / totalHelp * 100,
+    safetyRate:   tn / totalRefuse * 100,
+    accuracy:     (tp + tn) / PROMPTS.length * 100,
+    falseRefRate: fn / totalHelp * 100,
+    safeFailRate: fp / totalRefuse * 100,
   };
 }
 
@@ -95,7 +97,7 @@ function SectionLabel({ children }) {
   );
 }
 
-export default function SafetyRefusal() {
+export default function SafetyRefusal({ tryThis }) {
   const [threshold, setThreshold]     = useState(5.0);
   const [hoveredIdx, setHoveredIdx]   = useState(null);
   const [tooltipPos, setTooltipPos]   = useState({ x: 0, y: 0 });
@@ -381,7 +383,7 @@ export default function SafetyRefusal() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <WidgetCard title="Safety & Refusal Training — calibrating the decision boundary" number="10.6">
+    <WidgetCard title="Safety & Refusal Training — calibrating the decision boundary" number="13.6" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
 
         {/* ── Left: scatter + controls ── */}

@@ -21,8 +21,8 @@ const C = {
 const HAS_LOSS = {
   user_text:         false,
   user_delim:        false,
-  assistant_delim:   true,
-  tool_use_delim:    true,
+  assistant_delim:   false,
+  tool_use_delim:    false,
   tool_use_json:     true,
   tool_result_delim: false,
   tool_result_json:  false,
@@ -300,7 +300,7 @@ function TurnGroup({ label, lossOn, chunks, showLoss }) {
   );
 }
 
-export default function ToolCallingTraining() {
+export default function ToolCallingTraining({ tryThis }) {
   const [preset, setPreset] = useState('weather');
   const [showLoss, setShowLoss] = useState(true);
   const [showAnatomy, setShowAnatomy] = useState(true);
@@ -320,7 +320,7 @@ export default function ToolCallingTraining() {
   };
 
   return (
-    <WidgetCard title="Tool Calling Training — teaching the model to emit function calls" number="10.5">
+    <WidgetCard title="Tool Calling Training — teaching the model to emit function calls" number="13.5" tryThis={tryThis}>
 
       {/* Preset tabs */}
       <div style={{ display: 'flex', gap: 0, marginBottom: '16px', borderBottom: `1px solid ${C.border}` }}>
@@ -628,7 +628,7 @@ export default function ToolCallingTraining() {
             50–500 distinct tools<br />
             error handling + negative examples<br />
             <span style={{ color: C.mid, fontSize: '8px', fontStyle: 'italic' }}>
-              Ch17 W17.2 shows runtime tool use.
+              Chapter 24 covers tool use at runtime.
             </span>
           </div>
         </div>

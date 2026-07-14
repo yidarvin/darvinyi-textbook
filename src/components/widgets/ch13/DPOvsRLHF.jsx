@@ -30,6 +30,14 @@ const TINT = {
 };
 
 // Precomputed walkthrough numbers (one preference pair example).
+// Loss is derived live from beta/deltaW/deltaL so the displayed number can
+// never drift from the formula the widget walks the reader through.
+const DPO_BETA = 0.1;
+const DPO_DELTA_W = 0.5;
+const DPO_DELTA_L = -1.6;
+const DPO_SIG_INNER = DPO_BETA * (DPO_DELTA_W - DPO_DELTA_L); // β · (Δw − Δl)
+const DPO_LOSS = -Math.log(1 / (1 + Math.exp(-DPO_SIG_INNER))); // −log σ(·)
+
 const EX = {
   prompt: 'Explain why the sky is blue.',
   chosen: 'Sunlight is scattered by air molecules. Shorter blue wavelengths scatter more than red, so blue light dominates the sky’s color.',
@@ -38,16 +46,15 @@ const EX = {
   logTheta_l:  -12.4,
   logRef_w:    -8.7,
   logRef_l:    -10.8,
-  beta:        0.1,
-  // β(Δw - Δl) = 0.1 · 2.1 = 0.21, σ(0.21) ≈ 0.5523, spec target 0.601
-  deltaW:      0.5,
-  deltaL:      -1.6,
-  loss:        0.601,
-  sigInner:    0.21,
+  beta:        DPO_BETA,
+  deltaW:      DPO_DELTA_W,
+  deltaL:      DPO_DELTA_L,
+  loss:        DPO_LOSS,
+  sigInner:    DPO_SIG_INNER,
 };
 
 const BAR_ROWS = [
-  { label: 'Models needed',   rlhf: 100, dpo: 67,  rlhfText: '3  (π_θ, π_ref, R_φ)',  dpoText: '2  (π_θ, π_ref)' },
+  { label: 'Models needed',   rlhf: 100, dpo: 67,  rlhfText: '3  (π_θ, π_ref, r_φ)',  dpoText: '2  (π_θ, π_ref)' },
   { label: 'Training stages', rlhf: 100, dpo: 67,  rlhfText: '3  (SFT, RM, PPO)',     dpoText: '2  (SFT, DPO)' },
   { label: 'Compute cost',    rlhf: 100, dpo: 40,  rlhfText: 'High  (rollouts/step)', dpoText: 'Moderate' },
   { label: 'Stability',       rlhf: 50,  dpo: 88,  rlhfText: 'Sensitive  (PPO ~10 hp)', dpoText: 'Stable  (β only)' },
@@ -218,7 +225,7 @@ function ArchDiagram() {
         <text x={cxL} y={41}
               fontFamily="'JetBrains Mono', monospace"
               fontSize="9.5" fill={C.red} textAnchor="middle">
-          3 models in memory: π_θ, π_ref, R_φ
+          3 models in memory: π_θ, π_ref, r_φ
         </text>
         <text x={cxL} y={56}
               fontFamily="'Inter', sans-serif"
@@ -258,12 +265,12 @@ function ArchDiagram() {
         {/* Reward Model */}
         <Box cx={cxL} cy={206} w={160} h={26}
              fill={TINT.orange} stroke={C.orange} strokeW={1.3}
-             label="Reward Model  R_φ" labelColor={C.orange} labelSize={11.5} labelWeight="600" />
+             label="Reward Model  r_φ" labelColor={C.orange} labelSize={11.5} labelWeight="600" />
         <Arrow x1={cxL} y1={219} x2={cxL} y2={244} color={C.orange} markerId="ah-orange" />
         <text x={cxL + 8} y={234}
               fontFamily="'JetBrains Mono', monospace" fontSize="10"
               fill={C.orange}>
-          R(y)
+          r_φ(y)
         </text>
 
         {/* PPO Objective */}
@@ -278,7 +285,7 @@ function ArchDiagram() {
           <text x={cxL} y={275}
                 fontFamily="'JetBrains Mono', monospace" fontSize="9.5"
                 fill={C.purple} textAnchor="middle">
-            max  E[R(y)] − β·KL(π_θ ‖ π_ref)
+            max  E[r_φ] − β·KL(π_θ ‖ π_ref)
           </text>
           <text x={cxL} y={287}
                 fontFamily="'Inter', sans-serif" fontSize="9"
@@ -823,7 +830,7 @@ function Walkthrough({ step, showRLHFExpansion }) {
               <div style={{ color: C.muted }}>β = {EX.beta}    (typical value)</div>
               <div>L = −log σ( β · ( Δw − Δl ) )</div>
               <div>&nbsp;&nbsp;&nbsp;= −log σ( 0.1 · ( 0.5 − (−1.6) ) )</div>
-              <div>&nbsp;&nbsp;&nbsp;= −log σ( {EX.sigInner} )</div>
+              <div>&nbsp;&nbsp;&nbsp;= −log σ( {EX.sigInner.toFixed(2)} )</div>
               <div>&nbsp;&nbsp;&nbsp;= <span style={{ color: C.green, fontWeight: 600, fontSize: '14px' }}>{EX.loss.toFixed(3)}</span></div>
             </div>
             <p style={{
@@ -854,10 +861,10 @@ function Walkthrough({ step, showRLHFExpansion }) {
                   paddingLeft: '20px',
                   margin: 0,
                 }}>
-                  <li>Train a reward model R_φ on the preference dataset.</li>
+                  <li>Train a reward model r_φ on the preference dataset.</li>
                   <li>Sample new responses y from π_θ (rollouts at every step).</li>
-                  <li>Score with R_φ(y). Estimate KL against π_ref.</li>
-                  <li>PPO clipped-policy update toward higher R, subject to KL.</li>
+                  <li>Score with r_φ(y). Estimate KL against π_ref.</li>
+                  <li>PPO clipped-policy update toward higher r_φ, subject to KL.</li>
                 </ol>
                 <p style={{
                   fontFamily: "'Inter', sans-serif",
@@ -944,7 +951,7 @@ function StatsStrip({ step, stat }) {
             </span>
             {' '}— default for most preference tuning. Used by most open-weight chat models.
           </div>
-          <div>
+          <div style={{ marginBottom: '8px' }}>
             <span style={{
               fontFamily: "'JetBrains Mono', monospace",
               color: C.orange,
@@ -954,6 +961,19 @@ function StatsStrip({ step, stat }) {
               RLHF
             </span>
             {' '}— iterative loops where the reward model is reused, or very large datasets.
+          </div>
+          <div>
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              color: C.purple,
+              fontWeight: 600,
+              fontSize: '10.5px',
+            }}>
+              RLVR / GRPO
+            </span>
+            {' '}— neither: reasoning-heavy domains (math, code) now train frontier
+            models with RL against verifiable rewards. See Reasoning Models &amp; Test-Time
+            Compute for RLVR/GRPO details.
           </div>
         </div>
       </div>
@@ -994,7 +1014,7 @@ function StatsStrip({ step, stat }) {
    Main component
    ─────────────────────────────────────────────────────────── */
 
-export default function DPOvsRLHF() {
+export default function DPOvsRLHF({ tryThis }) {
   const [step, setStep] = useState(1);
   const [showRLHF, setShowRLHF] = useState(false);
   const [showBars, setShowBars] = useState(true);
@@ -1014,7 +1034,8 @@ export default function DPOvsRLHF() {
   return (
     <WidgetCard
       title="DPO vs RLHF — direct preference optimization vs reward modeling"
-      number="10.3"
+      number="13.3"
+      tryThis={tryThis}
     >
       {/* Architecture diagrams — full width */}
       <div style={{

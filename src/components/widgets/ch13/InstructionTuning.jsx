@@ -155,7 +155,7 @@ function TokenChip({ token, index, loss, showMarkers, onEnter, onLeave }) {
     }),
   };
 
-  const showBadge = showMarkers && (type === 'user' || type === 'response');
+  const showBadge = showMarkers && (type === 'user' || type === 'delim' || type === 'response');
 
   return (
     <div
@@ -185,7 +185,7 @@ function TokenChip({ token, index, loss, showMarkers, onEnter, onLeave }) {
   );
 }
 
-export default function InstructionTuning() {
+export default function InstructionTuning({ tryThis }) {
   const [preset, setPreset] = useState('arithmetic');
   const [showMarkers, setShowMarkers] = useState(true);
   const [showBars, setShowBars] = useState(true);
@@ -276,7 +276,7 @@ export default function InstructionTuning() {
     ctx.font      = `400 9px 'JetBrains Mono', monospace`;
     ctx.fillStyle = C.mid;
     ctx.textAlign = 'left';
-    ctx.fillText('L_SFT =', padL + chartW + 8, midY - 5);
+    ctx.fillText('Sim. L_SFT =', padL + chartW + 8, midY - 5);
     ctx.font      = `600 13px 'JetBrains Mono', monospace`;
     ctx.fillStyle = C.accent;
     ctx.fillText(stats.totalLoss.toFixed(2), padL + chartW + 8, midY + 10);
@@ -333,7 +333,7 @@ export default function InstructionTuning() {
   });
 
   return (
-    <WidgetCard title="Instruction Tuning — loss masking and behavior change" number="10.2">
+    <WidgetCard title="Instruction Tuning — loss masking and behavior change" number="13.2" tryThis={tryThis}>
       {/* Preset tabs */}
       <div style={{
         display: 'flex',

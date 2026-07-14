@@ -169,7 +169,7 @@ export default function BaseVsSFTBehavior() {
           fontSize="11"
           fill={C.muted}
         >
-          SFT data: ~1K (LIMA) to ~1M (LLaMA-2) curated (instruction, response) pairs
+          SFT data: ~1K (LIMA) to ~28K (Llama 2) curated (instruction, response) pairs
         </text>
       </svg>
 

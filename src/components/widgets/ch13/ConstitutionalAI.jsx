@@ -157,7 +157,7 @@ function StripCell({ label, value, color, wide }) {
   );
 }
 
-export default function ConstitutionalAI() {
+export default function ConstitutionalAI({ tryThis }) {
   const [preset, setPreset]                     = useState('helpful');
   const [currentPhase, setCurrentPhase]         = useState(0);
   const [revealedCells, setRevealedCells]       = useState(new Set());
@@ -231,7 +231,7 @@ export default function ConstitutionalAI() {
   }
 
   return (
-    <WidgetCard title="Constitutional AI — self-critique and revision" number="10.4">
+    <WidgetCard title="Constitutional AI — self-critique and revision" number="13.4" tryThis={tryThis}>
       {/* Preset tabs */}
       <div style={{ display: 'flex', gap: 0, marginBottom: '12px', borderBottom: `1px solid ${C.border}` }}>
         {Object.entries(PRESETS).map(([key, pd]) => {

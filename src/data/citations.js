@@ -90,7 +90,7 @@ export const CITATIONS = {
   },
   "constitutional-ai": {
     title: "Constitutional AI: Harmlessness from AI Feedback",
-    authors: "Bai, Jones, Ndousse, Askell, Chen, DasSarma, Drain, Fort, Ganguli, Henighan, Joseph, Kadavath, Kernion, Conerly, El-Showk, Elhage, Hatfield-Dodds, Hernandez, Hume, Johnston, Kravec, Lovitt, Nanda, Olsson, Amodei, Brown, Clark, McCandlish, Olah, Mann, Kaplan",
+    authors: "Bai, Kadavath, Kundu, Askell, Kernion, Jones, Chen, Goldie, Mirhoseini, McKinnon, et al.",
     venue: "arXiv",
     year: "2022",
     tag: "seminal",
@@ -146,6 +146,25 @@ export const CITATIONS = {
     venue: "PNAS",
     year: "2019",
     tag: "seminal",
+  },
+  "deepseek-r1": {
+    // Previously an inline object in ch12 only; now also cited in ch13
+    // (Reasoning Models & Test-Time Compute), so consolidated here per the
+    // llama2/dpo entries' precedent.
+    title: "DeepSeek-R1 Incentivizes Reasoning in LLMs through Reinforcement Learning",
+    authors: "Guo, Yang, Zhang, Song, Wang, Zhu, Xu, Zhang, Ma, Bi, Zhang, Yu, Wu, Wu, Gou, et al.",
+    venue: "Nature",
+    year: "2025",
+    tag: "paper",
+  },
+  "deepseekmath": {
+    // Introduces GRPO (Group Relative Policy Optimization). Previously an
+    // inline object in ch12 only; now also cited in ch13 — consolidated here.
+    title: "DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models",
+    authors: "Shao, Wang, Zhu, Xu, Song, Bi, Zhang, Zhang, Li, Wu, Guo, et al.",
+    venue: "arXiv",
+    year: "2024",
+    tag: "paper",
   },
 };
 

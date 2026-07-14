@@ -79,7 +79,7 @@ const STAGE_DETAILS = [
     dataLabel: '(prompt, chosen, rejected) triples',
     volume: '10K-500K comparisons',
     objective: 'DPO: -log σ(β·[log π/π_ref(y_w) - log π/π_ref(y_l)])',
-    objNote: 'or RLHF: max E[R_φ(y)] - β·KL(π||π_SFT)',
+    objNote: 'or RLHF: max E[R_φ(y)] - β·KL(π||π_ref)',
     behaviors: [
       'Strongly preferred over SFT in human evals',
       'Better helpfulness, style, conciseness',
@@ -142,7 +142,7 @@ function Arrow({ x1, x2, y, color, width }) {
 
 
 // ── Main component ────────────────────────────────────────────────────────────
-export default function TrainingPipeline() {
+export default function TrainingPipeline({ tryThis }) {
   const [currentStage,    setCurrentStage]    = useState(0);
   const [promptType,      setPromptType]      = useState('benign');
   const [isAnimating,     setIsAnimating]     = useState(false);
@@ -344,7 +344,7 @@ export default function TrainingPipeline() {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <WidgetCard title="Training Pipeline — from base model to aligned assistant" number="10.1">
+    <WidgetCard title="Training Pipeline — from base model to aligned assistant" number="13.1" tryThis={tryThis}>
 
       {/* ── Prompt tabs + typing toggle ─── */}
       <div style={{ display: 'flex', gap: '6px', marginBottom: '14px', alignItems: 'center' }}>
