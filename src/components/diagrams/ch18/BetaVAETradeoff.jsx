@@ -18,13 +18,16 @@ const PX_R = 560;   // right x
 const PY_T = 60;    // top y
 const PY_B = 230;   // bottom y (axis)
 
-// β ticks (linear in plot space, labeled with the actual values)
+// β ticks — linear 0..5, matching the ELBODecomposition widget's slider
+// range (that widget's peak-quality β=2.0 and collapse-onset β=4.5 are the
+// numbers this diagram's curve/region positions below are keyed to).
 const BETA_TICKS = [
-  { label: '0.5',  pos: 0.00 },
-  { label: '1',    pos: 0.18 },
-  { label: '5',    pos: 0.42 },
-  { label: '10',   pos: 0.58 },
-  { label: '100',  pos: 1.00 },
+  { label: '0',  pos: 0.00 },
+  { label: '1',  pos: 0.20 },
+  { label: '2',  pos: 0.40 },
+  { label: '3',  pos: 0.60 },
+  { label: '4',  pos: 0.80 },
+  { label: '5',  pos: 1.00 },
 ];
 
 // Map fractional position (0..1) to plot x
@@ -35,29 +38,32 @@ const Y = (frac) => PY_B - frac * (PY_B - PY_T);
 // Reconstruction curve points (decreasing): list of [frac_x, frac_quality]
 const RECON_PTS = [
   [0.00, 0.92],
-  [0.10, 0.90],
-  [0.18, 0.87],
-  [0.30, 0.78],
-  [0.42, 0.66],
-  [0.50, 0.55],
-  [0.58, 0.45],
-  [0.70, 0.30],
-  [0.85, 0.18],
+  [0.10, 0.87],
+  [0.20, 0.80],
+  [0.30, 0.72],
+  [0.40, 0.63],
+  [0.50, 0.54],
+  [0.60, 0.45],
+  [0.70, 0.36],
+  [0.80, 0.27],
+  [0.90, 0.18],
   [1.00, 0.10],
 ];
 
-// Disentanglement curve (rise then fall, peak around β=4–10)
+// Disentanglement curve (rise then fall, peak at β=2 — matches the
+// ELBODecomposition widget's QUALITY_FALL_PEAK=2.0)
 const DIS_PTS = [
   [0.00, 0.10],
-  [0.10, 0.18],
-  [0.18, 0.32],
-  [0.30, 0.55],
-  [0.42, 0.78],
-  [0.50, 0.84],
-  [0.58, 0.78],
-  [0.70, 0.55],
-  [0.85, 0.28],
-  [1.00, 0.12],
+  [0.10, 0.22],
+  [0.20, 0.42],
+  [0.30, 0.68],
+  [0.40, 0.86],
+  [0.50, 0.78],
+  [0.60, 0.55],
+  [0.70, 0.32],
+  [0.80, 0.15],
+  [0.90, 0.06],
+  [1.00, 0.02],
 ];
 
 function smoothPath(pts) {
@@ -78,11 +84,11 @@ function smoothPath(pts) {
 export default function BetaVAETradeoff() {
   // Region band x ranges (fractional)
   const REGIONS = [
-    { x0: 0.00, x1: 0.16, label: 'under-regularized',  sub: 'entangled, sharp',
+    { x0: 0.00, x1: 0.30, label: 'under-regularized',  sub: 'entangled, sharp',
       fill: 'rgba(255,255,255,0.025)' },
-    { x0: 0.30, x1: 0.62, label: 'sweet spot',          sub: 'disentangled, usable',
+    { x0: 0.30, x1: 0.90, label: 'sweet spot',          sub: 'disentangled, usable',
       fill: 'rgba(45,212,191,0.10)', highlight: true },
-    { x0: 0.78, x1: 1.00, label: 'over-regularized',   sub: 'posterior collapse',
+    { x0: 0.90, x1: 1.00, label: 'over-regularized',   sub: 'posterior collapse',
       fill: 'rgba(248,113,113,0.06)' },
   ];
 
@@ -208,15 +214,15 @@ export default function BetaVAETradeoff() {
               fill="none" stroke={C.accent} strokeWidth="1.7" />
 
         {/* peak marker */}
-        <circle cx={X(0.50)} cy={Y(0.84)} r="3.2"
+        <circle cx={X(0.40)} cy={Y(0.86)} r="3.2"
                 fill={C.accent} />
-        <line x1={X(0.50)} y1={Y(0.84) - 6}
-              x2={X(0.50) + 30} y2={Y(0.84) - 30}
+        <line x1={X(0.40)} y1={Y(0.86) - 6}
+              x2={X(0.40) + 30} y2={Y(0.86) - 30}
               stroke={C.accent} strokeWidth="0.9"
               strokeDasharray="2 3" />
-        <text x={X(0.50) + 34} y={Y(0.84) - 30}
+        <text x={X(0.40) + 34} y={Y(0.86) - 30}
               fontFamily={mono} fontSize="10" fill={C.accent}>
-          peak ≈ β 4–10
+          peak ≈ β 2
         </text>
 
         {/* ── Legend (top-left, inside plot) ──────────── */}

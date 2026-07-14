@@ -260,6 +260,25 @@ export const CITATIONS = {
     year: "2023",
     tag: "paper",
   },
+
+  // ── ch18 Variational Autoencoders / ch20 Diffusion Models ─────────────────
+  // Both papers are widely referenced concepts likely to be cited by future
+  // chapters as well (discrete tokenization, latent-space diffusion) —
+  // promoted here rather than kept as chapter-local inline objects.
+  "latent-diffusion": {
+    title: "High-Resolution Image Synthesis with Latent Diffusion Models",
+    authors: "Rombach, Blattmann, Lorenz, Esser, Ommer",
+    venue: "CVPR",
+    year: "2022",
+    tag: "paper",
+  },
+  "vq-vae": {
+    title: "Neural Discrete Representation Learning",
+    authors: "van den Oord, Vinyals, Kavukcuoglu",
+    venue: "NeurIPS",
+    year: "2017",
+    tag: "paper",
+  },
 };
 
 // Build a chapter's numbered citation list from an ordered array of entries.

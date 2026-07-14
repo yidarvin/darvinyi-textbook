@@ -60,7 +60,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | C13 | Ch13 LLM Training & Alignment — deep pass + Reasoning/Test-Time-Compute section (Appendix A: ch10→13) | DONE |
 | C15 | Ch15 Multimodal Networks — deep pass + Audio-as-a-Modality section (Appendix A: ch11→15) | DONE |
 | C16 | Ch16 Graph Neural Networks — deep pass (Appendix A: ch13→16) | DONE |
-| C18 | Ch18 Variational Autoencoders — deep pass (Appendix A: ch16→18) | PENDING |
+| C18 | Ch18 Variational Autoencoders — deep pass (Appendix A: ch16→18) | DONE |
 | C19 | Ch19 GANs & Image-to-Image — merge old ch17+ch18, deep pass (Appendix A: ch17→19, ch18) | PENDING |
 | C20 | Ch20 Diffusion Models — deep pass + video/world-models closing section (Appendix A: ch19→20) | PENDING |
 | C21 | Ch21 Datasets & Benchmarks — deep pass (Appendix A: ch20→21) | PENDING |

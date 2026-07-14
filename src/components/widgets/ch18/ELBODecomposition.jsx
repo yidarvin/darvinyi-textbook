@@ -27,7 +27,22 @@ const calcRecon      = b => BASE_RECON * (1 + b * 0.35);
 const calcKL         = b => BASE_KL * Math.exp(-b * 0.45);
 const calcWeightedKL = b => b * calcKL(b);
 const calcTotal      = b => calcRecon(b) + calcWeightedKL(b);
-const calcQuality    = b => 1 - Math.exp(-b * 0.7);
+
+// Latent space quality is an inverted-U, not a monotonic climb: it rises as
+// beta first introduces useful regularization, then falls once beta pushes
+// past the sweet spot and the model starts trading the latent code away for
+// a cheaper KL — i.e. posterior collapse. Quality must read low/red in
+// exactly the regime getRegime below labels "collapse", never high/green.
+const QUALITY_RISE_TAU  = 0.6;  // how fast quality climbs from beta=0
+const QUALITY_FALL_PEAK = 2.0;  // beta beyond which quality starts declining
+const QUALITY_FALL_SIGMA = 1.8; // how sharply it declines past the peak
+const calcQuality = b => {
+  const rise = 1 - Math.exp(-b / QUALITY_RISE_TAU);
+  const fall = b <= QUALITY_FALL_PEAK
+    ? 1
+    : Math.exp(-((b - QUALITY_FALL_PEAK) ** 2) / (2 * QUALITY_FALL_SIGMA ** 2));
+  return Math.max(0, rise * fall);
+};
 
 const BETAS   = [0, 0.5, 1, 2, 3, 4, 5];
 const BAR_W   = 36;
@@ -41,18 +56,22 @@ function lerpColor(c1, c2, t) {
   return `rgb(${Math.round(c1[0] + (c2[0] - c1[0]) * t)},${Math.round(c1[1] + (c2[1] - c1[1]) * t)},${Math.round(c1[2] + (c2[2] - c1[2]) * t)})`;
 }
 
+// Thresholds align with the preset buttons below: beta=4 is still labeled
+// "beta-VAE" there, so the collapse regime must start above it (4.5), not
+// below it — otherwise the preset's own label and the computed regime
+// contradict each other at the same beta value.
 function getRegime(b) {
   if (b < 0.1) return 'AE';
   if (b < 1.5) return 'VAE';
-  if (b < 3.5) return 'beta-VAE';
+  if (b < 4.5) return 'beta-VAE';
   return 'collapse';
 }
 
 function getRegimeDesc(b) {
   if (b < 0.1) return 'Autoencoder — no regularization. Latent space unstructured.';
   if (b < 1.5) return 'VAE regime — balanced reconstruction and regularity.';
-  if (b < 3.5) return 'beta-VAE — increased compression, possible disentanglement.';
-  return 'High beta — posterior collapse risk. Decoder ignores latent code.';
+  if (b < 4.5) return 'beta-VAE — increased compression, possible disentanglement.';
+  return 'High beta — posterior collapse. Decoder ignores latent code.';
 }
 
 const PRESETS = [
@@ -85,7 +104,7 @@ function Div() {
   return <div style={{ width: 1, background: C.border, alignSelf: 'stretch', margin: '0 10px', flexShrink: 0 }} />;
 }
 
-export default function ELBODecomposition() {
+export default function ELBODecomposition({ tryThis }) {
   const [beta, setBeta]           = useState(1.0);
   const [animating, setAnimating] = useState(false);
   const canvasRef                 = useRef(null);
@@ -203,7 +222,7 @@ export default function ELBODecomposition() {
       ctx.fillStyle = C.orange;
       ctx.fillRect(x, baseY - rh - klh, barW, klh);
 
-      const reg = b === 0 ? 'AE' : b === 1 ? 'VAE' : b >= 4 ? 'β-VAE' : '';
+      const reg = b === 0 ? 'AE' : b === 1 ? 'VAE' : b === 4 ? 'β-VAE' : b === 5 ? 'collapse' : '';
       if (reg) {
         ctx.font = `8px ${sans}`;
         ctx.fillStyle = 'rgba(136,136,136,0.5)';
@@ -248,7 +267,7 @@ export default function ELBODecomposition() {
   const activePreset = PRESETS.findIndex(p => Math.abs(p.value - beta) < 0.001);
 
   return (
-    <WidgetCard title="ELBO Decomposition — reconstruction vs KL tradeoff" number="11.4">
+    <WidgetCard title="ELBO Decomposition — reconstruction vs KL tradeoff" number="18.4" tryThis={tryThis}>
 
       {/* ── Chart + right panel, both pinned to CHART_H ──────────────────────── */}
       <div style={{ display: 'flex', gap: 12, height: CHART_H }}>

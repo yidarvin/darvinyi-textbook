@@ -33,8 +33,11 @@ for (let i = 0; i < 7; i++)
 function gx(i) { return PAD + i * SPACING; }
 function gy(j) { return PAD + j * SPACING; }
 function latZ1(i) { return (i - 3) / 3.0; }
-function latZ2(j) { return (j - 3) / 3.0; }
+// z2 increases upward on screen (j=0, top row → z2=+1) so the "z2 →" axis
+// arrow, rotated to point up, correctly reads "arrow points toward increasing z2".
+function latZ2(j) { return (3 - j) / 3.0; }
 function lerp(a, b, t) { return a + (b - a) * t; }
+function clamp01(v) { return Math.max(0, Math.min(1, v)); }
 
 function shapeColor(z1, z2) {
   const h = Math.round(180 + z1 * 60 + z2 * 30);
@@ -43,37 +46,72 @@ function shapeColor(z1, z2) {
   return `hsl(${h}, ${s}%, ${l}%)`;
 }
 
-function triPoints(cx, cy, r, angleDeg) {
-  return [0, 1, 2].map(k => {
-    const a = (90 + k * 120 + angleDeg) * Math.PI / 180;
-    return `${(cx + r * Math.cos(a)).toFixed(2)},${(cy - r * Math.sin(a)).toFixed(2)}`;
-  }).join(' ');
+// Polar point in the same convention as the rest of the file: angle 0 points
+// right, increasing angle sweeps counterclockwise on screen (SVG is y-down).
+function polar(cx, cy, r, angleDeg) {
+  const a = angleDeg * Math.PI / 180;
+  return [cx + r * Math.cos(a), cy - r * Math.sin(a)];
 }
 
+// The decoded shape morphs continuously along two independent axes rather
+// than switching between discrete SVG element types:
+//  - roundAmount: 1 at z1 <= -1/3 (a full circle), falling to 0 by z1 = 0
+//    (a sharp square) — rendered as a single rounded-rect whose corner
+//    radius sweeps from "fully rounded" to "sharp".
+//  - pinchAmount: 0 at z1 <= 0 (the same sharp square), rising to 1 by
+//    z1 = 1/3 (a triangle) — rendered by sliding one corner of that square
+//    onto its neighbor, so the polygon never changes vertex count mid-morph.
+// The two ranges don't overlap, and both branches agree exactly at z1 = 0,
+// so the rendered outline is continuous across the whole z1 sweep.
 function getShapeProps(z1, z2) {
-  const shapeType = z1 < -0.33 ? 'circle' : z1 < 0.33 ? 'square' : 'triangle';
+  const roundAmount = clamp01(-3 * z1);
+  const pinchAmount = clamp01(3 * z1);
   const size = 30 + 35 * (Math.abs(z1) + Math.abs(z2)) / 2;
   const angle = z2 * 90;
   const color = shapeColor(z1, z2);
-  const fillStyle = z1 + z2 > 0.6 ? 'solid' : z1 + z2 < -0.6 ? 'outline' : 'semi';
-  return { shapeType, size, angle, color, fillStyle };
+  const fillOpacity = clamp01((z1 + z2 + 0.6) / 1.2);
+  // Human-readable labels for the stats panel only — purely descriptive,
+  // they don't drive any rendering decision above.
+  const shapeLabel = z1 < -0.33 ? 'circle' : z1 < 0.33 ? 'square' : 'triangle';
+  const fillLabel  = fillOpacity > 0.66 ? 'solid' : fillOpacity < 0.33 ? 'outline' : 'semi';
+  return { roundAmount, pinchAmount, size, angle, color, fillOpacity, shapeLabel, fillLabel };
 }
 
 function ShapeEl({ z1, z2, cx = 80, cy = 80, r: rOverride }) {
-  const { shapeType, size, angle, color, fillStyle } = getShapeProps(z1, z2);
+  const { roundAmount, pinchAmount, size, angle, color, fillOpacity } = getShapeProps(z1, z2);
   const r = rOverride ?? size;
-  let fill = color, stroke = 'none', sw = 0, opacity = 1;
-  if (fillStyle === 'outline') { fill = 'none'; stroke = color; sw = rOverride ? 1.5 : 2; }
-  else if (fillStyle === 'semi') { opacity = 0.5; }
+  const sw = rOverride ? 1.2 : 1.5;
   const tf = `rotate(${angle}, ${cx}, ${cy})`;
 
-  if (shapeType === 'circle') {
-    return <circle cx={cx} cy={cy} r={r} fill={fill} fillOpacity={opacity} stroke={stroke} strokeWidth={sw} transform={tf} />;
-  } else if (shapeType === 'square') {
-    return <rect x={cx - r} y={cy - r} width={r * 2} height={r * 2} fill={fill} fillOpacity={opacity} stroke={stroke} strokeWidth={sw} transform={tf} />;
-  } else {
-    return <polygon points={triPoints(cx, cy, r, angle)} fill={fill} fillOpacity={opacity} stroke={stroke} strokeWidth={sw} />;
+  if (pinchAmount <= 0) {
+    // Circle ↔ square: a rounded rect whose corner radius runs from 0 (a
+    // sharp square) to halfSide (a perfect circle) as roundAmount → 1.
+    const halfSide = r / Math.SQRT2;
+    const cr = roundAmount * halfSide;
+    return (
+      <rect x={cx - halfSide} y={cy - halfSide} width={halfSide * 2} height={halfSide * 2}
+        rx={cr} ry={cr}
+        fill={color} fillOpacity={fillOpacity} stroke={color} strokeOpacity={0.9} strokeWidth={sw}
+        transform={tf} />
+    );
   }
+
+  // Square ↔ triangle: pinch one corner of the same square onto its
+  // neighbor. At pinchAmount = 1 the pinched vertex exactly coincides with
+  // its neighbor, so the quadrilateral renders identically to a triangle.
+  const p1 = polar(cx, cy, r, 45);
+  const p2 = polar(cx, cy, r, 135);
+  const p3 = polar(cx, cy, r, 225);
+  const p4 = polar(cx, cy, r, 315);
+  const p4x = p4[0] + (p1[0] - p4[0]) * pinchAmount;
+  const p4y = p4[1] + (p1[1] - p4[1]) * pinchAmount;
+  const points = [p1, p2, p3, [p4x, p4y]]
+    .map(([x, y]) => `${x.toFixed(2)},${y.toFixed(2)}`).join(' ');
+  return (
+    <polygon points={points}
+      fill={color} fillOpacity={fillOpacity} stroke={color} strokeOpacity={0.9} strokeWidth={sw}
+      transform={tf} />
+  );
 }
 
 function StatRow({ label, value, color }) {
@@ -111,7 +149,7 @@ function Toggle({ label, on, onChange }) {
 
 const PATH_TS = [0, 0.25, 0.5, 0.75, 1.0];
 
-export default function LatentSpaceExplorer() {
+export default function LatentSpaceExplorer({ tryThis }) {
   const [hovered, setHovered]           = useState(null);
   const [mode, setMode]                 = useState('hover');
   const [pointA, setPointA]             = useState(null);
@@ -164,7 +202,7 @@ export default function LatentSpaceExplorer() {
   }
 
   return (
-    <WidgetCard title="Latent Space Explorer — hover to decode, drag to interpolate" number="11.2">
+    <WidgetCard title="Latent Space Explorer — hover to decode, drag to interpolate" number="18.3" tryThis={tryThis}>
       <div style={{ display: 'flex', gap: 0 }}>
 
         {/* ── Grid SVG ── */}
@@ -271,7 +309,8 @@ export default function LatentSpaceExplorer() {
               );
             })}
 
-            {/* Axis labels */}
+            {/* Axis labels — both arrows point toward increasing value:
+                z1 increases rightward, z2 increases upward (top row = +1). */}
             <text x={GW / 2} y={GH - 5} textAnchor="middle"
               fontSize={10} fill={C.textMuted} fontFamily={inter}>
               z1 →
@@ -281,10 +320,16 @@ export default function LatentSpaceExplorer() {
               transform={`rotate(-90, 10, ${GH / 2})`}>
               z2 →
             </text>
+            {/* z1 ticks, bottom edge, left-to-right = -1 to +1 */}
             <text x={gx(0)} y={gy(6) + 16} textAnchor="middle"
               fontSize={8} fill={C.textMuted} fontFamily={mono}>-1</text>
-            <text x={gx(6)} y={gy(0) - 8} textAnchor="middle"
+            <text x={gx(6)} y={gy(6) + 16} textAnchor="middle"
               fontSize={8} fill={C.textMuted} fontFamily={mono}>+1</text>
+            {/* z2 ticks, left edge, top-to-bottom = +1 to -1 */}
+            <text x={20} y={gy(0) + 3} textAnchor="end"
+              fontSize={8} fill={C.textMuted} fontFamily={mono}>+1</text>
+            <text x={20} y={gy(6) + 3} textAnchor="end"
+              fontSize={8} fill={C.textMuted} fontFamily={mono}>-1</text>
           </svg>
         </div>
 
@@ -302,7 +347,7 @@ export default function LatentSpaceExplorer() {
                 z1 = {dz1.toFixed(2)}  z2 = {dz2.toFixed(2)}
               </div>
               <div style={{ fontFamily: inter, fontSize: 11, color: C.textMid, textAlign: 'center' }}>
-                {shapeProps.shapeType}
+                {shapeProps.shapeLabel}
               </div>
 
               {/* Shape canvas */}
@@ -321,10 +366,10 @@ export default function LatentSpaceExplorer() {
               }}>
                 <StatRow label="z1"       value={dz1.toFixed(2)} />
                 <StatRow label="z2"       value={dz2.toFixed(2)} />
-                <StatRow label="Shape"    value={shapeProps.shapeType}                         color={C.text} />
+                <StatRow label="Shape"    value={shapeProps.shapeLabel}                        color={C.text} />
                 <StatRow label="Size"     value={`${Math.round(shapeProps.size)}px`}           color={C.text} />
                 <StatRow label="Rotation" value={`${Math.round(shapeProps.angle)}°`}           color={C.text} />
-                <StatRow label="Fill"     value={shapeProps.fillStyle}                         color={C.text} />
+                <StatRow label="Fill"     value={shapeProps.fillLabel}                         color={C.text} />
               </div>
 
               {/* Interpolation stats */}

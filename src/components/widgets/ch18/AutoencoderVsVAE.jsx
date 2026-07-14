@@ -179,7 +179,7 @@ function Toggle({ label, on, onChange }) {
 }
 
 // ── MAIN COMPONENT ────────────────────────────────────────────────────────────
-export default function AutoencoderVsVAE() {
+export default function AutoencoderVsVAE({ tryThis }) {
   const [samples, setSamples]           = useState([]);
   const [tInterp, setTInterp]           = useState(0);
   const [showEllipses, setShowEllipses] = useState(true);
@@ -207,6 +207,23 @@ export default function AutoencoderVsVAE() {
   }, []);
 
   const heatmap = useMemo(() => computeHeatmap(VAE_CFG), []);
+
+  // Monte Carlo coverage estimate — fraction of the [-1,1]² domain that falls
+  // inside some cluster's 2σ radius, for each panel's own cluster geometry.
+  const coverage = useMemo(() => {
+    const rng = mulberry32(777);
+    const N = 4000;
+    let aeCov = 0, vaeCov = 0;
+    for (let k = 0; k < N; k++) {
+      const pt = [rng() * 2 - 1, rng() * 2 - 1];
+      if (inAnyCluster(pt, AE_CFG))  aeCov++;
+      if (inAnyCluster(pt, VAE_CFG)) vaeCov++;
+    }
+    return {
+      aePct:  Math.round((aeCov / N) * 100),
+      vaePct: Math.round((vaeCov / N) * 100),
+    };
+  }, []);
 
   // ── Derived state ─────────────────────────────────────────────────────────
   const interpPt = lerp2(A_PT, B_PT, tInterp);
@@ -324,7 +341,7 @@ export default function AutoencoderVsVAE() {
 
   // ── RENDER ────────────────────────────────────────────────────────────────
   return (
-    <WidgetCard title="Autoencoder vs VAE — discrete clusters vs smooth manifold" number="11.1">
+    <WidgetCard title="Autoencoder vs VAE — discrete clusters vs smooth manifold" number="18.1" tryThis={tryThis}>
 
       {/* ── SVG canvas (full width) ── */}
       <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
@@ -417,8 +434,8 @@ export default function AutoencoderVsVAE() {
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <StatCell label="σ"    value="0.06" />
-            <StatCell label="cov"  value="~15%" color={C.red} />
-            <StatCell label="gap"  value="~85%" color={C.red} />
+            <StatCell label="cov"  value={`~${coverage.aePct}%`}       color={C.red} />
+            <StatCell label="gap"  value={`~${100 - coverage.aePct}%`} color={C.red} />
             <StatCell label="last"
               value={aeSampleResult?.type ?? '—'}
               color={aeSampleResult?.color ?? C.textMuted} />
@@ -432,8 +449,8 @@ export default function AutoencoderVsVAE() {
           </div>
           <div style={{ display: 'flex', gap: 10 }}>
             <StatCell label="σ"    value="0.22" />
-            <StatCell label="cov"  value="~95%" color={C.green} />
-            <StatCell label="gap"  value="~5%"  color={C.green} />
+            <StatCell label="cov"  value={`~${coverage.vaePct}%`}       color={C.green} />
+            <StatCell label="gap"  value={`~${100 - coverage.vaePct}%`} color={C.green} />
             <StatCell label="last"
               value={vaeSampleResult?.type ?? '—'}
               color={vaeSampleResult?.color ?? C.textMuted} />

@@ -70,7 +70,7 @@ function StatRow({ label, value, color }) {
   );
 }
 
-export default function KLDivergence() {
+export default function KLDivergence({ tryThis }) {
   const [mu, setMu]                     = useState(1.0);
   const [sigma, setSigma]               = useState(1.0);
   const [showKLpq, setShowKLpq]         = useState(false);
@@ -283,7 +283,7 @@ export default function KLDivergence() {
   };
 
   return (
-    <WidgetCard title="KL Divergence — posterior vs prior, live formula" number="11.3">
+    <WidgetCard title="KL Divergence — posterior vs prior, live formula" number="18.2" tryThis={tryThis}>
 
       {/* ── Canvas + Stats ──────────────────────────────────────────────── */}
       <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
