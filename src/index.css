@@ -234,3 +234,9 @@ input[type=range]::-webkit-slider-thumb {
     break-inside: avoid;
   }
 }
+/* Keyboard focus must remain as visible as the mouse-only highlight it replaces. */
+#toc-rail button:focus-visible,
+.a11y-hover-target:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

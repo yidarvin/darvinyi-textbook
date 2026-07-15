@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useId } from "react";
 import ErrorBoundary from "./ErrorBoundary";
 
 function WidgetErrorFallback() {
@@ -18,9 +18,13 @@ function WidgetErrorFallback() {
 }
 
 const WidgetCard = forwardRef(function WidgetCard({ title, number, tryThis, children }, ref) {
+  const titleId = useId();
   return (
     <div
       ref={ref}
+      className="widget-card"
+      role="region"
+      aria-labelledby={titleId}
       style={{
         background: 'var(--widget-bg, #111111)',
         border: '1px solid var(--border)',
@@ -43,6 +47,7 @@ const WidgetCard = forwardRef(function WidgetCard({ title, number, tryThis, chil
       >
         {/* [Interactive] pill */}
         <span
+          id={titleId}
           style={{
             fontSize: '9.5px',
             fontWeight: 600,

@@ -58,11 +58,19 @@ function TocItem({ id, label, active, onClick }) {
     transition: "all .12s",
     marginBottom: "1px",
     lineHeight: "1.4",
+    width: "100%",
+    textAlign: "left",
+    background: "transparent",
+    borderTop: 0,
+    borderRight: 0,
+    borderBottom: 0,
   };
 
   return (
-    <div
+    <button
+      type="button"
       style={style}
+      aria-current={active ? "location" : undefined}
       onClick={() => onClick(id)}
       onMouseEnter={e => {
         if (!active) e.currentTarget.style.color = "var(--text-mid)";
@@ -72,7 +80,7 @@ function TocItem({ id, label, active, onClick }) {
       }}
     >
       {label}
-    </div>
+    </button>
   );
 }
 

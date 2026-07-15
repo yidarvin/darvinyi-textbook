@@ -81,7 +81,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 
 | ID | Title | Status |
 |---|---|---|
-| Q1 | Accessibility pass — TocRail buttons, slider aria-labels, hover-only widget focus/tap equivalents | PENDING |
+| Q1 | Accessibility pass — TocRail buttons, slider aria-labels, hover-only widget focus/tap equivalents | DRAFT |
 | Q2 | Search/filter over chapter + section titles | PENDING |
 | Q3 | Mobile widget pass at 375px on worst offenders | PENDING |
 | Q4 | Tests + CI — Playwright smoke over all routes, GitHub Actions workflow | PENDING |

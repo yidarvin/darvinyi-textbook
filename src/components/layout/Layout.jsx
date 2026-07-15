@@ -4,6 +4,7 @@ import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
 import TocRail, { TocContext, TocProvider } from "./TocRail";
 import MobileNav from "./MobileNav";
+import WidgetAccessibility from "../shared/WidgetAccessibility";
 import { useIsMobile } from "../../hooks/useMediaQuery";
 import { findChapterByPath } from "../../data/chapters";
 
@@ -250,6 +251,7 @@ export default function Layout() {
           <div id="content-wrap" style={contentWrapStyle}>
             {/* Scrollable content area */}
             <div id="content-scroll" style={contentScrollStyle}>
+              <WidgetAccessibility />
               <MobileNavMount />
               <div style={contentInnerStyle}>
                 <Outlet />
