@@ -9,9 +9,8 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 // each chapter (with all its widgets) becomes its own chunk and only
 // downloads when the user navigates into it.
 //
-// V2 curriculum (25 chapters, 7 parts — see src/data/chapters.js). Chapters
-// 22 and 23 are new and not yet built (queue items N22/N23); their
-// routes are added once those pages exist.
+// V2 curriculum (25 chapters, 7 parts — see src/data/chapters.js). Chapter 23
+// is new and remains unwired until queue item N23 builds it.
 const ProbabilityAndInformation = lazy(() => import("./pages/ch01/ProbabilityAndInformation"));
 const StatisticalLearning   = lazy(() => import("./pages/ch02/StatisticalLearning"));
 const NeuralNetworks        = lazy(() => import("./pages/ch03/NeuralNetworks"));
@@ -33,6 +32,7 @@ const VAEs                  = lazy(() => import("./pages/ch18/VAEs"));
 const GANs                  = lazy(() => import("./pages/ch19/GANs"));
 const DiffusionModels       = lazy(() => import("./pages/ch20/DiffusionModels"));
 const Datasets              = lazy(() => import("./pages/ch21/Datasets"));
+const EvaluatingLLMsAndAgents = lazy(() => import("./pages/ch22/EvaluatingLLMsAndAgents"));
 const AIAgents              = lazy(() => import("./pages/ch24/AIAgents"));
 const AgentHarnesses        = lazy(() => import("./pages/ch25/AgentHarnesses"));
 
@@ -134,6 +134,7 @@ export default function App() {
           <Route path="ch/19" element={L(GANs)} />
           <Route path="ch/20" element={L(DiffusionModels)} />
           <Route path="ch/21" element={L(Datasets)} />
+          <Route path="ch/22" element={L(EvaluatingLLMsAndAgents)} />
           <Route path="ch/24" element={L(AIAgents)} />
           <Route path="ch/25" element={L(AgentHarnesses)} />
           <Route path="*" element={<NotFound />} />
