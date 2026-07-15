@@ -75,7 +75,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | N14 | Ch14 "Efficient Inference & Deployment" — new chapter (Appendix C: N14) | DONE |
 | N17 | Ch17 "State-Space Models & Attention Alternatives" — new chapter (Appendix C: N17) | DONE |
 | N22 | Ch22 "Evaluating LLMs & Agents" — new chapter (Appendix C: N22) | DONE |
-| N23 | Ch23 "Interpretability" — new chapter (Appendix C: N23) | DRAFT |
+| N23 | Ch23 "Interpretability" — new chapter (Appendix C: N23) | DONE |
 
 ### Phase Q — Site polish & QA (last)
 
