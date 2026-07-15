@@ -36,60 +36,6 @@ function stableLabel(value) {
     .trim();
 }
 
-function canvasPoint(canvas, point) {
-  const rect = canvas.getBoundingClientRect();
-  return {
-    clientX: rect.left + rect.width * point.x,
-    clientY: rect.top + rect.height * point.y,
-  };
-}
-
-function dispatchCanvasMove(canvas, point, type = "mousemove") {
-  canvas.dispatchEvent(new MouseEvent(type, {
-    bubbles: true,
-    cancelable: true,
-    view: window,
-    ...canvasPoint(canvas, point),
-  }));
-}
-
-function installCanvasExplorer(canvas) {
-  if (canvas.dataset.a11yCanvasExplorer) return;
-  canvas.dataset.a11yCanvasExplorer = "true";
-  canvas.tabIndex = 0;
-  canvas.setAttribute("role", "application");
-  canvas.setAttribute("aria-label", `${widgetTitle(canvas)} chart. Use arrow keys to inspect positions; press Enter to select the current position.`);
-  canvas.setAttribute("aria-keyshortcuts", "ArrowUp ArrowDown ArrowLeft ArrowRight Enter Space Escape");
-
-  const point = { x: 0.5, y: 0.5 };
-  const move = () => dispatchCanvasMove(canvas, point);
-  canvas.addEventListener("focus", move);
-  canvas.addEventListener("keydown", event => {
-    const step = event.shiftKey ? 0.2 : 0.1;
-    const delta = {
-      ArrowLeft: [-step, 0], ArrowRight: [step, 0],
-      ArrowUp: [0, -step], ArrowDown: [0, step],
-    }[event.key];
-    if (delta) {
-      event.preventDefault();
-      point.x = Math.max(0, Math.min(1, point.x + delta[0]));
-      point.y = Math.max(0, Math.min(1, point.y + delta[1]));
-      move();
-    }
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      dispatchCanvasMove(canvas, point, "click");
-    }
-    if (event.key === "Escape") canvas.dispatchEvent(new MouseEvent("mouseout", { bubbles: true }));
-  });
-  canvas.addEventListener("pointermove", event => {
-    if (event.pointerType === "touch") dispatchCanvasMove(canvas, { x: (event.clientX - canvas.getBoundingClientRect().left) / canvas.getBoundingClientRect().width, y: (event.clientY - canvas.getBoundingClientRect().top) / canvas.getBoundingClientRect().height });
-  });
-  canvas.addEventListener("pointerup", event => {
-    if (event.pointerType === "touch") dispatchCanvasMove(canvas, { x: (event.clientX - canvas.getBoundingClientRect().left) / canvas.getBoundingClientRect().width, y: (event.clientY - canvas.getBoundingClientRect().top) / canvas.getBoundingClientRect().height }, "click");
-  });
-}
-
 function markDescription(mark, index) {
   const explicit = mark.getAttribute("aria-label") || mark.querySelector("title")?.textContent || mark.textContent;
   if (text(explicit || "")) return text(explicit);
@@ -100,31 +46,42 @@ function markDescription(mark, index) {
 }
 
 function installSvgExplorer(svg) {
-  if (svg.nextElementSibling?.classList.contains("a11y-svg-explorer")) return;
+  if (svg.dataset.a11yExplorer === "manual") return;
   const marks = [...svg.querySelectorAll('[style*="cursor: pointer"], [style*="cursor: crosshair"]')];
   if (!marks.length) return;
-  const select = document.createElement("select");
-  select.className = "a11y-svg-explorer";
-  select.setAttribute("aria-label", `Explore data in ${widgetTitle(svg)}`);
-  select.innerHTML = '<option value="">Select a visual datum</option>';
-  marks.forEach((mark, index) => {
-    const option = document.createElement("option");
-    option.value = String(index);
-    option.textContent = markDescription(mark, index);
-    select.append(option);
-  });
-  select.addEventListener("change", () => {
+  let select = svg.nextElementSibling?.classList.contains("a11y-svg-explorer")
+    ? svg.nextElementSibling
+    : null;
+  if (!select) {
+    select = document.createElement("select");
+    select.className = "a11y-svg-explorer";
+    select.setAttribute("aria-label", `Explore data in ${widgetTitle(svg)}`);
+    svg.insertAdjacentElement("afterend", select);
+  }
+
+  const descriptions = marks.map(markDescription);
+  const optionTexts = ["Select a visual datum", ...descriptions];
+  if ([...select.options].some((option, index) => option.textContent !== optionTexts[index]) || select.options.length !== optionTexts.length) {
+    const value = select.value;
+    select.replaceChildren(...optionTexts.map((description, index) => {
+      const option = document.createElement("option");
+      option.value = index === 0 ? "" : String(index - 1);
+      option.textContent = description;
+      return option;
+    }));
+    select.value = value;
+  }
+
+  select.onchange = () => {
     const mark = marks[Number(select.value)];
-    if (!mark) return;
-    mark.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, cancelable: true, view: window }));
-  });
-  select.addEventListener("blur", () => marks.forEach(mark => mark.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, cancelable: true, view: window }))));
-  svg.insertAdjacentElement("afterend", select);
+    if (mark) mark.dispatchEvent(new MouseEvent("mouseover", { bubbles: true, cancelable: true, view: window }));
+  };
+  select.onblur = () => marks.forEach(mark => mark.dispatchEvent(new MouseEvent("mouseout", { bubbles: true, cancelable: true, view: window })));
 }
 
-// Legacy widgets keep their visual interaction, but expose compact keyboard and
-// touch equivalents. A canvas gets a discrete coordinate explorer; an SVG gets
-// one native selector per chart, never one tab stop per rendered mark.
+// Legacy SVG widgets keep their visual interaction but expose one compact native
+// selector per chart, never one tab stop per rendered mark. Canvas charts with
+// meaningful data targets own semantic selectors in their widget component.
 export default function WidgetAccessibility() {
   useEffect(() => {
     const root = document.getElementById("content-scroll");
@@ -134,13 +91,12 @@ export default function WidgetAccessibility() {
       root.querySelectorAll('input[type="range"]').forEach((input, index) => {
         if (!input.getAttribute("aria-label")) input.setAttribute("aria-label", rangeLabel(input, index));
       });
-      root.querySelectorAll("canvas").forEach(installCanvasExplorer);
       root.querySelectorAll("svg").forEach(installSvgExplorer);
     }
 
     enhance();
     const observer = new MutationObserver(enhance);
-    observer.observe(root, { childList: true, subtree: true });
+    observer.observe(root, { childList: true, subtree: true, attributes: true, attributeFilter: ["aria-label", "style"] });
     return () => observer.disconnect();
   }, []);
 

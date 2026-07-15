@@ -399,7 +399,8 @@ function PrimCard({ prim, used, highlightUsed, hoveredId, setHoveredId, pulsedId
   const glowing = highlightUsed && used;
 
   return (
-    <div
+    <button
+      type="button"
       style={{
         position: 'relative',
         background: isPulsed ? hexRgba(p.color, 0.12) : C.bg3,
@@ -410,35 +411,41 @@ function PrimCard({ prim, used, highlightUsed, hoveredId, setHoveredId, pulsedId
         borderRadius: '6px',
         padding: '8px 10px',
         opacity: dimmed ? 0.38 : 1,
-        cursor: 'default',
+        cursor: 'pointer',
+        width: '100%',
+        textAlign: 'left',
         transition: 'opacity 200ms, background 200ms, border-color 200ms',
         boxShadow: glowing ? `0 0 0 1px ${hexRgba(p.color, 0.25)}` : 'none',
       }}
       onMouseEnter={() => setHoveredId(prim.id)}
       onMouseLeave={() => setHoveredId(null)}
+      onFocus={() => setHoveredId(prim.id)}
+      onBlur={() => setHoveredId(null)}
       onClick={() => {
         setPulsedId(prim.id);
         setTimeout(() => setPulsedId(null), 380);
       }}
     >
       {/* Top row: icon + name */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px' }}>
+      <span style={{ display: 'flex', alignItems: 'center', gap: '5px', marginBottom: '3px' }}>
         <span style={{ fontSize: '12px' }}>{p.icon}</span>
         <span style={{
           fontFamily: "'Inter', sans-serif", fontSize: '11px',
           fontWeight: 500, color: p.color,
         }}>{p.name}</span>
-      </div>
+      </span>
       {/* Description (truncated) */}
-      <div style={{
+      <span style={{
+        display: 'block',
         fontFamily: "'Inter', sans-serif", fontSize: '9px',
         color: C.mid, lineHeight: 1.35,
         overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
-      }}>{p.desc}</div>
+      }}>{p.desc}</span>
 
       {/* Tooltip: apiNote */}
       {isHovered && (
-        <div style={{
+        <span style={{
+          display: 'block',
           position: 'absolute', left: '100%', top: '50%',
           transform: 'translateY(-50%)',
           marginLeft: '8px',
@@ -449,9 +456,9 @@ function PrimCard({ prim, used, highlightUsed, hoveredId, setHoveredId, pulsedId
           pointerEvents: 'none',
         }}>
           {p.apiNote}
-        </div>
+        </span>
       )}
-    </div>
+    </button>
   );
 }
 

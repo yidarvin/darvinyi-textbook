@@ -455,11 +455,22 @@ export default function SemanticArithmetic({ tryThis }) {
       }}>
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label="Projected word embedding map. Use the word selector below to inspect a plotted word."
           style={{ display: 'block', width: '100%', height: '400px', cursor: 'crosshair' }}
           onMouseMove={handleMouseMove}
           onMouseLeave={() => setHov(null)}
         />
       </div>
+      <select
+        className="a11y-data-selector"
+        aria-label="Inspect word embedding"
+        value={hov || ""}
+        onChange={event => setHov(event.target.value || null)}
+      >
+        <option value="">Select a word</option>
+        {PROJ.map(point => <option key={point.word} value={point.word}>{`${point.word}, ${point.cluster} cluster`}</option>)}
+      </select>
 
       {/* ── Result vector (full width) ─────────────────────────────────────── */}
       {result && (

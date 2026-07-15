@@ -333,12 +333,27 @@ export default function AttentionHeatmap({ tryThis }) {
           <div style={{ background: C.codeBg, borderRadius: '6px', overflow: 'hidden', display: 'inline-block' }}>
             <canvas
               ref={canvasRef}
+              role="img"
+              aria-label="Attention-weight heatmap. Use the query-token selector below to inspect and pin a row."
               style={{ width: canvasW, height: canvasH, display: 'block', cursor: 'pointer' }}
               onMouseMove={handleMouseMove}
               onMouseLeave={handleMouseLeave}
               onClick={handleClick}
             />
           </div>
+          <select
+            className="a11y-data-selector"
+            aria-label="Inspect attention query token"
+            value={pinnedRow ?? ""}
+            onChange={event => {
+              const row = event.target.value === "" ? null : Number(event.target.value);
+              setHoveredRow(row);
+              setPinnedRow(row);
+            }}
+          >
+            <option value="">Select a query token</option>
+            {tokens.map((token, index) => <option key={`${token}-${index}`} value={index}>{`${token}: attention row ${index + 1}`}</option>)}
+          </select>
 
           {/* Bar chart panel — slides in when a row is pinned */}
           <div style={{

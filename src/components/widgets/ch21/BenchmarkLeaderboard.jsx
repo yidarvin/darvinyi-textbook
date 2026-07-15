@@ -520,6 +520,8 @@ export default function BenchmarkLeaderboard({ tryThis }) {
       <div style={{ position: 'relative' }}>
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label="Benchmark score chart. Use the model selector below to inspect and select a plotted model."
           style={{
             width:        '100%',
             height:       '260px',
@@ -533,6 +535,20 @@ export default function BenchmarkLeaderboard({ tryThis }) {
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
         />
+
+        <select
+          className="a11y-data-selector"
+          aria-label={`Inspect ${displayBenchmark} model`}
+          value={selIdx ?? ""}
+          onChange={event => {
+            const index = event.target.value === "" ? null : Number(event.target.value);
+            setHovIdx(index);
+            setSelIdx(index);
+          }}
+        >
+          <option value="">Select a plotted model</option>
+          {data.map((model, index) => <option key={model.model} value={index}>{`${model.model}, ${model.year}, ${model.score}%`}</option>)}
+        </select>
 
         {/* Tooltip */}
         {ttStyle && ttModel && (

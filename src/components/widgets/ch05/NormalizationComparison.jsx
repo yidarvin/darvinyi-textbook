@@ -550,6 +550,8 @@ export default function NormalizationComparison({ tryThis }) {
       <div ref={containerRef} style={{ width: '100%' }}>
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label="Normalization matrix. Use the cell selector below to inspect a cell and its normalization group."
           style={{
             display: 'block', cursor: 'crosshair',
             width: layout.CW + 'px', height: layout.CH + 'px',
@@ -558,6 +560,22 @@ export default function NormalizationComparison({ tryThis }) {
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
         />
+        <select
+          className="a11y-data-selector"
+          aria-label="Inspect normalization matrix cell"
+          value={hovered ? `${hovered.row}-${hovered.col}` : ""}
+          onChange={event => {
+            const [row, col] = event.target.value.split("-").map(Number);
+            setHovered(event.target.value ? { row, col } : null);
+          }}
+        >
+          <option value="">Select a sample and feature</option>
+          {grid.flatMap((row, rowIndex) => row.map((value, colIndex) => (
+            <option key={`${rowIndex}-${colIndex}`} value={`${rowIndex}-${colIndex}`}>
+              {`sample ${rowIndex + 1}, feature ${colIndex + 1}: ${value.toFixed(2)}`}
+            </option>
+          )))}
+        </select>
       </div>
 
       {/* Stat bar */}

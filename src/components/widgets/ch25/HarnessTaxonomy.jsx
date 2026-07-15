@@ -525,11 +525,28 @@ export default function HarnessTaxonomy({ tryThis }) {
       <div style={{ position: 'relative' }}>
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label="Harness design-space chart. Use the harness selector below to inspect and select a tool."
           style={{ display: 'block', cursor: hovered ? 'pointer' : 'default', borderRadius: '6px' }}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           onClick={handleClick}
         />
+        <select
+          className="a11y-data-selector"
+          aria-label="Inspect agent harness"
+          value={selected || ""}
+          onChange={event => {
+            const key = event.target.value || null;
+            setHovered(key);
+            setSelected(key);
+          }}
+        >
+          <option value="">Select a harness</option>
+          {Object.entries(HARNESSES).map(([key, harness]) => (
+            <option key={key} value={key}>{`${harness.name}: ${harness.quadrant}`}</option>
+          ))}
+        </select>
         {tooltip && (
           <div style={{
             position: 'absolute',

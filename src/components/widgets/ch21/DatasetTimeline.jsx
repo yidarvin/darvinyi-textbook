@@ -282,6 +282,7 @@ export default function DatasetTimeline({ tryThis }) {
       <svg
         viewBox="0 0 580 200"
         width="100%"
+        data-a11y-explorer="manual"
         style={{ display: 'block', overflow: 'visible' }}
       >
         {/* Baseline */}
@@ -366,6 +367,7 @@ export default function DatasetTimeline({ tryThis }) {
               stroke={isSelected ? 'white' : 'none'}
               strokeWidth={isSelected ? 2 : 0}
               opacity={isDimmed ? 0.25 : 1}
+              aria-label={`${ds.name}, ${ds.year}, ${ds.sizeLabel}, ${ds.domain}`}
               style={{ cursor: 'pointer' }}
               onClick={() => handleDotClick(i)}
               onMouseEnter={() => setHovered(i)}
@@ -374,6 +376,19 @@ export default function DatasetTimeline({ tryThis }) {
           );
         })}
       </svg>
+      <select
+        className="a11y-data-selector"
+        aria-label="Select dataset from timeline"
+        value={selected ?? ""}
+        onChange={event => {
+          const index = event.target.value === "" ? null : Number(event.target.value);
+          setHovered(index);
+          setSelected(index);
+        }}
+      >
+        <option value="">Select a dataset</option>
+        {DATASETS.map((dataset, index) => <option key={dataset.name} value={index}>{`${dataset.name}, ${dataset.year}, ${dataset.sizeLabel}, ${dataset.domain}`}</option>)}
+      </select>
 
       {/* ── Stats strip — always visible ─────────────────────────────── */}
       <div style={{

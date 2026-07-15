@@ -388,6 +388,7 @@ export default function DBEvolution({ tryThis } = {}) {
   const [showBoundary,   setShowBoundary]   = useState(true);
   const [showBackground, setShowBackground] = useState(true);
   const [hoveredPoint,   setHoveredPoint]   = useState(null);
+  const [selectedPointKey, setSelectedPointKey] = useState("");
 
   const canvasRef     = useRef(null);
   const rafRef        = useRef(null);
@@ -399,6 +400,15 @@ export default function DBEvolution({ tryThis } = {}) {
   const prefersReducedMotion = usePrefersReducedMotion();
   const isVisibleRef         = useRef(true);
   isVisibleRef.current = isVisible;
+
+  const w = lerpWeights(displayEpoch);
+  const fakePts = lerpFakePts(displayEpoch);
+  const accessiblePoints = [
+    ...REAL_PTS.map(([x, y], index) => ({ key: `real-${index}`, x, y, type: 'real', dVal: discriminatorD(x, y, w) })),
+    ...fakePts.map(([x, y], index) => ({ key: `fake-${index}`, x, y, type: 'fake', dVal: discriminatorD(x, y, w) })),
+  ];
+  const selectedPoint = accessiblePoints.find(point => point.key === selectedPointKey) || null;
+  const activePoint = hoveredPoint || selectedPoint;
 
   // Animate displayEpoch toward epoch when epoch changes
   useEffect(() => {
@@ -423,8 +433,8 @@ export default function DBEvolution({ tryThis } = {}) {
 
   // Redraw canvas whenever visible state changes
   useEffect(() => {
-    drawEverything(canvasRef.current, { displayEpoch, showBoundary, showBackground, hoveredPoint });
-  }, [displayEpoch, showBoundary, showBackground, hoveredPoint]);
+    drawEverything(canvasRef.current, { displayEpoch, showBoundary, showBackground, hoveredPoint: activePoint });
+  }, [displayEpoch, showBoundary, showBackground, activePoint]);
 
   // Play animation: advance 1 epoch every 600ms (pauses off-screen, resumes back in view)
   useEffect(() => {
@@ -483,8 +493,6 @@ export default function DBEvolution({ tryThis } = {}) {
   const handleMouseLeave = useCallback(() => setHoveredPoint(null), []);
 
   // ── Derived stats for panel + epoch label ──────────────────────────────
-  const w        = lerpWeights(displayEpoch);
-  const fakePts  = lerpFakePts(displayEpoch);
   const dAccPct  = Math.round(lerpScalar(displayEpoch, D_ACCURACY));
   const gQIdx    = Math.min(5, Math.round(displayEpoch / 4));
   const gQuality = G_QUALITY_LBLS[gQIdx];
@@ -506,6 +514,8 @@ export default function DBEvolution({ tryThis } = {}) {
         {/* Canvas */}
         <canvas
           ref={canvasRef}
+          role="img"
+          aria-label="Decision-boundary evolution chart. Use the point selector below to inspect a real or generated point."
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
           style={{
@@ -513,6 +523,19 @@ export default function DBEvolution({ tryThis } = {}) {
             height: '360px', borderRadius: '4px', cursor: 'crosshair',
           }}
         />
+        <select
+          className="a11y-data-selector"
+          aria-label="Inspect decision-boundary data point"
+          value={selectedPointKey}
+          onChange={event => setSelectedPointKey(event.target.value)}
+        >
+          <option value="">Select a real or generated point</option>
+          {accessiblePoints.map((point, index) => (
+            <option key={point.key} value={point.key}>
+              {`${point.type === 'real' ? 'Real' : 'Generated'} point ${index + 1}: (${point.x.toFixed(2)}, ${point.y.toFixed(2)}), D(x) ${point.dVal.toFixed(3)}`}
+            </option>
+          ))}
+        </select>
 
         {/* Stats panel */}
         <div style={{
@@ -557,7 +580,7 @@ export default function DBEvolution({ tryThis } = {}) {
 
           <Divider />
           <div style={{ fontFamily: mono, fontSize: '9px', color: C.textMuted, lineHeight: 1.55 }}>
-            Hover a point to see D(x,y) at that location.
+            Hover a point or use the selector to see D(x,y) at that location.
           </div>
         </div>
       </div>
