@@ -14,15 +14,17 @@ const mono = "'JetBrains Mono', monospace";
 // These are disclosed accounting models, not benchmark measurements.  The
 // quadratic term counts causal QK comparisons during prefill.  The linear
 // models carry a fixed-width recurrent summary; their constants differ, but
-// their dependence on sequence length does not.
+// their dependence on sequence length does not. Linear attention retains a
+// feature-by-value accumulator, hence the width-squared term.
 function costs(tokens, width) {
   const pairs = tokens * (tokens + 1) / 2;
   return {
     attention: pairs * width,
     ssm: tokens * width * 3,
-    linear: tokens * width * 5,
+    linear: tokens * width * width * 5,
     attentionMemory: tokens * width * 2,
     stateMemory: width * 2,
+    linearMemory: width * width + width,
   };
 }
 
@@ -49,7 +51,7 @@ function Bar({ label, value, max, color, suffix = "" }) {
 export default function ComplexityRace({ tryThis }) {
   const [tokens, setTokens] = useState(4096);
   const [width, setWidth] = useState(256);
-  const { attention, ssm, linear, attentionMemory, stateMemory } = useMemo(() => costs(tokens, width), [tokens, width]);
+  const { attention, ssm, linear, attentionMemory, stateMemory, linearMemory } = useMemo(() => costs(tokens, width), [tokens, width]);
   const maxWork = Math.max(attention, ssm, linear);
   const speedup = attention / ssm;
 
@@ -71,12 +73,13 @@ export default function ComplexityRace({ tryThis }) {
           <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 11 }}>PREFILL WORK UNITS</div>
           <Bar label="full attention · T(T+1)/2·d" value={attention} max={maxWork} color={C.accent} />
           <Bar label="SSM scan · 3T·d" value={ssm} max={maxWork} color={C.green} />
-          <Bar label="linear attention · 5T·d" value={linear} max={maxWork} color={C.purple} />
+          <Bar label="linear attention · 5T·d²" value={linear} max={maxWork} color={C.purple} />
         </div>
         <div>
           <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 11 }}>STREAMING STATE UNITS</div>
           <Bar label="attention KV cache · 2T·d" value={attentionMemory} max={attentionMemory} color={C.accent} suffix=" values" />
           <Bar label="scan state · 2d" value={stateMemory} max={attentionMemory} color={C.green} suffix=" values" />
+          <Bar label="linear-attention state · d²+d" value={linearMemory} max={attentionMemory} color={C.purple} suffix=" values" />
           <div style={{ marginTop: 18, padding: "10px 12px", border: `1px solid ${C.border}`, borderRadius: 5, fontFamily: mono, fontSize: 11, color: C.muted, lineHeight: 1.55 }}>
             at this T, pairwise attention has <span style={{ color: C.accent }}>{speedup.toFixed(1)}×</span> the modeled SSM prefill work. The comparison changes with kernels and hardware, but not with the T² versus T dependence.
           </div>

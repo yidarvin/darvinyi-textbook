@@ -15,6 +15,7 @@ function bars(values, color, label, max) {
 export default function SSMDuality({ tryThis }) {
   const [decay, setDecay] = useState(0.72);
   const [preset, setPreset] = useState('pulse');
+  const [view, setView] = useState('both');
   const u = PRESETS[preset];
   const { recurrence, kernel, convolution, error } = useMemo(() => {
     const b = 1, c = 1;
@@ -29,9 +30,10 @@ export default function SSMDuality({ tryThis }) {
     <div style={{ fontFamily: "'Inter', sans-serif", fontSize: 12, color: 'var(--text-mid)', lineHeight: 1.5, marginBottom: 14 }}>
       This is the scalar discrete SSM <code>xₜ = a xₜ₋₁ + uₜ</code>, <code>yₜ = xₜ</code>. The convolution panel uses its exact causal kernel <code>kℓ = aℓ</code>, not a fitted approximation.
     </div>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>{Object.keys(PRESETS).map(name => <button type="button" key={name} onClick={() => setPreset(name)} style={{ border: `1px solid ${preset === name ? C.accent : C.border}`, background: preset === name ? 'var(--accent-dim)' : 'var(--bg3)', color: preset === name ? C.accent : 'var(--text-mid)', borderRadius: 4, padding: '5px 9px', fontFamily: "'JetBrains Mono', monospace", fontSize: 10, cursor: 'pointer' }}>{name}</button>)}</div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>{Object.keys(PRESETS).map(name => <button type="button" key={name} onClick={() => setPreset(name)} style={{ border: `1px solid ${preset === name ? C.accent : C.border}`, background: preset === name ? 'var(--accent-dim)' : 'var(--bg3)', color: preset === name ? C.accent : 'var(--text-mid)', borderRadius: 4, padding: '5px 9px', fontFamily: "'JetBrains Mono', monospace", fontSize: 10, cursor: 'pointer' }}>{name}</button>)}</div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>{[['both', 'compare both'], ['recurrence', 'recurrence'], ['convolution', 'convolution']].map(([value, label]) => <button type="button" key={value} onClick={() => setView(value)} aria-pressed={view === value} style={{ border: `1px solid ${view === value ? C.purple : C.border}`, background: view === value ? 'var(--bg3)' : 'var(--bg4)', color: view === value ? C.purple : C.muted, borderRadius: 4, padding: '4px 8px', fontFamily: "'JetBrains Mono', monospace", fontSize: 9, cursor: 'pointer' }}>{label}</button>)}</div>
     <label style={{ display: 'block', fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--text)', marginBottom: 20 }}>decay a = {decay.toFixed(2)}<input aria-label="SSM state decay" type="range" min="0" max="0.95" step="0.01" value={decay} onChange={e => setDecay(Number(e.target.value))} style={{ display: 'block', width: '100%', marginTop: 9 }} /></label>
-    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, padding: 12, background: C.bg, borderRadius: 5 }}>{bars(u, 'var(--text-mid)', 'input uₜ', 1)}{bars(kernel, C.purple, 'causal kernel kℓ', 1)}{bars(recurrence, C.accent, 'recurrence yₜ', Math.max(1, ...recurrence.map(Math.abs)))}{bars(convolution, C.accent, 'convolution yₜ', Math.max(1, ...convolution.map(Math.abs)))}</div>
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, padding: 12, background: C.bg, borderRadius: 5 }}>{bars(u, 'var(--text-mid)', 'input uₜ', 1)}{bars(kernel, C.purple, 'causal kernel kℓ', 1)}{view !== 'convolution' && bars(recurrence, C.accent, 'recurrence yₜ', Math.max(1, ...recurrence.map(Math.abs)))}{view !== 'recurrence' && bars(convolution, C.accent, 'convolution yₜ', Math.max(1, ...convolution.map(Math.abs)))}</div>
     <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: C.muted, marginTop: 22 }}>max |recurrence − convolution| = {error.toExponential(2)} (floating-point roundoff)</div>
   </WidgetCard>;
 }
