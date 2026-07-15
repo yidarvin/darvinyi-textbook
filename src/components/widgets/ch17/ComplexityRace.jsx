@@ -10,17 +10,18 @@ const C = {
   muted: "var(--text-muted)",
 };
 const mono = "'JetBrains Mono', monospace";
+const SSM_STATE_UPDATE_UNITS = 3;
 
 // These are disclosed accounting models, not benchmark measurements.  The
 // quadratic term counts causal QK comparisons during prefill.  The linear
-// models carry a fixed-width recurrent summary; their constants differ, but
-// their dependence on sequence length does not. Linear attention retains a
+// models have fixed-size state with respect to sequence length. The SSM scan
+// updates and reads every d-by-N state value, while linear attention retains a
 // feature-by-value accumulator, hence the width-squared term.
 function costs(tokens, width, stateDim) {
   const pairs = tokens * (tokens + 1) / 2;
   return {
     attention: pairs * width,
-    ssm: tokens * width * 3,
+    ssm: tokens * width * stateDim * SSM_STATE_UPDATE_UNITS,
     linear: tokens * width * width * 5,
     attentionMemory: tokens * width * 2,
     stateMemory: width * stateDim,
@@ -59,7 +60,7 @@ export default function ComplexityRace({ tryThis }) {
   return (
     <WidgetCard title="Complexity race: count the work" number="17.3" tryThis={tryThis}>
       <p style={{ margin: "0 0 16px", fontFamily: "'Inter', sans-serif", fontSize: 12, lineHeight: 1.55, color: "var(--text-mid)" }}>
-        This is an analytic accounting model, not a hardware benchmark. It counts one width-scaled unit for each causal query-key comparison, and 3 or 5 units per token for two fixed-width scans. The SSM state has <code>d × N</code> values, where <code>N</code> is the per-channel state dimension. Change the context length to see the asymptotic term take over.
+        This is an analytic accounting model, not a hardware benchmark. It counts one width-scaled unit for each causal query-key comparison and <code>3</code> proportional units for each token's update and read across the SSM's <code>d × N</code> state values. The <code>3</code> is a disclosed accounting constant, not a measured operation count; <code>N</code> is the per-channel state dimension. Change the context length to see the asymptotic term take over, or change <code>N</code> to see both SSM work and state grow.
       </p>
       <label style={{ display: "block", fontFamily: mono, fontSize: 11, color: "var(--text)", marginBottom: 14 }}>
         context length T = {tokens.toLocaleString()} tokens
@@ -77,7 +78,7 @@ export default function ComplexityRace({ tryThis }) {
         <div>
           <div style={{ fontFamily: mono, fontSize: 10, color: C.muted, marginBottom: 11 }}>PREFILL WORK UNITS</div>
           <Bar label="full attention · T(T+1)/2·d" value={attention} max={maxWork} color={C.accent} />
-          <Bar label="SSM scan · 3T·d" value={ssm} max={maxWork} color={C.green} />
+          <Bar label="SSM scan · 3T·d·N" value={ssm} max={maxWork} color={C.green} />
           <Bar label="linear attention · 5T·d²" value={linear} max={maxWork} color={C.purple} />
         </div>
         <div>
@@ -86,7 +87,7 @@ export default function ComplexityRace({ tryThis }) {
           <Bar label="SSM scan state · d·N" value={stateMemory} max={attentionMemory} color={C.green} suffix=" values" />
           <Bar label="linear-attention state · d²+d" value={linearMemory} max={attentionMemory} color={C.purple} suffix=" values" />
           <div style={{ marginTop: 18, padding: "10px 12px", border: `1px solid ${C.border}`, borderRadius: 5, fontFamily: mono, fontSize: 11, color: C.muted, lineHeight: 1.55 }}>
-            at this T, pairwise attention has <span style={{ color: C.accent }}>{speedup.toFixed(1)}×</span> the modeled SSM prefill work. The comparison changes with kernels and hardware, but not with the T² versus T dependence.
+            attention / SSM work = <span style={{ color: C.accent }}>T(T+1)d / (6TdN) = {speedup.toFixed(1)}×</span> at this <code>T</code> and <code>N</code>. The comparison changes with kernels and hardware, but not with the T² versus T dependence.
           </div>
         </div>
       </div>
