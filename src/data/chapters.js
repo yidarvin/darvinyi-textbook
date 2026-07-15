@@ -2,10 +2,7 @@
 // Consumed by Sidebar (parts + chapter list) and Topbar (breadcrumb + prev/next).
 //
 // V2 curriculum (25 chapters, 7 parts) — see context/V2_PLAN.md and
-// context/CURRICULUM.md. Chapter 23 is still a scaffold, so it remains
-// `live: false`; Sidebar renders it as an inert "soon" placeholder and Topbar
-// skips it. Chapter 22 is now fully wired after queue item N22, alongside the
-// earlier new chapters 01, 14, and 17.
+// context/CURRICULUM.md.
 
 export const PARTS = [
   {
@@ -64,7 +61,7 @@ export const PARTS = [
     chapters: [
       { num: "21", title: "Datasets & Benchmarks", widgets: 3, live: true },
       { num: "22", title: "Evaluating LLMs & Agents", widgets: 4, live: true },
-      { num: "23", title: "Interpretability", widgets: 0, live: false },
+      { num: "23", title: "Interpretability", widgets: 5, live: true },
     ],
   },
   {
