@@ -2,6 +2,8 @@
 
 This is a Vite/React interactive textbook. `context/V2_PLAN.md` is the approved V2 specification; `prompts/queue.md` is the ordered delivery queue. Read the relevant plan section, `context/STYLE_GUIDE.md`, and `context/CURRICULUM.md` before touching a queue item.
 
+This is an established, older-style refsite: it intentionally has no `content/registry.json`. Do not scaffold a template or infer missing files from generic refsite procedures; this repository's queue contract overrides them.
+
 ## Codex roles
 
 - Terra (`gpt-5.6-terra`, high effort) builds pending items and resolves critiques.

@@ -156,7 +156,7 @@ You are the Terra builder for one item in the Darvinyi interactive textbook queu
 
 Item: $id — $title
 
-Read AGENTS.md, prompts/queue.md, context/V2_PLAN.md, context/STYLE_GUIDE.md, and context/CURRICULUM.md before acting. Work only on this item. Research time-sensitive or factual claims with primary sources using web search. Preserve the established React/Vite design language and make every educational widget faithfully compute the behavior it teaches.
+Read AGENTS.md, prompts/queue.md, context/V2_PLAN.md, context/STYLE_GUIDE.md, and context/CURRICULUM.md before acting. This established repository intentionally has no content/registry.json; do not scaffold a template or substitute a generic refsite workflow. Work only on this item. Research time-sensitive or factual claims with primary sources using web search. Preserve the established React/Vite design language and make every educational widget faithfully compute the behavior it teaches.
 
 Implement the complete item, run npm run check, then change only this queue row from PENDING to DRAFT and commit the implementation as: build: $id -- $title. Do not mark it DONE, do not write a critique verdict, do not push, and do not begin another queue item. If the item is genuinely inapplicable, leave it DRAFT and append a concise <!-- skip proposed: reason --> comment to that row for the Sol critic to decide.
 EOF
