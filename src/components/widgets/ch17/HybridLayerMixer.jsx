@@ -9,6 +9,11 @@ const TYPES = {
   ssm: { label: "SSM", color: C.green, params: 0.95, kv: 0.04, recall: 0.54 },
   mlp: { label: "MLP", color: C.purple, params: 1.15, kv: 0, recall: 0.12 },
 };
+const PRESETS = {
+  "attention-heavy": ["attention", "mlp", "attention", "mlp", "attention", "mlp", "attention", "mlp"],
+  hybrid: ["ssm", "mlp", "ssm", "mlp", "attention", "mlp", "ssm", "mlp"],
+  "scan-heavy": ["ssm", "mlp", "ssm", "mlp", "ssm", "mlp", "ssm", "mlp"],
+};
 
 function Button({ type, active, onClick }) {
   const cfg = TYPES[type];
@@ -16,7 +21,7 @@ function Button({ type, active, onClick }) {
 }
 
 export default function HybridLayerMixer({ tryThis }) {
-  const [layers, setLayers] = useState(["ssm", "mlp", "ssm", "mlp", "attention", "mlp", "ssm", "mlp"]);
+  const [layers, setLayers] = useState(PRESETS.hybrid);
   const stats = useMemo(() => {
     const typeStats = layers.map(x => TYPES[x]);
     const attention = layers.filter(x => x === "attention").length;
@@ -35,6 +40,12 @@ export default function HybridLayerMixer({ tryThis }) {
       <p style={{ margin: "0 0 15px", fontFamily: "'Inter', sans-serif", fontSize: 12, lineHeight: 1.55, color: "var(--text-mid)" }}>
         Choose the token mixer in each of eight toy blocks. Parameter units and KV-state units are relative accounting units. The recall score is an explicitly illustrative heuristic: attention layers provide a larger exact-lookup contribution, while SSM layers contribute a small distributed-memory contribution.
       </p>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 14 }}>
+        {Object.entries(PRESETS).map(([name, preset]) => {
+          const active = layers.join(",") === preset.join(",");
+          return <button type="button" key={name} onClick={() => setLayers(preset)} aria-pressed={active} style={{ border: `1px solid ${active ? C.accent : C.border}`, background: "var(--bg4)", color: active ? C.accent : C.muted, borderRadius: 4, padding: "5px 9px", fontFamily: mono, fontSize: 10, cursor: "pointer" }}>{name} preset</button>;
+        })}
+      </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(130px, 1fr))", gap: 8, marginBottom: 16 }}>
         {layers.map((type, i) => <div key={i} style={{ padding: 9, border: `1px solid ${C.border}`, borderRadius: 5, background: "var(--code-bg)" }}>
           <div style={{ fontFamily: mono, fontSize: 9, color: C.muted, marginBottom: 7 }}>block {i + 1}</div>
@@ -49,7 +60,6 @@ export default function HybridLayerMixer({ tryThis }) {
           ["long-context recall", `${stats.recall}%`, C.green],
         ].map(([label, value, color]) => <div key={label} style={{ padding: "11px 10px", background: "var(--bg3)" }}><div style={{ fontFamily: mono, fontSize: 9, color: C.muted }}>{label}</div><div style={{ fontFamily: mono, fontSize: 15, color, marginTop: 5 }}>{value}</div></div>)}
       </div>
-      <button type="button" onClick={() => setLayers(["ssm", "mlp", "ssm", "mlp", "attention", "mlp", "ssm", "mlp"])} style={{ marginTop: 12, border: `1px solid ${C.border}`, background: "var(--bg4)", color: C.muted, borderRadius: 4, padding: "5px 9px", fontFamily: mono, fontSize: 10, cursor: "pointer" }}>restore hybrid preset</button>
     </WidgetCard>
   );
 }
