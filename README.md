@@ -1,16 +1,29 @@
-# React + Vite
+# Darvinyi Textbook
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+An interactive machine-learning textbook built with React, Vite, KaTeX, live mathematical widgets, and inline SVG diagrams.
 
-Currently, two official plugins are available:
+## Local development
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm run dev
+npm run check
+npm run lint
+```
 
-## React Compiler
+The approved curriculum, editorial standards, and chapter specifications live in `context/`. The remaining V2 work is ordered in `prompts/queue.md`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Codex queue workflow
 
-## Expanding the ESLint configuration
+The repository uses a high-effort Codex builder/critic loop:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- Terra (`gpt-5.6-terra`) builds or resolves one queue item.
+- Sol (`gpt-5.6-sol`) independently critiques it and alone grants `DONE`.
+- The item moves `PENDING -> DRAFT -> DONE`; critique history is append-only under `content/critiques/`.
+
+Run one completed item at a time:
+
+```bash
+./runqueue.sh -n 1
+```
+
+Use `./runqueue.sh --dry-run` to inspect the next role and exact Codex command. The runner makes local commits only and never pushes. See `AGENTS.md` for the complete agent contract.

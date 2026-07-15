@@ -7,7 +7,7 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 ## Protocol
 
 - Process rows **top to bottom**. Phases are ordered by dependency: bug fixes (E) → structural reorg (S) → book-wide conventions (V) → per-chapter deep passes (C) → new chapters (N) → site polish/QA (Q). Do not skip ahead — later items assume earlier ones landed (e.g. every Phase C item assumes S1's renumbering already happened).
-- **One item per run.** Pick the first PENDING row, do the work, run `npm run check`, flip its status to `DONE` (or `SKIPPED` with a one-line reason appended in a trailing `<!-- -->` comment on that row if the item turns out not to apply), commit everything for that item in one commit, done.
+- **Builder/critic lifecycle.** The first PENDING row is built by Terra and committed as `DRAFT`. Sol then independently critiques it: `DONE` is granted only on approval; a `revise` verdict sends the same DRAFT back to Terra for a focused resolution and re-review. `SKIPPED` requires a documented `<!-- skip proposed: ... -->` queue comment and Sol approval. The runner commits each durable stage locally and never pushes.
 - **Phase C / N items** (chapter passes) follow the critique→fix→verify protocol in the plan's "Queue item protocol" section: re-read the chapter + its widgets/diagrams, apply Appendix A's baked findings for that chapter plus anything newly found against the Appendix B rubric, apply the Editorial Standard, complete citations, check currency, then `npm run check` and a dev-server spot-check of any changed widget.
 - **Phase E / S / V / Q items** are direct spec execution — the plan section for that ID has the concrete instructions.
 - Never mark an item DONE with a dirty tree or a failing `npm run check`.

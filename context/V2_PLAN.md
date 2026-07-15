@@ -79,11 +79,11 @@ Renumbering is handled by a one-time migration (item S1) introducing a single so
 
 ## Execution Architecture
 
-### Step 0 — Queue bootstrap (first thing Sonnet does)
+### Step 0 — Queue bootstrap (first Terra build run)
 1. Add `"check"` script to package.json: `vite build` (later items extend it with smoke tests). Lint is NOT part of check yet (184 pre-existing react-hooks v7 errors; relaxed in item E6).
-2. Create `prompts/queue.md` from the **Queue Manifest** below — GFM pipe table, one row per item, columns: `| id | title | status |` with status ∈ PENDING/DONE/SKIPPED (runqueue.sh counts status cells by shape).
+2. Create `prompts/queue.md` from the **Queue Manifest** below — GFM pipe table, one row per item, columns: `| id | title | status |` with status ∈ PENDING/DRAFT/DONE/SKIPPED. Terra builds PENDING items to DRAFT; Sol independently critiques drafts and alone grants DONE or approves a documented skip.
 3. Create `context/STYLE_GUIDE.md` from the **Editorial Standard** section below (verbatim), and update `context/PROJECT_OVERVIEW.md` + `context/CURRICULUM.md` to match owner decision #3 and the target curriculum (kill the "3-5 sentences" charter, the "17 chapters" remnant, the stale [in development] flags, "Mobile is NOT a priority", and "Dark mode only" if contradicted — mobile IS now supported).
-4. Commit. Every subsequent queue item = one commit, marked DONE in queue.md in the same commit (runqueue.sh requires clean tree + queue progress per run).
+4. Commit. Every subsequent queue stage is committed locally: build to DRAFT, critique verdict, and any resolution. The runner requires a clean tree and does not advance while an earlier item remains DRAFT.
 
 ### Queue item protocol
 Each item's queue row links to its plan section here. Chapter items follow **critique→fix→verify**: re-read the chapter + its widgets/diagrams, apply the baked findings from Appendix A *plus* anything newly discovered against the rubric (Appendix B), then `npm run check` before commit.
