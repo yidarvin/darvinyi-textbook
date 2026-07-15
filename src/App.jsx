@@ -10,7 +10,7 @@ import ErrorBoundary from "./components/shared/ErrorBoundary";
 // downloads when the user navigates into it.
 //
 // V2 curriculum (25 chapters, 7 parts — see src/data/chapters.js). Chapters
-// 17, 22, 23 are new and not yet built (queue items N17/N22/N23); their
+// 22 and 23 are new and not yet built (queue items N22/N23); their
 // routes are added once those pages exist.
 const ProbabilityAndInformation = lazy(() => import("./pages/ch01/ProbabilityAndInformation"));
 const StatisticalLearning   = lazy(() => import("./pages/ch02/StatisticalLearning"));
@@ -28,6 +28,7 @@ const LLMTraining           = lazy(() => import("./pages/ch13/LLMTraining"));
 const EfficientInference    = lazy(() => import("./pages/ch14/EfficientInference"));
 const Multimodal            = lazy(() => import("./pages/ch15/Multimodal"));
 const GNNs                  = lazy(() => import("./pages/ch16/GNNs"));
+const StateSpaceModels      = lazy(() => import("./pages/ch17/StateSpaceModels"));
 const VAEs                  = lazy(() => import("./pages/ch18/VAEs"));
 const GANs                  = lazy(() => import("./pages/ch19/GANs"));
 const DiffusionModels       = lazy(() => import("./pages/ch20/DiffusionModels"));
@@ -128,6 +129,7 @@ export default function App() {
           <Route path="ch/14" element={L(EfficientInference)} />
           <Route path="ch/15" element={L(Multimodal)} />
           <Route path="ch/16" element={L(GNNs)} />
+          <Route path="ch/17" element={L(StateSpaceModels)} />
           <Route path="ch/18" element={L(VAEs)} />
           <Route path="ch/19" element={L(GANs)} />
           <Route path="ch/20" element={L(DiffusionModels)} />

@@ -2,12 +2,12 @@
 // Consumed by Sidebar (parts + chapter list) and Topbar (breadcrumb + prev/next).
 //
 // V2 curriculum (25 chapters, 7 parts) — see context/V2_PLAN.md and
-// context/CURRICULUM.md. Three chapters (17, 22, 23) are still new; each
+// context/CURRICULUM.md. Two chapters (22, 23) are still new; each
 // has a scaffold page (lede + TOC + "in progress" note) but no route yet, so
 // they are marked `live: false` here — Sidebar renders them as inert "soon"
 // placeholders and Topbar's prev/next skips over them. Wire up a route in
-// App.jsx and flip `live: true` once queue item N17/N22/N23 finishes
-// building the chapter out. Chapters 01 and 14 finished this process
+// App.jsx and flip `live: true` once queue item N22/N23 finishes
+// building the chapter out. Chapters 01, 14, and 17 finished this process
 // (queue items N1 and N14).
 
 export const PARTS = [
@@ -49,7 +49,7 @@ export const PARTS = [
     color: "var(--green)",
     chapters: [
       { num: "16", title: "Graph Neural Networks", widgets: 4, live: true },
-      { num: "17", title: "State-Space Models & Attention Alternatives", widgets: 0, live: false },
+      { num: "17", title: "State-Space Models & Attention Alternatives", widgets: 4, live: true },
     ],
   },
   {
