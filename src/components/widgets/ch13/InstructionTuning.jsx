@@ -158,10 +158,15 @@ function TokenChip({ token, index, loss, showMarkers, onEnter, onLeave }) {
   const showBadge = showMarkers && (type === 'user' || type === 'delim' || type === 'response');
 
   return (
-    <div
+    <button
+      type="button"
+      aria-label={`Inspect token ${token.trim()}, loss ${loss.toFixed(2)}`}
       style={chipStyle}
       onMouseEnter={(e) => onEnter(index, token, loss, e)}
       onMouseLeave={onLeave}
+      onFocus={(e) => onEnter(index, token, loss, e)}
+      onBlur={onLeave}
+      onClick={(e) => onEnter(index, token, loss, e)}
     >
       {showBadge && (
         <span style={{
@@ -181,7 +186,7 @@ function TokenChip({ token, index, loss, showMarkers, onEnter, onLeave }) {
         </span>
       )}
       {text}
-    </div>
+    </button>
   );
 }
 

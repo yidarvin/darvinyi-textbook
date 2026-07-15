@@ -279,6 +279,7 @@ export default function LSTMGates({ tryThis }) {
                             stroke={isHovered ? 'white' : 'none'}
                             strokeWidth={isHovered ? 2 : 0}
                             style={{ cursor: 'crosshair' }}
+                            aria-label={`${rd.displayName}, timestep ${col}: ${dispVal}`}
                             onMouseEnter={e => handleCellEnter(row, col, e)}
                             onMouseLeave={() => setHoveredCell(null)}
                           />

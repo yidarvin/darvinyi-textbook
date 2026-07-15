@@ -47,7 +47,6 @@ const WidgetCard = forwardRef(function WidgetCard({ title, number, tryThis, chil
       >
         {/* [Interactive] pill */}
         <span
-          id={titleId}
           style={{
             fontSize: '9.5px',
             fontWeight: 600,
@@ -66,6 +65,7 @@ const WidgetCard = forwardRef(function WidgetCard({ title, number, tryThis, chil
 
         {/* Title */}
         <span
+          id={titleId}
           style={{
             fontFamily: "'Inter', sans-serif",
             fontSize: '13px',

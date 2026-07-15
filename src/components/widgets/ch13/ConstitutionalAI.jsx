@@ -308,17 +308,24 @@ export default function ConstitutionalAI({ tryThis }) {
                 : 'none' : 'none';
 
               return (
-                <div key={principle.id} style={{
+                <button
+                  type="button"
+                  key={principle.id}
+                  aria-label={`Inspect principle ${principle.id}: ${principle.hint}`}
+                  style={{
                   background: C.bg4, border: `1px solid ${borderColor}`, borderRadius: '5px',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
                   padding: '6px 4px', gap: '2px',
                   opacity: hidden ? 0 : (revealed ? 1 : 0),
                   transition: 'opacity 0.15s ease',
                   pointerEvents: hidden || !revealed ? 'none' : 'auto',
-                  cursor: 'default', boxShadow: glow,
+                  cursor: 'pointer', boxShadow: glow,
                 }}
                   onMouseEnter={(e) => handleCellHover(principle, status, e)}
                   onMouseLeave={() => setTooltip(null)}
+                  onFocus={(e) => handleCellHover(principle, status, e)}
+                  onBlur={() => setTooltip(null)}
+                  onClick={(e) => handleCellHover(principle, status, e)}
                 >
                   <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: '8px', color: C.muted, lineHeight: 1 }}>
                     {principle.id}
@@ -329,7 +336,7 @@ export default function ConstitutionalAI({ tryThis }) {
                   <div style={{ fontFamily: "'Inter',sans-serif", fontSize: '9px', color: C.muted, lineHeight: 1, textAlign: 'center' }}>
                     {principle.hint}
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>

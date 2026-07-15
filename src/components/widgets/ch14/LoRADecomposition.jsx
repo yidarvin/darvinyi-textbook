@@ -120,7 +120,7 @@ const DOTX  = (BX + BW + AX) / 2;     // 264
 const EQX   = (AX + MAT + WEX) / 2;   // 433
 
 // ── Sub-components (render inside SVG) ───────────────────────────────────────
-function Heatmap({ matrix, x, y, cellW, cellH, normMatrix, onHover }) {
+function Heatmap({ matrix, x, y, cellW, cellH, normMatrix, onHover, name }) {
   return (
     <>
       {matrix.flatMap((row, i) =>
@@ -135,6 +135,7 @@ function Heatmap({ matrix, x, y, cellW, cellH, normMatrix, onHover }) {
               height={Math.max(1, cellH - 0.5)}
               fill={valColor(dv)}
               style={{ cursor: 'crosshair', transition: 'fill 0.25s ease' }}
+              aria-label={`${name}, row ${i + 1}, column ${j + 1}: ${val.toFixed(4)}`}
               onMouseEnter={() => onHover({ row: i, col: j, val })}
               onMouseLeave={() => onHover(null)}
             />
@@ -258,25 +259,25 @@ export default function LoRADecomposition({ tryThis }) {
               <MatLabel cx={WEX + MAT/2}  y={LBL - 5} text="W_eff = W₀ + ΔW" />
 
               {/* W₀ */}
-              <Heatmap matrix={W0}   x={W0X} y={LBL} cellW={CELL}   cellH={CELL} normMatrix={W0_NORM}  onHover={handleHover} />
+              <Heatmap matrix={W0}   x={W0X} y={LBL} cellW={CELL}   cellH={CELL} normMatrix={W0_NORM}  onHover={handleHover} name="Frozen weights W0" />
               <MatBorder x={W0X} y={LBL} w={MAT} h={MAT} />
 
               <Op x={PLUSX} y={OPY} text="+" />
 
               {/* B */}
-              <Heatmap matrix={B}    x={BX}  y={LBL} cellW={bCellW} cellH={CELL} normMatrix={B_norm}   onHover={handleHover} />
+              <Heatmap matrix={B}    x={BX}  y={LBL} cellW={bCellW} cellH={CELL} normMatrix={B_norm}   onHover={handleHover} name="LoRA matrix B" />
               <MatBorder x={BX} y={LBL} w={BW} h={MAT} />
 
               <Op x={DOTX} y={OPY} text="·" />
 
               {/* A */}
-              <Heatmap matrix={A}    x={AX}  y={LBL} cellW={CELL}   cellH={aCellH} normMatrix={A_norm} onHover={handleHover} />
+              <Heatmap matrix={A}    x={AX}  y={LBL} cellW={CELL}   cellH={aCellH} normMatrix={A_norm} onHover={handleHover} name="LoRA matrix A" />
               <MatBorder x={AX} y={LBL} w={MAT} h={AH} />
 
               <Op x={EQX} y={OPY} text="=" />
 
               {/* W_eff */}
-              <Heatmap matrix={Weff} x={WEX} y={LBL} cellW={CELL}   cellH={CELL} normMatrix={Weff_norm} onHover={handleHover} />
+              <Heatmap matrix={Weff} x={WEX} y={LBL} cellW={CELL}   cellH={CELL} normMatrix={Weff_norm} onHover={handleHover} name="Effective weights" />
               <MatBorder x={WEX} y={LBL} w={MAT} h={MAT} />
             </svg>
 
@@ -286,7 +287,7 @@ export default function LoRADecomposition({ tryThis }) {
                 ΔW = B·A &nbsp; (learned perturbation)
               </div>
               <svg width={MAT + PAD * 2} height={MAT + PAD} style={{ display: 'block' }}>
-                <Heatmap matrix={dW} x={PAD} y={PAD / 2} cellW={CELL} cellH={CELL} normMatrix={dW_norm} onHover={handleHover} />
+                <Heatmap matrix={dW} x={PAD} y={PAD / 2} cellW={CELL} cellH={CELL} normMatrix={dW_norm} onHover={handleHover} name="Learned perturbation" />
                 <MatBorder x={PAD} y={PAD / 2} w={MAT} h={MAT} />
               </svg>
             </div>

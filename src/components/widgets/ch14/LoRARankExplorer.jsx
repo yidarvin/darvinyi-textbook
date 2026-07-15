@@ -252,6 +252,7 @@ function Heatmap({ matrix, x, y, normMatrix, onHover, id }) {
               width={Math.max(1, CELL - 0.5)}
               height={Math.max(1, CELL - 0.5)}
               fill={valColor(dv)}
+              aria-label={`${id}[${i + 1},${j + 1}] = ${val.toFixed(4)}`}
               style={{ cursor: 'crosshair' }}
               onMouseEnter={() => onHover({ id, row: i, col: j, val })}
               onMouseLeave={() => onHover(null)}
