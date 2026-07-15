@@ -7,14 +7,15 @@ const STEPS = [
   { action: 'inspect the relevant module', credit: 1, note: 'finds the implementation boundary' },
   { action: 'edit an unrelated configuration file', credit: -1, note: 'introduces an unnecessary change' },
   { action: 'patch the faulty branch', credit: 2, note: 'addresses the stated defect' },
-  { action: 'run the full test suite', credit: 1, note: 'checks for regressions before finishing' },
+  { action: 'full test suite reports 148 passed, 0 failed', credit: 1, evaluatorResult: 'pass', note: 'the stated evaluator confirms the repaired repository passes' },
 ];
 
 export default function AgentTrajectoryScorer({ tryThis }) {
   const [shown, setShown] = useState(1);
   const visible = STEPS.slice(0, shown);
   const trajectory = visible.reduce((sum, step) => sum + step.credit, 0) / 4;
-  const outcome = shown === STEPS.length ? 1 : 0;
+  const evaluatorResult = visible.find(step => step.evaluatorResult)?.evaluatorResult;
+  const outcome = evaluatorResult === 'pass' ? 1 : 0;
 
   return <WidgetCard title="The same run, two scoring rules" number="22.4" tryThis={tryThis}>
     <p style={{ margin: '0 0 16px', fontFamily: "'Inter', sans-serif", fontSize: 12, lineHeight: 1.55, color: 'var(--text-mid)' }}>
