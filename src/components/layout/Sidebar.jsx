@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation } from "react-router-dom";
 import { PARTS, chapterPath } from "../../data/chapters";
 
 // ─── Chapter data lives in src/data/chapters.js (single source of truth,
@@ -136,8 +136,9 @@ function SectionMatch({ chapter, section, partColor }) {
   const isActive = location.pathname === chapter.path && location.hash === `#${section.id}`;
 
   return (
-    <NavLink
+    <Link
       to={`${chapter.path}#${section.id}`}
+      aria-current={isActive ? "location" : undefined}
       style={{
         ...s.matchSection,
         borderLeftColor: isActive ? partColor : "transparent",
@@ -154,7 +155,7 @@ function SectionMatch({ chapter, section, partColor }) {
       }}
     >
       ↳ {section.label}
-    </NavLink>
+    </Link>
   );
 }
 
