@@ -12,23 +12,12 @@ npm run lint
 
 The approved curriculum, editorial standards, and chapter specifications live in `context/`. The completed V2 delivery record is preserved in `prompts/queue.md`.
 
-## Codex queue workflow
+## Queue workflow
 
-The repository uses a high-effort Codex builder/critic loop:
+The repository uses a high-effort Claude Code builder/critic loop, driven directly by the agent (no separate runner script):
 
-- Terra (`gpt-5.6-terra`) builds or resolves one queue item.
-- Sol (`gpt-5.6-sol`) independently critiques it and alone grants `DONE`.
+- A build pass implements or resolves one queue item.
+- An independent critic subagent reviews it and alone grants `DONE`.
 - The item moves `PENDING -> DRAFT -> DONE`; critique history is append-only under `content/critiques/`.
 
-Run one completed item at a time:
-
-```bash
-./runqueue.sh -n 1
-```
-
-Use `./runqueue.sh --dry-run` to inspect the next role and exact Codex command. The runner makes local commits only and never pushes. See `AGENTS.md` for the complete agent contract.
-
-For an explicitly authorized unattended drain with a push after every validated
-stage, run `./scripts/orchestrate-queue.sh`. It waits for any already-active
-textbook agent, then serializes Terra and Sol stages until the queue drains or
-a safety gate fails.
+Each stage is a local commit only — nothing is pushed automatically. See `CLAUDE.md` for the complete agent contract.

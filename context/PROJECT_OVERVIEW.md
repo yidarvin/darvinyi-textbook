@@ -64,7 +64,7 @@ darvinyi-textbook/
 │   ├── V2_PLAN.md               # The full critique + overhaul plan driving current work
 │   └── WIDGET_SPEC.md           # Retired pre-V2 reference; see STYLE_GUIDE.md + V2_PLAN.md
 ├── prompts/
-│   └── queue.md                 # V2 build queue (drained by ./runqueue.sh)
+│   └── queue.md                 # V2 build queue (drained via the build/critique loop in CLAUDE.md)
 ├── vite.config.js
 ├── package.json
 └── vercel.json
