@@ -690,7 +690,7 @@ export default function CrewAIvsAutoGPT({ tryThis }) {
     <WidgetCard title="CrewAI vs AutoGPT — role-based vs autonomous multi-agent" number="25.6" tryThis={tryThis}>
 
       {/* Shared task banner */}
-      <div style={{
+      <div data-mobile-stack style={{
         background: C.codeBg,
         border: `1px solid ${C.border}`,
         borderRadius: '6px',
@@ -718,7 +718,7 @@ export default function CrewAIvsAutoGPT({ tryThis }) {
       </div>
 
       {/* Two columns: CrewAI | AutoGPT */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* ─── CrewAI column ─────────────────────────── */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '4px' }}>

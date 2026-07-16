@@ -524,9 +524,14 @@ export default function LangGraphStateMachine({ tryThis }) {
       </div>
 
       {/* SVG diagram — full width */}
-      <div style={{ marginBottom: '12px' }}>
+      <div
+        data-mobile-scroll
+        role="region"
+        aria-label="LangGraph state machine diagram; scroll horizontally on narrow screens to inspect every state and transition."
+        style={{ marginBottom: '12px' }}
+      >
         <svg viewBox="0 0 700 370" width="100%"
-          style={{ display: 'block', background: C.codeBg, borderRadius: '8px' }}
+          style={{ display: 'block', minWidth: 700, background: C.codeBg, borderRadius: '8px' }}
         >
           <defs>
             {[

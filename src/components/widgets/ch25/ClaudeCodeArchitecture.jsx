@@ -329,8 +329,12 @@ export default function ClaudeCodeArchitecture({ tryThis }) {
       `}</style>
 
       {/* ── Diagram ── */}
-      <div>
-          <svg viewBox="-1 -1 582 434" width="100%" style={{ display: 'block' }}>
+      <div
+        data-mobile-scroll
+        role="region"
+        aria-label="Claude Code architecture diagram; scroll horizontally on narrow screens to inspect every subsystem."
+      >
+          <svg viewBox="-1 -1 582 434" width="100%" style={{ display: 'block', minWidth: 582 }}>
             <defs>
               {/* Arrowhead for loop arrows */}
               <marker id="cca-arr-loop" markerWidth="8" markerHeight="8" refX="8" refY="4" orient="auto">
