@@ -101,7 +101,7 @@ const cardTitleStyle = {
 const cardMetaStyle = {
   fontFamily: "'JetBrains Mono', monospace",
   fontSize: "10.5px",
-  color: "var(--text-muted)",
+  color: "var(--text-mid)",
 };
 
 function ChapterCard({ chapter, color }) {

@@ -84,11 +84,11 @@ darvinyi-textbook/
 | VI — Evaluation & Understanding | 21-23 | Datasets & benchmarks, evaluating LLMs & agents, interpretability |
 | VII — AI Agents | 24-25 | AI agents, agent harnesses |
 
-The authoritative per-chapter list lives in [CURRICULUM.md](CURRICULUM.md). The migration from the prior 22-chapter structure (reordering, merges, new chapters) is tracked as queue items S1/S2/N1/N14/N17/N22/N23 in [`prompts/queue.md`](../prompts/queue.md); see [`V2_PLAN.md`](V2_PLAN.md) for the full rationale and per-chapter findings driving the rewrite.
+The authoritative per-chapter list lives in [CURRICULUM.md](CURRICULUM.md). The V2 migration from the prior 22-chapter structure is complete. [`V2_PLAN.md`](V2_PLAN.md) preserves its rationale, historical mapping, and per-chapter findings.
 
 ## Current Status (2026-07)
 
-V1 (22 chapters, all live) shipped and was fully critiqued. The repo is now mid-overhaul per `prompts/queue.md` — drained via `./runqueue.sh`, one queue item per run, gated on `npm run check`. Do not assume the chapter numbering/count in older commits or docs is current; `context/CURRICULUM.md` and `src/data/chapters.js` (once S1 lands) are the sources of truth.
+The V2 overhaul is complete: all 25 chapters are live in the revised reading order, and the queue records the builder/critic history. `context/CURRICULUM.md` and `src/data/chapters.js` are the current sources of truth; older plans and commits retain the previous 22-chapter structure only as history.
 
 ## Routing
 
@@ -107,7 +107,8 @@ V1 (22 chapters, all live) shipped and was fully critiqued. The repo is now mid-
 
 - **Platform:** Vercel
 - **Deploy trigger:** Push to `main` branch
-- **Build command:** `npm run build` (equivalently `npm run check`, the queue's gate)
+- **Build command:** `npm run build`
+- **Queue gate:** `npm run check` (production build plus Playwright route smoke tests)
 - **Output dir:** `dist`
 - **No env vars needed** (no backend, no API keys)
 
@@ -117,5 +118,5 @@ V1 (22 chapters, all live) shipped and was fully critiqued. The repo is now mid-
 2. **No external data fetching at runtime** — everything is self-contained in the bundle.
 3. **KaTeX for math** — not MathJax (too slow). Imported in `index.css`; self-hosted alongside the other web fonts.
 4. **No D3/Recharts** — removed as unused dependencies; all interactive viz is custom inline SVG/Canvas.
-5. **Mobile is a supported target** — a responsive pass has shipped (design tokens, off-canvas nav, code-split routes); further refinement (per-widget mobile layout) is tracked in queue item Q3.
+5. **Mobile is a supported target** — responsive tokens, off-canvas navigation, code-split routes, and the per-widget mobile pass are shipped.
 6. **Dark mode only** — no light mode toggle.

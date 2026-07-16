@@ -1,6 +1,6 @@
 # Curriculum (V2 target — 25 chapters, 7 parts)
 
-This is the authoritative chapter list. The migration from the prior 22-chapter structure is in progress via `prompts/queue.md` (items S1/S2, then N1/N14/N17/N22/N23 for the new chapters, then C-items for content passes on every chapter). Until `src/data/chapters.js` exists (queue item E1) and the renumbering migration lands (queue item S1), the live site still uses the old 22-chapter numbering — see git history / `context/V2_PLAN.md` for the old→new mapping.
+This is the authoritative chapter list. The V2 migration from the prior 22-chapter structure is complete: `src/data/chapters.js` and the live routes use this 25-chapter order. `context/V2_PLAN.md` preserves the rationale and the old-to-new mapping for historical reference.
 
 ## Part I — Foundations
 - Ch01: Probability & Information for Machine Learning — **new**

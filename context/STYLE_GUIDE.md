@@ -71,4 +71,4 @@ Book-wide notational and terminological conventions, enforced by queue items V1�
 ## No longer true as of V2 — do not carry forward
 
 - ~~"Every concept gets ~3-5 sentences of explanation"~~ — superseded by the section skeleton above.
-- ~~"Mobile is NOT a priority — desktop-first, minimum viewport 1024px"~~ — a full mobile pass has shipped (responsive tokens, off-canvas nav, code-split routes); mobile is a supported target, refined further in queue item Q3.
+- ~~"Mobile is NOT a priority — desktop-first, minimum viewport 1024px"~~ — the responsive and per-widget mobile passes have shipped. Mobile is a supported target.
