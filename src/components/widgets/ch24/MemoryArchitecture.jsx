@@ -143,7 +143,7 @@ function Divider() {
 
 function MemoryDiagram({ active }) {
   return (
-    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
+    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block', minWidth: VW }}>
       <defs>
         {Object.entries(MEM).map(([key, m]) => (
           <filter key={key} id={`ma-glow-${key}`} x="-25%" y="-25%" width="150%" height="150%">
@@ -479,7 +479,13 @@ export default function MemoryArchitecture({ tryThis }) {
 
         {/* Left column: diagram + detail + controls */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <MemoryDiagram active={active}/>
+          <div
+            data-mobile-scroll
+            role="region"
+            aria-label="Agent memory architecture diagram; scroll horizontally on narrow screens to inspect every memory type."
+          >
+            <MemoryDiagram active={active}/>
+          </div>
           <DetailPanel active={active}/>
 
           {/* Hint when nothing selected */}

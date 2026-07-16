@@ -41,9 +41,23 @@ const HUMANEVAL_DATA = [
 // - HumanEval: no rigorous human pass@1 baseline has ever been published for
 //   this benchmark, so no human line is drawn at all.
 const BENCHMARKS = {
-  ImageNet:  { data: IMAGENET_DATA,  human: 94.9, humanComparable: false, humanLabel: 'Human top-5 ≈ 94.9% (not top-1 — not directly comparable)', yearMin: 2012, yearMax: 2023, label: 'Top-1 Accuracy (%)' },
-  GLUE:      { data: GLUE_DATA,      human: 87.1, humanComparable: true,  humanLabel: 'Human ~87.1%',                                              yearMin: 2018, yearMax: 2023, label: 'GLUE Score (0–100)' },
-  HumanEval: { data: HUMANEVAL_DATA, human: null, humanComparable: false, humanLabel: 'No rigorous human pass@1 baseline is published for HumanEval',   yearMin: 2021, yearMax: 2025, label: 'Pass@1 (%)' },
+  ImageNet:  {
+    data: IMAGENET_DATA, human: 94.9, humanComparable: false,
+    humanLabel: 'Human reference — see note ↓',
+    humanNote: 'Human reference: the published ≈94.9% result is ImageNet top-5 accuracy, while this chart plots top-1. The line is a non-comparable reference, not a top-1 threshold.',
+    yearMin: 2012, yearMax: 2023, label: 'Top-1 Accuracy (%)',
+  },
+  GLUE: {
+    data: GLUE_DATA, human: 87.1, humanComparable: true,
+    humanLabel: 'Human ~87.1%',
+    yearMin: 2018, yearMax: 2023, label: 'GLUE Score (0–100)',
+  },
+  HumanEval: {
+    data: HUMANEVAL_DATA, human: null, humanComparable: false,
+    humanLabel: 'Human: see note ↓',
+    humanNote: 'No rigorous human pass@1 baseline is published for HumanEval, so this chart does not claim that a model surpasses humans.',
+    yearMin: 2021, yearMax: 2025, label: 'Pass@1 (%)',
+  },
 };
 
 // ── Colors + Layout ───────────────────────────────────────────────────────────
@@ -463,11 +477,14 @@ export default function BenchmarkLeaderboard({ tryThis }) {
     const { toX, toY, W } = getCoords(canvas, displayBenchmark);
     const cx           = toX(ttModel.year);
     const cy           = toY(ttModel.score);
-    const TW           = 200;
-    const TH           = 88;
-    const leftPos      = cx + TW + 14 > W - L.right ? cx - TW - 14 : cx + 14;
-    const topPos       = cy >= TH + 10 ? cy - TH : cy + 12;
-    ttStyle = { position: 'absolute', left: leftPos, top: topPos, pointerEvents: 'none', zIndex: 10 };
+    const GUTTER       = 8;
+    const TW           = Math.min(210, Math.max(0, W - GUTTER * 2));
+    const TH           = 104;
+    const leftCandidate = cx + TW + 14 > W - L.right ? cx - TW - 14 : cx + 14;
+    const leftPos      = Math.min(Math.max(GUTTER, W - TW - GUTTER), Math.max(GUTTER, leftCandidate));
+    const topCandidate = cy >= TH + GUTTER ? cy - TH : cy + 12;
+    const topPos       = Math.min(Math.max(GUTTER, H - TH - GUTTER), Math.max(GUTTER, topCandidate));
+    ttStyle = { position: 'absolute', left: leftPos, top: topPos, width: TW, pointerEvents: 'none', zIndex: 10 };
   }
 
   return (
@@ -558,7 +575,7 @@ export default function BenchmarkLeaderboard({ tryThis }) {
             border:       `1px solid ${C.border}`,
             borderRadius: '6px',
             padding:      '10px 14px',
-            width:        '210px',
+            boxSizing:    'border-box',
             boxShadow:    '0 4px 20px rgba(0,0,0,0.5)',
           }}>
             <div style={{ fontFamily: "'Inter', sans-serif", fontSize: '12px', fontWeight: 600, color: C.text, marginBottom: '2px' }}>
@@ -583,6 +600,22 @@ export default function BenchmarkLeaderboard({ tryThis }) {
           </div>
         )}
       </div>
+
+      {showHuman && bench.humanNote && (
+        <div style={{
+          marginTop: '8px',
+          padding: '8px 10px',
+          background: C.bg3,
+          border: `1px solid ${C.border}`,
+          borderRadius: '6px',
+          fontFamily: "'Inter', sans-serif",
+          fontSize: '11px',
+          color: C.orange,
+          lineHeight: 1.45,
+        }}>
+          {bench.humanNote}
+        </div>
+      )}
 
       {/* ── Horizontal stats strip ───────────────────────────────────────── */}
       <div data-mobile-stat-strip style={{

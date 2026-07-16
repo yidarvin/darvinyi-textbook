@@ -1,3 +1,5 @@
+import ScrollableFigure from '../../shared/ScrollableFigure';
+
 const C = {
   text:    '#e5e7eb',
   muted:   '#6b7280',
@@ -52,13 +54,22 @@ export default function ScalingLawCurves() {
     (chinchillaTo[0] - chinchillaFrom[0]);
 
   return (
-    <figure style={{ margin: '28px 0' }}>
+    <ScrollableFigure
+      minWidth={640}
+      caption={
+        <span style={{ display: 'block', textAlign: 'center' }}>
+          Loss falls as a power law in compute; Chinchilla showed the compute-optimal
+          frontier requires balancing model size and dataset size, not just growing the
+          model.
+        </span>
+      }
+    >
       <svg
         viewBox="0 0 640 420"
         width="100%"
         role="img"
         aria-label="Log-log scaling-law curves: Kaplan suggestion vs Chinchilla-optimal frontier"
-        style={{ display: 'block' }}
+        style={{ display: 'block', minWidth: 640 }}
       >
         <defs>
           <marker
@@ -255,20 +266,6 @@ export default function ScalingLawCurves() {
         </text>
       </svg>
 
-      <figcaption
-        style={{
-          fontFamily: sans,
-          fontSize: '12px',
-          color: C.muted,
-          textAlign: 'center',
-          marginTop: '10px',
-          lineHeight: 1.5,
-        }}
-      >
-        Loss falls as a power law in compute; Chinchilla showed the compute-optimal
-        frontier requires balancing model size and dataset size, not just growing the
-        model.
-      </figcaption>
-    </figure>
+    </ScrollableFigure>
   );
 }
