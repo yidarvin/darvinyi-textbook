@@ -84,5 +84,5 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | Q1 | Accessibility pass — TocRail buttons, slider aria-labels, hover-only widget focus/tap equivalents | DONE |
 | Q2 | Search/filter over chapter + section titles | DONE |
 | Q3 | Mobile widget pass at 375px on worst offenders | DONE |
-| Q4 | Tests + CI — Playwright smoke over all routes, GitHub Actions workflow | PENDING |
+| Q4 | Tests + CI — Playwright smoke over all routes, GitHub Actions workflow | DRAFT |
 | Q5 | Final consistency audit — re-run Appendix B global checks, Lighthouse baseline, retire/refresh stale audit docs | PENDING |

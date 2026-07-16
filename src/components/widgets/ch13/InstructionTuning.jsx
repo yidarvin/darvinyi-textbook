@@ -160,7 +160,7 @@ function TokenChip({ token, index, loss, showMarkers, onEnter, onLeave }) {
   return (
     <button
       type="button"
-      aria-label={`Inspect token ${token.trim()}, loss ${loss.toFixed(2)}`}
+      aria-label={`Inspect token ${text.trim()}, loss ${loss.toFixed(2)}`}
       style={chipStyle}
       onMouseEnter={(e) => onEnter(index, token, loss, e)}
       onMouseLeave={onLeave}
