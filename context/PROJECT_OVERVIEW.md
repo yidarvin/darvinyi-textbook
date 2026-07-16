@@ -62,8 +62,7 @@ darvinyi-textbook/
 │   ├── CURRICULUM.md            # Authoritative 25-chapter, 7-part curriculum
 │   ├── STYLE_GUIDE.md           # Editorial standard + notational conventions (V2)
 │   ├── V2_PLAN.md               # The full critique + overhaul plan driving current work
-│   ├── WIDGET_SPEC.md           # Retired pre-V2 reference; see STYLE_GUIDE.md + V2_PLAN.md
-│   └── REFERENCE_WIDGET.html    # The gradient descent widget (built, reference impl)
+│   └── WIDGET_SPEC.md           # Retired pre-V2 reference; see STYLE_GUIDE.md + V2_PLAN.md
 ├── prompts/
 │   └── queue.md                 # V2 build queue (drained by ./runqueue.sh)
 ├── vite.config.js
@@ -88,7 +87,7 @@ The authoritative per-chapter list lives in [CURRICULUM.md](CURRICULUM.md). The 
 
 ## Current Status (2026-07)
 
-The V2 overhaul is complete: all 25 chapters are live in the revised reading order, and the queue records the builder/critic history. `context/CURRICULUM.md` and `src/data/chapters.js` are the current sources of truth; older plans and commits retain the previous 22-chapter structure only as history.
+The V2 overhaul is complete: all 25 chapters are live in the revised reading order, and the queue records the builder/critic history. `context/CURRICULUM.md` and `src/data/chapters.js` are the current sources of truth; older plans and commits retain the previous 22-chapter structure only as history. Q5 removed the obsolete V1 visual curriculum, mock shell, reference-widget prototype, and OpenCode setup guide rather than leaving executable-looking instructions that conflict with V2. Use this overview, `STYLE_GUIDE.md`, `CURRICULUM.md`, `V2_PLAN.md`, and the live `src/` components instead.
 
 ## Routing
 

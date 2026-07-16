@@ -499,8 +499,8 @@ export default function WordEmbeddings() {
       </p>
 
       <MathBlock>{`$$\\begin{aligned}
-  \\text{static:} \\quad &v(\\text{bank}) \\quad \\text{— same vector everywhere} \\\\
-  \\text{contextual:} \\quad &v(\\text{bank} \\mid \\text{\`\`river ___''}) \\neq v(\\text{bank} \\mid \\text{\`\`Federal ___''})
+  \\text{static:} \\quad &v(\\text{bank}) \\quad \\text{(same vector everywhere)} \\\\
+  \\text{contextual:} \\quad &v(\\text{bank} \\mid \\text{river [blank]}) \\neq v(\\text{bank} \\mid \\text{Federal [blank]})
 \\end{aligned}$$`}</MathBlock>
 
       <p style={prose}>

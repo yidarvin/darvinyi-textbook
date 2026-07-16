@@ -42,11 +42,7 @@ async function expectLinkedCitationMarkers(page) {
       if (node.parentElement?.closest(excluded)) continue;
       marker.lastIndex = 0;
       let match;
-      while ((match = marker.exec(node.nodeValue))) {
-        if (article.querySelector(`[id="ref-${match[1]}"]`)) {
-          bareMarkers.push(match[0]);
-        }
-      }
+      while ((match = marker.exec(node.nodeValue))) bareMarkers.push(match[0]);
     }
     return bareMarkers;
   });
@@ -62,19 +58,21 @@ async function expectLinkedCitationMarkers(page) {
 }
 
 async function expectProductionFonts(page) {
-  const missing = await page.evaluate(async () => {
+  const failures = await page.evaluate(async () => {
     const required = [
       "400 16px Inter",
       '400 16px "JetBrains Mono"',
       '600 16px "Crimson Pro"',
       "400 16px KaTeX_Main",
     ];
-    await Promise.all(required.map((descriptor) => document.fonts.load(descriptor, "Q5")));
+    const loaded = await Promise.all(required.map((descriptor) => document.fonts.load(descriptor, "Q5")));
     await document.fonts.ready;
-    return required.filter((descriptor) => !document.fonts.check(descriptor));
+    return required.filter((descriptor, index) => (
+      loaded[index].length === 0 || !document.fonts.check(descriptor)
+    ));
   });
 
-  await expect(missing).toEqual([]);
+  await expect(failures).toEqual([]);
 }
 
 test("home route renders without console errors", async ({ page }) => {
@@ -92,6 +90,7 @@ for (const chapter of CHAPTERS) {
     );
     await expect(page.locator(".widget-card")).toHaveCount(chapter.widgets);
     await expectLinkedCitationMarkers(page);
+    await expect(page.locator(".katex-error")).toHaveCount(0);
   });
 }
 
