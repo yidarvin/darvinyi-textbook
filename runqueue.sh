@@ -20,6 +20,9 @@
 #       --builder-model MODEL Terra role model (default: gpt-5.6-terra)
 #       --critic-model MODEL  Sol role model (default: gpt-5.6-sol)
 #       --effort LEVEL        reasoning effort for both roles (default: high)
+#       --max-critique-rounds N
+#                              stop for review after N Sol revisions (default: 6)
+#       --push                push each validated stage to origin/main
 #   -q, --queue PATH          queue file (default: prompts/queue.md)
 #   -t, --timeout SEC         per-agent timeout; 0 disables it (default: 0)
 #       --dry-run             print the next action and command without writing
@@ -37,7 +40,8 @@ TIMEOUT=0
 TIMEOUT_BIN=''
 DRY_RUN=0
 ASSUME_YES=0
-MAX_CRITIQUE_ROUNDS=3
+MAX_CRITIQUE_ROUNDS=6
+PUSH=0
 CHILD_PID=''
 
 usage() { sed -n '2,/^set -uo pipefail/{/^# \{0,1\}/!d;s/^# \{0,1\}//;p;}' "$0"; }
@@ -60,6 +64,8 @@ while [ $# -gt 0 ]; do
     --builder-model)      [ $# -ge 2 ] || die "$1 needs a value"; BUILDER_MODEL="$2"; shift 2 ;;
     --critic-model)       [ $# -ge 2 ] || die "$1 needs a value"; CRITIC_MODEL="$2"; shift 2 ;;
     --effort)             [ $# -ge 2 ] || die "$1 needs a value"; EFFORT="$2"; shift 2 ;;
+    --max-critique-rounds) [ $# -ge 2 ] || die "$1 needs a value"; MAX_CRITIQUE_ROUNDS="$(parse_count "$1" "$2")"; shift 2 ;;
+    --push)               PUSH=1; shift ;;
     -q|--queue)           [ $# -ge 2 ] || die "$1 needs a value"; QUEUE="$2"; shift 2 ;;
     -t|--timeout)         [ $# -ge 2 ] || die "$1 needs a value"; TIMEOUT="$(parse_count "$1" "$2")"; shift 2 ;;
     --dry-run)            DRY_RUN=1; shift ;;
@@ -268,6 +274,7 @@ printf '  builder:        %s (effort: %s)\n' "$BUILDER_MODEL" "$EFFORT"
 printf '  critic:         %s (effort: %s)\n' "$CRITIC_MODEL" "$EFFORT"
 printf '  sandbox:        workspace-write; approvals never; web search enabled\n'
 printf '  delivery:       local commits only; no automatic push\n'
+[ "$PUSH" -eq 0 ] || printf '  delivery:       push each validated stage to origin/main\n'
 printf '  gate:           npm run check after every agent stage\n'
 printf '  queue state:    %s PENDING, %s DRAFT\n' "$pending" "$drafts"
 
@@ -333,4 +340,7 @@ EOF
 
   validate_transition "$action" "$id" "$before"
   if ! npm run check; then stop "npm run check failed after $action for $id"; fi
+  if [ "$PUSH" -eq 1 ]; then
+    git push origin main || stop "push failed after $action for $id"
+  fi
 done

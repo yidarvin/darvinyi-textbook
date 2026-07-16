@@ -27,3 +27,8 @@ Run one completed item at a time:
 ```
 
 Use `./runqueue.sh --dry-run` to inspect the next role and exact Codex command. The runner makes local commits only and never pushes. See `AGENTS.md` for the complete agent contract.
+
+For an explicitly authorized unattended drain with a push after every validated
+stage, run `./scripts/orchestrate-queue.sh`. It waits for any already-active
+textbook agent, then serializes Terra and Sol stages until the queue drains or
+a safety gate fails.
