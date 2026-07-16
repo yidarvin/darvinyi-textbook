@@ -645,7 +645,7 @@ export default function LangChainComposition({ tryThis }) {
 
           {/* SVG flowchart canvas */}
           <div data-mobile-scroll style={{
-            background: C.codeBg, borderRadius: '6px', overflow: 'hidden',
+            background: C.codeBg, borderRadius: '6px', overflowX: 'auto', overflowY: 'hidden',
             padding: '8px 0 4px',
           }}>
             {preset === 'basicRag'     && <BasicRagSVG />}

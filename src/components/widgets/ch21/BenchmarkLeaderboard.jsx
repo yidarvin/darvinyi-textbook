@@ -474,7 +474,7 @@ export default function BenchmarkLeaderboard({ tryThis }) {
 
   if (ttModel && canvasRef.current) {
     const canvas       = canvasRef.current;
-    const { toX, toY, W } = getCoords(canvas, displayBenchmark);
+    const { toX, toY, W, H } = getCoords(canvas, displayBenchmark);
     const cx           = toX(ttModel.year);
     const cy           = toY(ttModel.score);
     const GUTTER       = 8;
