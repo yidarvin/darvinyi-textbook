@@ -166,6 +166,19 @@
     max-width: 100% !important;
   }
 
+  /* Keep dense SVG diagrams legible rather than shrinking their labels below
+     a usable size. Each owner opts in at the point where the scroll is needed. */
+  [data-mobile-scroll] {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  [data-mobile-scroll] > svg {
+    display: block;
+    max-width: none !important;
+  }
+
   [data-mobile-stat-strip] {
     flex-wrap: wrap !important;
     gap: 0 !important;

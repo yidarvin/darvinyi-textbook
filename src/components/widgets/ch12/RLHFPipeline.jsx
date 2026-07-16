@@ -121,7 +121,8 @@ export default function RLHFPipeline({ tryThis }) {
     <WidgetCard title="RLHF Pipeline — from human preferences to model behavior" number="12.5" tryThis={tryThis}>
 
       {/* ── Full-width SVG flowchart ── */}
-      <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
+      <div data-mobile-scroll>
+      <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block', minWidth: VW }}>
         <defs>
           <marker id="rlhf-a-on"  markerWidth="7" markerHeight="5" refX="6" refY="2.5" orient="auto">
             <path d="M0 0L7 2.5L0 5Z" fill={C.accent} />
@@ -263,6 +264,7 @@ export default function RLHFPipeline({ tryThis }) {
           );
         })}
       </svg>
+      </div>
 
       {/* ── Controls ── */}
       <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '8px 0 10px' }}>

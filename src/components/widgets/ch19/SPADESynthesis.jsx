@@ -272,7 +272,7 @@ function MechanismDiagram({ showSPADEPath }) {
   const paramCX = s3x + BW_OP/2;
 
   return (
-    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
+    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block', minWidth: VW }}>
       <rect width={VW} height={VH} fill="#111" rx="6" />
 
       {/* ── Standard BN ──────────────────────────────────────── */}
@@ -374,12 +374,6 @@ export default function SPADESynthesis({ tryThis } = {}) {
   const isPaintRef   = useRef(false);
   const isEraseRef   = useRef(false);
 
-  useEffect(() => {
-    const onUp = () => { isPaintRef.current = false; };
-    window.addEventListener('mouseup', onUp);
-    return () => window.removeEventListener('mouseup', onUp);
-  }, []);
-
   // Computed stats
   const allCells = grid.flat();
   const totalPainted = allCells.filter(c => c !== 'none').length;
@@ -417,18 +411,25 @@ export default function SPADESynthesis({ tryThis } = {}) {
     });
   }
 
-  function handleMouseDown(e) {
+  function handlePointerDown(e) {
     e.preventDefault();
     isPaintRef.current = true;
     isEraseRef.current = e.button === 2;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     const cell = getCellFromEvent(e);
     if (cell) applyBrush(cell.row, cell.col, isEraseRef.current ? 'none' : activeClass);
   }
 
-  function handleMouseMove(e) {
+  function handlePointerMove(e) {
     if (!isPaintRef.current) return;
     const cell = getCellFromEvent(e);
     if (cell) applyBrush(cell.row, cell.col, isEraseRef.current ? 'none' : activeClass);
+  }
+
+  function handlePointerEnd(e) {
+    isPaintRef.current = false;
+    isEraseRef.current = false;
+    if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   }
 
   function handleContextMenu(e) {
@@ -513,8 +514,10 @@ export default function SPADESynthesis({ tryThis } = {}) {
                   cursor: activeClass === 'none' ? 'cell' : 'crosshair',
                   userSelect: 'none', touchAction: 'none',
                 }}
-                onMouseDown={handleMouseDown}
-                onMouseMove={handleMouseMove}
+                onPointerDown={handlePointerDown}
+                onPointerMove={handlePointerMove}
+                onPointerUp={handlePointerEnd}
+                onPointerCancel={handlePointerEnd}
                 onContextMenu={handleContextMenu}
               >
                 {grid.flatMap((rowArr, r) => rowArr.map((cls, c) => (
@@ -652,7 +655,9 @@ export default function SPADESynthesis({ tryThis } = {}) {
 
           {/* Left: diagram + comparison + callout */}
           <div style={{ flex: 1, minWidth: 0 }}>
-            <MechanismDiagram showSPADEPath={showSPADEPath} />
+            <div data-mobile-scroll>
+              <MechanismDiagram showSPADEPath={showSPADEPath} />
+            </div>
 
             {/* Toggle */}
             <div style={{ marginTop: '10px' }}>

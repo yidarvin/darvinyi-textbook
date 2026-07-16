@@ -177,7 +177,7 @@ function AgentSVG({ activeAgent, dotState, scenarioKey, shownMessages }) {
     : new Set();
 
   return (
-    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
+    <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block', minWidth: VW }}>
       {/* ── Arrow segments ── */}
       {[0, 1, 2].map(i => {
         const x1 = AX[i] + AW + 1;
@@ -621,12 +621,14 @@ export default function MultiAgent({ tryThis }) {
       </div>
 
       {/* ── Agent SVG — full width ── */}
-      <AgentSVG
-        activeAgent={activeAgent}
-        dotState={dotState}
-        scenarioKey={scenarioKey}
-        shownMessages={shownMessages}
-      />
+      <div data-mobile-scroll>
+        <AgentSVG
+          activeAgent={activeAgent}
+          dotState={dotState}
+          scenarioKey={scenarioKey}
+          shownMessages={shownMessages}
+        />
+      </div>
 
       {/* ── Message feed — full width ── */}
       <div

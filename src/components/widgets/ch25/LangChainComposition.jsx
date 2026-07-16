@@ -148,7 +148,7 @@ function BasicRagSVG() {
   const bkX = bx + bw + 6;
 
   return (
-    <svg viewBox="0 0 390 272" width="100%" style={{ display: 'block' }}>
+    <svg viewBox="0 0 390 272" width="100%" style={{ display: 'block', minWidth: 390 }}>
       <ArrDef />
 
       <NBox x={nx} y={y1} w={nw} h={nbh} label="User Question" />
@@ -200,7 +200,7 @@ function ToolAgentSVG() {
   const rh = 44;
 
   return (
-    <svg viewBox="0 0 390 300" width="100%" style={{ display: 'block' }}>
+    <svg viewBox="0 0 390 300" width="100%" style={{ display: 'block', minWidth: 390 }}>
       <ArrDef id="arr2" />
 
       <NBox x={nx} y={y1} w={nw} h={nbh} label="User Input" />
@@ -275,7 +275,7 @@ function ConvRagToolsSVG() {
   const loopX  = 364;       // x for the curve's right extent
 
   return (
-    <svg viewBox={`0 0 390 ${totalH}`} width="100%" style={{ display: 'block' }}>
+    <svg viewBox={`0 0 390 ${totalH}`} width="100%" style={{ display: 'block', minWidth: 390 }}>
       <ArrDef id="arr3" />
 
       <NBox x={nx} y={y0} w={nw} h={nbh} label="User Msg" />
@@ -593,10 +593,10 @@ export default function LangChainComposition({ tryThis }) {
     <WidgetCard title="LangChain — composing primitives into agents" number="25.4" tryThis={tryThis}>
 
       {/* ── Main row: palette + canvas section ── */}
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
 
         {/* Left: Primitive Palette */}
-        <div style={{ width: 192, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '5px' }}>
+        <div data-mobile-panel style={{ width: 192, flexShrink: 0, display: 'flex', flexDirection: 'column', gap: '5px' }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace", fontSize: '8px',
             color: C.muted, textTransform: 'uppercase', letterSpacing: '0.08em',
@@ -622,7 +622,7 @@ export default function LangChainComposition({ tryThis }) {
         <div style={{ flex: 1, minWidth: 0 }}>
 
           {/* Preset tabs */}
-          <div style={{ display: 'flex', gap: '5px', marginBottom: '8px' }}>
+          <div style={{ display: 'flex', gap: '5px', marginBottom: '8px', flexWrap: 'wrap' }}>
             {PRESETS.map(({ key, label }) => {
               const active = preset === key;
               return (
@@ -644,7 +644,7 @@ export default function LangChainComposition({ tryThis }) {
           </div>
 
           {/* SVG flowchart canvas */}
-          <div style={{
+          <div data-mobile-scroll style={{
             background: C.codeBg, borderRadius: '6px', overflow: 'hidden',
             padding: '8px 0 4px',
           }}>
@@ -657,7 +657,7 @@ export default function LangChainComposition({ tryThis }) {
           {showCode && <CodePreview preset={preset} />}
 
           {/* Controls */}
-          <div style={{ display: 'flex', gap: '14px', marginTop: '8px' }}>
+          <div style={{ display: 'flex', gap: '14px', marginTop: '8px', flexWrap: 'wrap' }}>
             {toggle('Show code preview', showCode, setShowCode)}
             {toggle('Highlight used primitives', highlightUsed, setHighlight)}
           </div>

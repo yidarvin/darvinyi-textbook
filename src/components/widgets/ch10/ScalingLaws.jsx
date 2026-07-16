@@ -269,7 +269,7 @@ function Stat({ label, val, color }) {
 }
 
 function StatDivider() {
-  return <div style={{ width: 1, background: C.border, alignSelf: 'stretch', margin: '0 4px' }} />;
+  return <div data-mobile-divider style={{ width: 1, background: C.border, alignSelf: 'stretch', margin: '0 4px' }} />;
 }
 
 // ── Toggle ────────────────────────────────────────────────────────────────────
