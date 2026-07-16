@@ -26,10 +26,11 @@
       "Bash(grep:*)",
       "Bash(find:*)",
       "Bash(ls:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(git push:*)"
     ],
     "deny": [
-      "Bash(git push:*)"
+      
     ]
   }
 }
