@@ -373,6 +373,8 @@ export default function SPADESynthesis({ tryThis } = {}) {
   const svgInputRef  = useRef(null);
   const isPaintRef   = useRef(false);
   const isEraseRef   = useRef(false);
+  const activePointerIdRef = useRef(null);
+  const lastCellRef = useRef(null);
 
   // Computed stats
   const allCells = grid.flat();
@@ -392,8 +394,14 @@ export default function SPADESynthesis({ tryThis } = {}) {
     const svg = svgInputRef.current;
     if (!svg) return null;
     const rect = svg.getBoundingClientRect();
-    const col = Math.floor(((e.clientX - rect.left) / rect.width) * COLS);
-    const row = Math.floor(((e.clientY - rect.top) / rect.height) * ROWS);
+    const viewBox = svg.viewBox.baseVal;
+    if (!rect.width || !rect.height || !viewBox.width || !viewBox.height) return null;
+    // Convert viewport pixels back into the fixed SVG coordinate system before
+    // selecting a cell, so touch painting remains accurate after mobile scaling.
+    const x = viewBox.x + (e.clientX - rect.left) * (viewBox.width / rect.width);
+    const y = viewBox.y + (e.clientY - rect.top) * (viewBox.height / rect.height);
+    const col = Math.floor(x / CELL);
+    const row = Math.floor(y / CELL);
     if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return null;
     return { row, col };
   }
@@ -411,24 +419,52 @@ export default function SPADESynthesis({ tryThis } = {}) {
     });
   }
 
+  function paintToCell(cell) {
+    const cls = isEraseRef.current ? 'none' : activeClass;
+    const previous = lastCellRef.current;
+    if (previous) {
+      // Fill between coalesced pointer events so a quick finger drag does not
+      // leave unpainted gaps in the semantic map.
+      const steps = Math.max(Math.abs(cell.row - previous.row), Math.abs(cell.col - previous.col));
+      for (let step = 1; step <= steps; step++) {
+        const progress = step / steps;
+        applyBrush(
+          Math.round(previous.row + (cell.row - previous.row) * progress),
+          Math.round(previous.col + (cell.col - previous.col) * progress),
+          cls
+        );
+      }
+    } else {
+      applyBrush(cell.row, cell.col, cls);
+    }
+    lastCellRef.current = cell;
+  }
+
   function handlePointerDown(e) {
+    if (e.pointerType === 'mouse' && e.button !== 0 && e.button !== 2) return;
     e.preventDefault();
     isPaintRef.current = true;
     isEraseRef.current = e.button === 2;
+    activePointerIdRef.current = e.pointerId;
+    lastCellRef.current = null;
     e.currentTarget.setPointerCapture?.(e.pointerId);
     const cell = getCellFromEvent(e);
-    if (cell) applyBrush(cell.row, cell.col, isEraseRef.current ? 'none' : activeClass);
+    if (cell) paintToCell(cell);
   }
 
   function handlePointerMove(e) {
-    if (!isPaintRef.current) return;
+    if (!isPaintRef.current || activePointerIdRef.current !== e.pointerId) return;
+    e.preventDefault();
     const cell = getCellFromEvent(e);
-    if (cell) applyBrush(cell.row, cell.col, isEraseRef.current ? 'none' : activeClass);
+    if (cell) paintToCell(cell);
   }
 
   function handlePointerEnd(e) {
+    if (activePointerIdRef.current !== e.pointerId) return;
     isPaintRef.current = false;
     isEraseRef.current = false;
+    activePointerIdRef.current = null;
+    lastCellRef.current = null;
     if (e.currentTarget.hasPointerCapture?.(e.pointerId)) e.currentTarget.releasePointerCapture(e.pointerId);
   }
 
@@ -518,6 +554,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerEnd}
                 onPointerCancel={handlePointerEnd}
+                 onLostPointerCapture={handlePointerEnd}
                 onContextMenu={handleContextMenu}
               >
                 {grid.flatMap((rowArr, r) => rowArr.map((cls, c) => (
