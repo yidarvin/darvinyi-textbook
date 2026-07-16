@@ -339,10 +339,10 @@ export default function PPOClipping({ tryThis }) {
       />
 
       {/* bottom row: trust-region diagram  +  controls / stats */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* left: trust-region diagram */}
-        <div style={{ flex: '0 0 auto', width: '45%', background: '#0a0a0a',
+        <div data-mobile-panel style={{ flex: '0 0 auto', width: '45%', background: '#0a0a0a',
                       borderRadius: '4px', border: '1px solid var(--border)',
                       padding: '10px 12px' }}>
           <div style={{ ...mono, fontSize: '8px', color: 'var(--text-muted)',

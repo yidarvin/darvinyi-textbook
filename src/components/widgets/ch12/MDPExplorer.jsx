@@ -345,8 +345,11 @@ export default function MDPExplorer({ tryThis }) {
 
   const handleClick = useCallback(e => {
     const rect = canRef.current.getBoundingClientRect();
-    const col = Math.floor((e.clientX - rect.left - MRG) / (CELL + GAP));
-    const row = Math.floor((e.clientY - rect.top  - MRG) / (CELL + GAP));
+    // The canvas scales down at the 375px breakpoint. Convert touch/click
+    // coordinates back into its fixed simulation coordinate system first.
+    const scale = CANVAS_W / rect.width;
+    const col = Math.floor(((e.clientX - rect.left) * scale - MRG) / (CELL + GAP));
+    const row = Math.floor(((e.clientY - rect.top) * scale - MRG) / (CELL + GAP));
     if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
     cycleCell(row, col);
   }, [cycleCell]);
@@ -469,7 +472,7 @@ export default function MDPExplorer({ tryThis }) {
   return (
     <WidgetCard title="MDP Explorer — grid world value iteration" number="12.1" tryThis={tryThis}>
       {/* canvas + stats panel */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         <canvas
           ref={canRef}
           onClick={handleClick}
@@ -484,7 +487,7 @@ export default function MDPExplorer({ tryThis }) {
         />
 
         {/* stats panel */}
-        <div style={{
+        <div data-mobile-panel style={{
           width: 180,
           flexShrink: 0,
           background: 'var(--bg2)',

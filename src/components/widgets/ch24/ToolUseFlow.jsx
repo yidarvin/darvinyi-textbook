@@ -570,7 +570,7 @@ export default function ToolUseFlow({ tryThis }) {
       </div>
 
       {/* Main: diagram + right panel */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* Left: SVG flow diagram */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -584,7 +584,7 @@ export default function ToolUseFlow({ tryThis }) {
         </div>
 
         {/* Right: tool cards + stats */}
-        <div style={{ width: '180px', flexShrink: 0 }}>
+        <div data-mobile-panel style={{ width: '180px', flexShrink: 0 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginBottom: '12px' }}>
             {TOOLS.map(tool => (
               <ToolCard

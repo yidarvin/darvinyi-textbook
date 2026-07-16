@@ -341,7 +341,7 @@ function StatsStrip({ scenarioKey, steps, shownMessages, activeAgent, isDone }) 
   const vDiv  = { width: 1, background: C.border, alignSelf: 'stretch', flexShrink: 0 };
 
   return (
-    <div style={{
+    <div data-mobile-stat-strip style={{
       display: 'flex', alignItems: 'stretch',
       background: C.bg2, border: `1px solid ${C.border}`,
       borderRadius: '8px', marginTop: '8px', overflow: 'hidden',
@@ -359,7 +359,7 @@ function StatsStrip({ scenarioKey, steps, shownMessages, activeAgent, isDone }) 
         </div>
       </div>
 
-      <div style={vDiv} />
+      <div data-mobile-divider style={vDiv} />
 
       {/* ── Agent status (2 × 2 grid) ── */}
       <div style={{ padding: '10px 16px', flex: 1, minWidth: 0 }}>
@@ -379,7 +379,7 @@ function StatsStrip({ scenarioKey, steps, shownMessages, activeAgent, isDone }) 
         </div>
       </div>
 
-      <div style={vDiv} />
+      <div data-mobile-divider style={vDiv} />
 
       {/* ── Counters ── */}
       <div style={{ padding: '10px 16px', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
@@ -396,7 +396,7 @@ function StatsStrip({ scenarioKey, steps, shownMessages, activeAgent, isDone }) 
         ))}
       </div>
 
-      <div style={vDiv} />
+      <div data-mobile-divider style={vDiv} />
 
       {/* ── Outcome ── */}
       <div style={{ padding: '10px 16px', flexShrink: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', minWidth: 120 }}>

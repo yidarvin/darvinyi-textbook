@@ -123,7 +123,7 @@ const WidgetCard = forwardRef(function WidgetCard({ title, number, tryThis, chil
       )}
 
       {/* Body */}
-      <div style={{ padding: 'var(--widget-card-padding, 20px 18px)', overflowX: 'auto' }}>
+      <div className="widget-card-body" style={{ padding: 'var(--widget-card-padding, 20px 18px)', overflowX: 'auto' }}>
         <ErrorBoundary fallback={<WidgetErrorFallback />}>
           {children}
         </ErrorBoundary>

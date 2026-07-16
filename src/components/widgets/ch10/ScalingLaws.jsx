@@ -436,13 +436,13 @@ export default function ScalingLaws({ tryThis }) {
       </div>
 
       {/* ── Charts (full width) ─────────────────────────────────────────── */}
-      <div style={{ display: 'flex', gap: '0px', background: C.codeBg, borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '0px', background: C.codeBg, borderRadius: '6px', overflow: 'hidden', marginBottom: '10px' }}>
         <canvas ref={leftRef}  style={{ width: '50%', display: 'block' }} />
         <canvas ref={rightRef} style={{ width: '50%', display: 'block' }} />
       </div>
 
       {/* ── Stats panel (below charts, horizontal) ──────────────────────── */}
-      <div style={{
+      <div data-mobile-stat-strip style={{
         background: C.bg2, border: `1px solid ${C.border}`,
         borderRadius: '8px', padding: '10px 16px',
         display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',

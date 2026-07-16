@@ -278,7 +278,7 @@ export default function RLHFPipeline({ tryThis }) {
       </div>
 
       {/* ── Detail panel + Stats panel ── */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '10px' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '10px' }}>
 
         {/* Detail panel */}
         <div style={{ flex: 1, minWidth: 0, background: C.bg3,
@@ -308,7 +308,7 @@ export default function RLHFPipeline({ tryThis }) {
         </div>
 
         {/* Stats panel */}
-        <div style={{ width: 180, flexShrink: 0, background: C.bg2,
+        <div data-mobile-panel style={{ width: 180, flexShrink: 0, background: C.bg2,
                       border: `1px solid ${C.border}`, borderRadius: '8px',
                       padding: '14px 12px' }}>
           <SRow k="Current stage" v={stage === 0 ? 'idle' : `${stage} / 3`}

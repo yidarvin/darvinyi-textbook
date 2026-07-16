@@ -551,7 +551,7 @@ export default function FailureModes({ tryThis }) {
       </div>
 
       {/* Main layout: cards + stats panel */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
         {/* Cards column */}
         <div style={{ flex: 1, minWidth: 0 }}>
           {displayedFailures.map(failure => (
@@ -566,7 +566,7 @@ export default function FailureModes({ tryThis }) {
         </div>
 
         {/* Stats panel */}
-        <div style={{ width: 180, flexShrink: 0 }}>
+        <div data-mobile-panel style={{ width: 180, flexShrink: 0 }}>
           <StatsPanel expandedId={statsExpandedId} />
         </div>
       </div>

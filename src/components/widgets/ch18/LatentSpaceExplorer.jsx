@@ -208,7 +208,7 @@ export default function LatentSpaceExplorer({ tryThis }) {
 
   return (
     <WidgetCard title="Latent Space Explorer — hover to decode, drag to interpolate" number="18.3" tryThis={tryThis}>
-      <div style={{ display: 'flex', gap: 0 }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: 0 }}>
 
         {/* ── Grid SVG ── */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -363,7 +363,7 @@ export default function LatentSpaceExplorer({ tryThis }) {
         </div>
 
         {/* ── Reconstruction Panel ── */}
-        <div style={{
+        <div data-mobile-panel style={{
           width: 220, flexShrink: 0,
           background: C.bg3, borderLeft: `1px solid ${C.border}`,
           display: 'flex', flexDirection: 'column',

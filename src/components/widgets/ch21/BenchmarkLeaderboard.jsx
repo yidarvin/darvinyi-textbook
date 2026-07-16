@@ -331,7 +331,7 @@ function StripCell({ label, main, sub, mainColor }) {
 }
 
 function VSep() {
-  return <div style={{ width: 1, background: C.border, alignSelf: 'stretch', flexShrink: 0 }} />;
+  return <div data-mobile-divider style={{ width: 1, background: C.border, alignSelf: 'stretch', flexShrink: 0 }} />;
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -482,7 +482,7 @@ export default function BenchmarkLeaderboard({ tryThis }) {
         marginBottom:   '10px',
         flexWrap:       'wrap',
       }}>
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           {['ImageNet', 'GLUE', 'HumanEval'].map(b => {
             const active = b === displayBenchmark;
             return (
@@ -509,7 +509,7 @@ export default function BenchmarkLeaderboard({ tryThis }) {
             );
           })}
         </div>
-        <div style={{ display: 'flex', gap: '6px' }}>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
           <Toggle label="Human"    on={showHuman}    onChange={setShowHuman}    />
           <Toggle label="Callouts" on={showCallouts} onChange={setShowCallouts} />
           <Toggle label="Guides"   on={showGuides}   onChange={setShowGuides}   />
@@ -585,7 +585,7 @@ export default function BenchmarkLeaderboard({ tryThis }) {
       </div>
 
       {/* ── Horizontal stats strip ───────────────────────────────────────── */}
-      <div style={{
+      <div data-mobile-stat-strip style={{
         display:      'flex',
         alignItems:   'center',
         gap:          '10px',

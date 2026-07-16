@@ -499,7 +499,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
           </div>
 
           {/* Canvases — full usable width, stats strip below */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+          <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
             {/* Input: semantic map */}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -543,7 +543,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
           </div>
 
           {/* Palette — 8 × flex:1 buttons fill the full canvas width */}
-          <div style={{ display: 'flex', gap: '4px', marginTop: '12px' }}>
+          <div data-mobile-palette style={{ display: 'flex', gap: '4px', marginTop: '12px' }}>
             {SEMANTIC_CLASSES.map(cls => (
               <button
                 key={cls.id}
@@ -606,7 +606,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
           </div>
 
           {/* Stats strip */}
-          <div style={{
+          <div data-mobile-stat-strip style={{
             display: 'flex', marginTop: '10px',
             background: 'var(--bg2)', border: '1px solid var(--border)',
             borderRadius: '8px', overflow: 'hidden',
@@ -617,7 +617,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
               <div style={{ fontFamily: mono, fontSize: '13px', color: 'var(--accent)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{activeName}</div>
               <div style={{ fontFamily: mono, fontSize: '9px', color: '#777' }}>{brushSize} cell{brushSize !== 1 ? 's' : ''}</div>
             </div>
-            <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
+            <div data-mobile-divider style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
             {/* Coverage */}
             <div style={{ flex: 1, padding: '10px 14px', minWidth: 0 }}>
               <div style={{ fontFamily: mono, fontSize: '8px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>Painted</div>
@@ -626,14 +626,14 @@ export default function SPADESynthesis({ tryThis } = {}) {
               </div>
               <div style={{ fontFamily: mono, fontSize: '9px', color: '#777' }}>{classesUsed} class{classesUsed !== 1 ? 'es' : ''}</div>
             </div>
-            <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
+            <div data-mobile-divider style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
             {/* Dominant */}
             <div style={{ flex: 1, padding: '10px 14px', minWidth: 0 }}>
               <div style={{ fontFamily: mono, fontSize: '8px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>Dominant</div>
               <div style={{ fontFamily: mono, fontSize: '13px', color: 'var(--green)', marginBottom: '2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{topClass?.name ?? '—'}</div>
               <div style={{ fontFamily: mono, fontSize: '9px', color: '#777' }}>{topCoverage} coverage</div>
             </div>
-            <div style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
+            <div data-mobile-divider style={{ width: 1, background: 'var(--border)', alignSelf: 'stretch', flexShrink: 0 }} />
             {/* SPADE */}
             <div style={{ flex: 2, padding: '10px 14px', minWidth: 0 }}>
               <div style={{ fontFamily: mono, fontSize: '8px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '5px' }}>SPADE generator</div>
@@ -648,7 +648,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
       ) : (
 
         /* ── MECHANISM MODE ──────────────────────────────────────────────────── */
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+        <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
           {/* Left: diagram + comparison + callout */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -670,7 +670,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
             </div>
 
             {/* Comparison */}
-            <div style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
+            <div data-mobile-stack style={{ display: 'flex', gap: '8px', marginTop: '16px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontFamily: mono, fontSize: '9px', color: 'var(--red)',
@@ -688,7 +688,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
                 </div>
               </div>
 
-              <div style={{ flex: 1, minWidth: 0 }}>
+              <div data-mobile-panel style={{ flex: 1, minWidth: 0 }}>
                 <div style={{
                   fontFamily: mono, fontSize: '9px', color: 'var(--accent)',
                   textTransform: 'uppercase', letterSpacing: '0.06em',
@@ -725,7 +725,7 @@ export default function SPADESynthesis({ tryThis } = {}) {
           </div>
 
           {/* Right: stats panel */}
-          <div style={{
+          <div data-mobile-panel style={{
             width: 180, flexShrink: 0,
             background: 'var(--bg2)', border: '1px solid var(--border)',
             borderRadius: '8px', padding: '12px 14px', fontFamily: mono,

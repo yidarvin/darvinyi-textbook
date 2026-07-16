@@ -475,7 +475,7 @@ export default function MemoryArchitecture({ tryThis }) {
       </div>
 
       {/* Main area: diagram + stats panel */}
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* Left column: diagram + detail + controls */}
         <div style={{ flex: 1, minWidth: 0 }}>
@@ -505,7 +505,7 @@ export default function MemoryArchitecture({ tryThis }) {
         </div>
 
         {/* Right column: stats panel */}
-        <div style={{ width: 180, flexShrink: 0 }}>
+        <div data-mobile-panel style={{ width: 180, flexShrink: 0 }}>
           <StatsPanel active={active}/>
         </div>
       </div>

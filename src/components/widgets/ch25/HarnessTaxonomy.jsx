@@ -173,11 +173,11 @@ function DetailCard({ harness, onClose }) {
   return (
     <div style={{
       marginTop: '6px',
-      maxHeight: visible ? '220px' : '0px',
+      maxHeight: visible ? '420px' : '0px',
       overflow: 'hidden',
       transition: 'max-height 280ms ease-out',
     }}>
-      <div style={{
+      <div data-mobile-stack style={{
         background: C.bg3,
         borderLeft: `4px solid ${h.color}`,
         borderRadius: '8px',
@@ -208,7 +208,7 @@ function DetailCard({ harness, onClose }) {
         </div>
 
         {/* Right column — bars */}
-        <div style={{ width: '200px', flexShrink: 0, paddingTop: '2px' }}>
+        <div data-mobile-panel style={{ width: '200px', flexShrink: 0, paddingTop: '2px' }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace", fontSize: '8px',
             color: C.muted, textTransform: 'uppercase', letterSpacing: '0.06em',
@@ -228,7 +228,7 @@ function StatsStrip({ selected, filter, showing }) {
   const h = selected ? HARNESSES[selected] : null;
   const mono = { fontFamily: "'JetBrains Mono', monospace" };
   const vdivider = (
-    <div style={{ width: '1px', background: C.border, alignSelf: 'stretch', flexShrink: 0, margin: '0 12px' }} />
+    <div data-mobile-divider style={{ width: '1px', background: C.border, alignSelf: 'stretch', flexShrink: 0, margin: '0 12px' }} />
   );
   const cell = (label, val, valColor) => (
     <div style={{ flexShrink: 0 }}>
@@ -238,7 +238,7 @@ function StatsStrip({ selected, filter, showing }) {
   );
 
   return (
-    <div style={{
+    <div data-mobile-stat-strip style={{
       display: 'flex', alignItems: 'center',
       background: C.bg2, border: `1px solid ${C.border}`,
       borderRadius: '8px', padding: '8px 14px',

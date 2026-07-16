@@ -83,7 +83,7 @@ function highlightText(text, phrases, color) {
 }
 
 function VDivider() {
-  return <div style={{ width: '1px', background: BORDER, alignSelf: 'stretch', flexShrink: 0 }} />;
+  return <div data-mobile-divider style={{ width: '1px', background: BORDER, alignSelf: 'stretch', flexShrink: 0 }} />;
 }
 
 function StatsSection({ label, labelColor, children }) {
@@ -118,7 +118,7 @@ function StatsStrip({ expandedId }) {
     : null;
 
   return (
-    <div style={{
+    <div data-mobile-stat-strip style={{
       display: 'flex',
       gap: '14px',
       alignItems: 'flex-start',
@@ -196,7 +196,7 @@ export default function ClaudeCodeVsCodex({ tryThis }) {
     <WidgetCard title="Claude Code vs Codex CLI — seven design dimensions" number="25.3" tryThis={tryThis}>
 
       {/* Column headers */}
-      <div style={{ display: 'flex', marginBottom: '10px' }}>
+      <div data-mobile-stack style={{ display: 'flex', marginBottom: '10px' }}>
         <div style={{ flex: 1 }}>
           <div style={{ fontFamily: "'Crimson Pro', serif", fontSize: '16px', color: ACCENT }}>
             Claude Code
@@ -254,11 +254,11 @@ export default function ClaudeCodeVsCodex({ tryThis }) {
 
               {/* Expandable body */}
               <div style={{
-                maxHeight: expanded ? '220px' : '0',
+                maxHeight: expanded ? '420px' : '0',
                 overflow: 'hidden',
                 transition: 'max-height 250ms ease',
               }}>
-                <div style={{ display: 'flex' }}>
+                <div data-mobile-stack style={{ display: 'flex' }}>
                   <div style={{
                     flex: 1,
                     background: 'rgba(45,212,191,0.04)',
@@ -271,7 +271,7 @@ export default function ClaudeCodeVsCodex({ tryThis }) {
                         : dim.claudeCode}
                     </div>
                   </div>
-                  <div style={{
+                  <div data-mobile-panel style={{
                     flex: 1,
                     background: 'rgba(251,146,60,0.04)',
                     borderLeft: `3px solid ${ORANGE}`,

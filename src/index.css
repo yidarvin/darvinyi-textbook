@@ -131,6 +131,52 @@
     --prose-size: 15.5px;
     --topbar-padding-x: 12px;
   }
+
+  /* Principal visualisation/inspector rows opt into this layout below.
+     On a 375px screen, stacked panels preserve readable labels and controls. */
+  [data-mobile-stack] {
+    flex-direction: column !important;
+    gap: 12px !important;
+  }
+
+  [data-mobile-stack] > [data-mobile-panel] {
+    width: 100% !important;
+    flex: 1 1 auto !important;
+    border-left: 0 !important;
+    border-top: 1px solid var(--border);
+  }
+
+  /* These canvases keep a fixed mathematical coordinate system. Scale their
+     rendered box only; MDP Explorer converts pointer coordinates back before
+     applying a cell edit. */
+  [data-mobile-stack] > canvas {
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  [data-mobile-palette] {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  [data-mobile-stack] > canvas,
+  [data-mobile-stack] > svg {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  [data-mobile-stat-strip] {
+    flex-wrap: wrap !important;
+    gap: 0 !important;
+  }
+
+  [data-mobile-stat-strip] > :not([data-mobile-divider]) {
+    flex: 1 1 46% !important;
+  }
+
+  [data-mobile-divider] {
+    display: none !important;
+  }
 }
 
 body { background: var(--bg); color: var(--text); }

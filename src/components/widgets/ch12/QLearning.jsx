@@ -408,7 +408,7 @@ export default function QLearning({ tryThis }) {
   return (
     <WidgetCard title="Q-Learning — epsilon-greedy exploration in a grid world" number="12.2" tryThis={tryThis}>
 
-      <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+      <div data-mobile-stack style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
 
         {/* ── SVG grid ───────────────────────────────────────────────────── */}
         <svg
@@ -533,7 +533,7 @@ export default function QLearning({ tryThis }) {
         </svg>
 
         {/* ── Stats panel ───────────────────────────────────────────────── */}
-        <div style={{
+        <div data-mobile-panel style={{
           width: 180, flexShrink: 0,
           background: 'var(--bg2)', border: '1px solid var(--border)',
           borderRadius: '8px', padding: '14px 14px',
