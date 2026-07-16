@@ -126,13 +126,18 @@ function StatRow({ label, value, color }) {
 function Toggle({ label, on, onChange }) {
   return (
     <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', userSelect: 'none' }}>
-      <div
+      <button
+        type="button"
+        role="switch"
+        aria-checked={on}
+        aria-label={label}
         onClick={() => onChange(!on)}
         style={{
           width: 26, height: 13, borderRadius: 7, flexShrink: 0,
           background: on ? C.accent : C.bg4,
           border: `1px solid ${on ? C.accent : C.border}`,
           position: 'relative', cursor: 'pointer', transition: 'background 0.2s',
+          padding: 0,
         }}
       >
         <div style={{
@@ -141,7 +146,7 @@ function Toggle({ label, on, onChange }) {
           background: on ? '#0a0a0a' : C.textMuted,
           transition: 'left 0.2s',
         }} />
-      </div>
+      </button>
       <span style={{ fontFamily: mono, fontSize: 11, color: C.textMid, whiteSpace: 'nowrap' }}>{label}</span>
     </label>
   );
@@ -210,6 +215,9 @@ export default function LatentSpaceExplorer({ tryThis }) {
           <svg
             viewBox={`0 0 ${GW} ${GH}`}
             width="100%"
+            data-a11y-explorer="manual"
+            role="img"
+            aria-label="Two-dimensional latent grid. Use the latent-coordinate selector below to decode a point or choose interpolation endpoints."
             style={{ display: 'block' }}
             onMouseLeave={() => setHovered(null)}
           >
@@ -331,6 +339,27 @@ export default function LatentSpaceExplorer({ tryThis }) {
             <text x={20} y={gy(6) + 3} textAnchor="end"
               fontSize={8} fill={C.textMuted} fontFamily={mono}>-1</text>
           </svg>
+          <select
+            className="a11y-data-selector"
+            aria-label={mode === 'interpolate' ? 'Choose latent interpolation endpoint' : 'Inspect latent coordinate'}
+            value={hovered ? `${hovered.i}:${hovered.j}` : ""}
+            onChange={event => {
+              if (event.target.value === "") {
+                setHovered(null);
+                return;
+              }
+              const [i, j] = event.target.value.split(":").map(Number);
+              setHovered({ i, j });
+              if (mode === 'interpolate') handleClick(i, j);
+            }}
+          >
+            <option value="">{mode === 'interpolate' ? 'Select endpoint A or B' : 'Select a latent coordinate'}</option>
+            {GRID_CELLS.map(({ i, j }) => (
+              <option key={`${i}-${j}`} value={`${i}:${j}`}>
+                {`z1 ${latZ1(i).toFixed(2)}, z2 ${latZ2(j).toFixed(2)}: ${getShapeProps(latZ1(i), latZ2(j)).shapeLabel}`}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* ── Reconstruction Panel ── */}

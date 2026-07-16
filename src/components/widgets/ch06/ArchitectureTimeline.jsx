@@ -198,6 +198,9 @@ export default function ArchitectureTimeline({ tryThis }) {
       <svg
         width="100%"
         viewBox={`0 0 580 ${SVG_H}`}
+        data-a11y-explorer="manual"
+        role="img"
+        aria-label="Convolutional-network architecture timeline. Use the architecture selector below to select an architecture and read its details."
         style={{ display: 'block', overflow: 'visible', marginBottom: '14px' }}
       >
         {/* Baseline */}
@@ -279,6 +282,20 @@ export default function ArchitectureTimeline({ tryThis }) {
           );
         })}
       </svg>
+
+      <select
+        className="a11y-data-selector"
+        aria-label="Select convolutional-network architecture"
+        value={selected ?? ""}
+        onChange={event => setSelected(event.target.value === "" ? null : Number(event.target.value))}
+      >
+        <option value="">Select an architecture</option>
+        {architectures.map((architecture, index) => (
+          <option key={architecture.name} value={index}>
+            {`${architecture.name}, ${architecture.year}, ${architecture.params} parameters, ${architecture.top1} ${architecture.task} top-1`}
+          </option>
+        ))}
+      </select>
 
       {sizeBy === 'Accuracy' && (
         <div style={{

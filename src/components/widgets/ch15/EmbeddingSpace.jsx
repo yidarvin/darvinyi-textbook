@@ -213,6 +213,9 @@ export default function EmbeddingSpace({ tryThis }) {
           <svg
             viewBox={`0 0 ${VW} ${VH}`}
             width="100%"
+            data-a11y-explorer="manual"
+            role="img"
+            aria-label="Image and text embedding map. Use the embedding selector below to inspect and pin a plotted embedding."
             style={{ display: 'block', cursor: dragging ? 'grabbing' : zoom > 1 ? 'grab' : 'default', userSelect: 'none' }}
             onMouseDown={onMouseDown}
             onMouseMove={onMouseMove}
@@ -373,6 +376,24 @@ export default function EmbeddingSpace({ tryThis }) {
 
             </g>
           </svg>
+          <select
+            className="a11y-data-selector"
+            aria-label="Inspect and pin embedding"
+            value={selected ? `${selected.concept}:${selected.modality}` : ""}
+            onChange={event => {
+              const [concept, modality] = event.target.value.split(":");
+              const point = concept && modality ? { concept, modality } : null;
+              setHovered(point);
+              setSelected(point);
+            }}
+          >
+            <option value="">Select an embedding to pin</option>
+            {ALL_POINTS.map(point => (
+              <option key={`${point.concept}-${point.modality}`} value={`${point.concept}:${point.modality}`}>
+                {`${point.concept}: ${point.modality} embedding`}
+              </option>
+            ))}
+          </select>
         </div>
 
         {/* ── Stats panel ─────────────────────────────────────────────────── */}

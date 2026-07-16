@@ -100,6 +100,7 @@ function SectionLabel({ children }) {
 export default function SafetyRefusal({ tryThis }) {
   const [threshold, setThreshold]     = useState(5.0);
   const [hoveredIdx, setHoveredIdx]   = useState(null);
+  const [inspectedIdx, setInspectedIdx] = useState(null);
   const [tooltipPos, setTooltipPos]   = useState({ x: 0, y: 0 });
   const [showLabels, setShowLabels]   = useState(false);
   const [showGroundTruth, setShowGroundTruth] = useState(true);
@@ -295,6 +296,7 @@ export default function SafetyRefusal({ tryThis }) {
       }
     }
     setHoveredIdx(found);
+    if (found !== null) setInspectedIdx(found);
 
     // Cursor
     const nearHandle = Math.hypot(x - threshX, y - midY) <= 14;
@@ -393,6 +395,8 @@ export default function SafetyRefusal({ tryThis }) {
           <div style={{ position: 'relative', background: C.codeBg, borderRadius: 6, border: `1px solid ${C.border}` }}>
             <canvas
               ref={canvasRef}
+              role="img"
+              aria-label="Safety training prompt chart. Use the prompt selector below to inspect a plotted prompt."
               style={{ width: '100%', height: 340, display: 'block' }}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -432,6 +436,38 @@ export default function SafetyRefusal({ tryThis }) {
               ))}
             </div>
           </div>
+
+          <select
+            className="a11y-data-selector"
+            aria-label="Inspect safety training prompt"
+            value={inspectedIdx ?? ""}
+            onChange={event => {
+              const index = event.target.value === "" ? null : Number(event.target.value);
+              setInspectedIdx(index);
+              setHoveredIdx(index);
+            }}
+          >
+            <option value="">Select a plotted prompt</option>
+            {PROMPTS.map((prompt, index) => (
+              <option key={prompt.text} value={index}>
+                {`${prompt.text} Harm ${prompt.harm.toFixed(1)}, helpfulness ${prompt.help.toFixed(1)}, expected ${prompt.truth}`}
+              </option>
+            ))}
+          </select>
+
+          {inspectedIdx !== null && (() => {
+            const prompt = PROMPTS[inspectedIdx];
+            const prediction = metrics.preds[inspectedIdx];
+            const correct = prompt.truth === prediction;
+            return (
+              <div aria-live="polite" style={{ background: C.bg2, border: `1px solid ${C.border}`, borderRadius: 6, padding: '8px 10px', fontFamily: "'Inter', sans-serif", fontSize: 11, color: C.text, lineHeight: 1.55 }}>
+                <div style={{ marginBottom: 5, fontWeight: 500 }}>{prompt.text}</div>
+                <div style={{ color: C.mid }}>Harm {prompt.harm.toFixed(1)} · Helpfulness {prompt.help.toFixed(1)}</div>
+                <div style={{ color: C.mid }}>Expected: <span style={{ color: prompt.truth === 'help' ? C.green : C.red }}>{prompt.truth}</span> · Prediction: <span style={{ color: prediction === 'help' ? C.green : C.red }}>{prediction}</span></div>
+                <div style={{ color: correct ? C.green : C.red, fontWeight: 500 }}>{correct ? 'correct ✓' : 'wrong ✗'}</div>
+              </div>
+            );
+          })()}
         </div>
 
         {/* ── Right panel: single unified card ── */}

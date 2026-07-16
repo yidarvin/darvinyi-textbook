@@ -439,7 +439,7 @@ export default function ContrastiveLearning({ tryThis }) {
 
         {/* SVG scatter plot */}
         <div style={{ flex: 1, minWidth: 0, background: C.codeBg, borderRadius: '6px', overflow: 'hidden' }}>
-          <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" style={{ display: 'block' }}>
+          <svg viewBox={`0 0 ${VW} ${VH}`} width="100%" data-a11y-explorer="manual" role="img" aria-label="Contrastive-learning embedding chart. Use the embedding selector below to inspect an image or text embedding." style={{ display: 'block' }}>
 
             {/* Background */}
             <rect width={VW} height={VH} fill={C.codeBg} />
@@ -561,6 +561,22 @@ export default function ContrastiveLearning({ tryThis }) {
               </text>
             </g>
           </svg>
+          <select
+            className="a11y-data-selector"
+            aria-label="Inspect contrastive-learning embedding"
+            value={hovKey && hovType ? `${hovKey}:${hovType}` : ""}
+            onChange={event => {
+              const [key, type] = event.target.value.split(":");
+              setHovKey(key || null);
+              setHovType(type || null);
+            }}
+          >
+            <option value="">Select an embedding</option>
+            {PAIRS.flatMap(({ key, label }) => [
+              <option key={`${key}-img`} value={`${key}:img`}>{`${label}: image embedding`}</option>,
+              <option key={`${key}-txt`} value={`${key}:txt`}>{`${label}: text embedding`}</option>,
+            ])}
+          </select>
         </div>
 
         {/* ── Stats panel ──────────────────────────────────────────────── */}
