@@ -195,10 +195,11 @@ export default function Layout() {
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Close drawer whenever the route changes (e.g. user picks a chapter)
+  // Close the drawer whenever navigation changes the route or its target section.
+  // A section result in the open chapter changes only the hash.
   useEffect(() => {
     setDrawerOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, location.hash]);
 
   // Reset scroll position on navigation — either to the top of the new
   // chapter, or to the section named by a URL hash (deep link / TOC click).
