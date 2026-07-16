@@ -66,7 +66,6 @@ darvinyi-textbook/
 ├── prompts/
 │   └── queue.md                 # V2 build queue (drained by ./runqueue.sh)
 ├── vite.config.js
-├── tailwind.config.js
 ├── package.json
 └── vercel.json
 ```

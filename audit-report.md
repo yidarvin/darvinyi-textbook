@@ -35,6 +35,11 @@ The route, page, widget, diagram, citation, cross-reference, placeholder, math, 
 
 ## Lighthouse mobile baseline
 
+The production route smoke starts an isolated Vite preview on `127.0.0.1:4174`
+with `reuseExistingServer: false` and `--strictPort`; it therefore cannot attach to
+an unrelated development server on Vite's default preview port. `npm run check`
+builds first and then runs that isolated smoke suite.
+
 Captured against the final local production preview of the home route with Lighthouse 12.8.2 and Chrome, using `--form-factor=mobile` and the Performance, Accessibility, Best Practices, and SEO categories. Capture timestamp: `2026-07-16T03:26:23.052Z`.
 
 | Category | Score |

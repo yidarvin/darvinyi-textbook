@@ -10,7 +10,7 @@ npm run check
 npm run lint
 ```
 
-The approved curriculum, editorial standards, and chapter specifications live in `context/`. The remaining V2 work is ordered in `prompts/queue.md`.
+The approved curriculum, editorial standards, and chapter specifications live in `context/`. The completed V2 delivery record is preserved in `prompts/queue.md`.
 
 ## Codex queue workflow
 

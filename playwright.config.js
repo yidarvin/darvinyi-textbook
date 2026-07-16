@@ -1,5 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
 
+// Keep the production smoke isolated from a developer's Vite preview. This port is
+// intentionally distinct from Vite's default 4173, and Playwright must own it.
+const smokePort = 4174;
+const smokeUrl = `http://127.0.0.1:${smokePort}`;
+
 export default defineConfig({
   testDir: "./tests",
   fullyParallel: false,
@@ -7,7 +12,7 @@ export default defineConfig({
   retries: process.env.CI ? 2 : 0,
   reporter: [["list"], ["html", { open: "never" }]],
   use: {
-    baseURL: "http://127.0.0.1:4173",
+    baseURL: smokeUrl,
     trace: "retain-on-failure",
   },
   projects: [
@@ -17,9 +22,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: "npm run preview -- --host 127.0.0.1 --port 4173",
-    url: "http://127.0.0.1:4173",
-    reuseExistingServer: !process.env.CI,
+    command: `npm run preview -- --host 127.0.0.1 --port ${smokePort} --strictPort`,
+    url: smokeUrl,
+    reuseExistingServer: false,
     timeout: 120_000,
   },
 });
