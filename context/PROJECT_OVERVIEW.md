@@ -58,11 +58,11 @@ darvinyi-textbook/
 │       └── ...
 ├── context/                     # NOT deployed — reference/planning files
 │   ├── PROJECT_OVERVIEW.md      # This file
-│   ├── DESIGN_SYSTEM.md         # Colors, typography, components
+│   ├── DESIGN_SYSTEM.md         # Retired pre-V2 reference; see index.css + STYLE_GUIDE.md
 │   ├── CURRICULUM.md            # Authoritative 25-chapter, 7-part curriculum
 │   ├── STYLE_GUIDE.md           # Editorial standard + notational conventions (V2)
 │   ├── V2_PLAN.md               # The full critique + overhaul plan driving current work
-│   ├── WIDGET_SPEC.md           # Widget interaction patterns
+│   ├── WIDGET_SPEC.md           # Retired pre-V2 reference; see STYLE_GUIDE.md + V2_PLAN.md
 │   └── REFERENCE_WIDGET.html    # The gradient descent widget (built, reference impl)
 ├── prompts/
 │   └── queue.md                 # V2 build queue (drained by ./runqueue.sh)
@@ -117,7 +117,7 @@ The V2 overhaul is complete: all 25 chapters are live in the revised reading ord
 
 1. **No real model inference** — widgets simulate behavior mathematically, they don't run actual neural networks. All visualizations are computed analytically or via simple JS math, and must faithfully implement the equations they claim to (see `STYLE_GUIDE.md` — widget fidelity is a hard requirement in V2, not a nice-to-have).
 2. **No external data fetching at runtime** — everything is self-contained in the bundle.
-3. **KaTeX for math** — not MathJax (too slow). Imported in `index.css`; self-hosted alongside the other web fonts.
+3. **KaTeX for math** — not MathJax (too slow). Its CSS and the self-hosted text-font CSS are module imports in `main.jsx`, so Vite fingerprints and emits their production font assets.
 4. **No D3/Recharts** — removed as unused dependencies; all interactive viz is custom inline SVG/Canvas.
 5. **Mobile is a supported target** — responsive tokens, off-canvas navigation, code-split routes, and the per-widget mobile pass are shipped.
 6. **Dark mode only** — no light mode toggle.

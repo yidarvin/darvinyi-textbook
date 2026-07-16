@@ -61,8 +61,25 @@ async function expectLinkedCitationMarkers(page) {
   await expect(invalidLinks).toEqual([]);
 }
 
+async function expectProductionFonts(page) {
+  const missing = await page.evaluate(async () => {
+    const required = [
+      "400 16px Inter",
+      '400 16px "JetBrains Mono"',
+      '600 16px "Crimson Pro"',
+      "400 16px KaTeX_Main",
+    ];
+    await Promise.all(required.map((descriptor) => document.fonts.load(descriptor, "Q5")));
+    await document.fonts.ready;
+    return required.filter((descriptor) => !document.fonts.check(descriptor));
+  });
+
+  await expect(missing).toEqual([]);
+}
+
 test("home route renders without console errors", async ({ page }) => {
   await expectRenderedWithoutErrors(page, "/", "h1", "darvinyi-textbook");
+  await expectProductionFonts(page);
 });
 
 for (const chapter of CHAPTERS) {

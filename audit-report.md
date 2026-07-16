@@ -20,14 +20,15 @@ Static checks cover the global aspects of Appendix B that can be verified mechan
 | Chapter pages with a lede, closing synthesis, and citations | 25 / 25 |
 | Rendered `WidgetCard` instances / `tryThis` props | 123 / 123 |
 | Per-chapter `chapters.js` widget metadata matching rendered `WidgetCard` instances | 25 / 25 |
-| Static diagrams with `role="img"` and `aria-label` | 97 / 97 |
+| Live static diagrams with `role="img"` and `aria-label` | 97 / 97 (one additional capsule diagram is deliberately parked) |
 | Source range controls | 86, named at runtime by `WidgetAccessibility` when a local label is absent |
 | Inline citation markers resolving to a `#ref-N` footer target | all rendered markers across 25 chapters |
 | Double-bracket citation markers | 0 |
 | Old `Ch` / `Chs` cross-reference form in chapter prose | 0 |
 | Unfilled `TODO:` or `{{PLACEHOLDER}}` markers in `src/` | 0 |
+| Production font faces | Inter 400, JetBrains Mono 400, Crimson Pro 600, and KaTeX_Main 400 load in the production preview |
 
-The route, page, widget, diagram, citation, cross-reference, and placeholder rows use `rg`/file-inventory checks plus the Playwright route pass. That route pass compares each `chapters.js` widget total with the rendered chapter cards and verifies that every inline `[N]` marker with a local reference has an anchor to its `ref-N` target. The range-control result is based on the source inventory and the shared runtime labeling path in `src/components/shared/WidgetAccessibility.jsx`. Em dashes and stock phrasing are not V2 style-guide rules and are deliberately not reported as audit failures.
+The route, page, widget, diagram, citation, cross-reference, placeholder, and font rows use `rg`/file-inventory checks plus the Playwright route pass. That route pass compares each `chapters.js` widget total with the rendered chapter cards, verifies that every inline `[N]` marker with a local reference has an anchor to its `ref-N` target, and waits for the production browser's font set before requiring the four shipped text and math faces. This fails when an emitted font URL is missing or returns non-font content. The range-control result is based on the source inventory and the shared runtime labeling path in `src/components/shared/WidgetAccessibility.jsx`. Em dashes and stock phrasing are not V2 style-guide rules and are deliberately not reported as audit failures.
 
 ## Lighthouse mobile baseline
 
@@ -46,7 +47,7 @@ The measured web-vitals diagnostics were FCP 2.0 s, LCP 2.0 s, TBT 0 ms, CLS 0, 
 
 ## Context-document refresh
 
-`context/CURRICULUM.md` and `context/PROJECT_OVERVIEW.md` now describe the completed 25-chapter V2 migration. The overview accurately records that `App.jsx` keeps explicit lazy imports and `<Route>` declarations, while `src/data/chapters.js` is the metadata source for navigation and home-page cards. `context/PROJECT_OVERVIEW.md` also distinguishes `npm run build` from the full `npm run check` gate. `context/STYLE_GUIDE.md` no longer points to the already-completed Q3 mobile work as future refinement.
+`context/CURRICULUM.md` and `context/PROJECT_OVERVIEW.md` now describe the completed 25-chapter V2 migration. The overview accurately records that `App.jsx` keeps explicit lazy imports and `<Route>` declarations, while `src/data/chapters.js` is the metadata source for navigation and home-page cards. `context/PROJECT_OVERVIEW.md` also distinguishes `npm run build` from the full `npm run check` gate. `context/STYLE_GUIDE.md` no longer points to the already-completed Q3 mobile work as future refinement. `context/DESIGN_SYSTEM.md` and `context/WIDGET_SPEC.md` are explicitly retired pre-V2 references, with pointers to the current V2 and runtime sources of truth.
 
 ## Reproduce
 

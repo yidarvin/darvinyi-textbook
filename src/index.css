@@ -1,16 +1,6 @@
-/* Self-hosted fonts (@fontsource) — avoids the render-blocking cross-origin
-   request a Google Fonts @import makes on every first visit. Only the
-   weights/styles actually used in the book are pulled in. */
-@import "@fontsource/inter/300.css";
-@import "@fontsource/inter/400.css";
-@import "@fontsource/inter/500.css";
-@import "@fontsource/inter/600.css";
-@import "@fontsource/jetbrains-mono/400.css";
-@import "@fontsource/jetbrains-mono/500.css";
-@import "@fontsource/crimson-pro/400.css";
-@import "@fontsource/crimson-pro/600.css";
-@import "@fontsource/crimson-pro/400-italic.css";
-@import "katex/dist/katex.min.css";
+/* Self-hosted font styles are module imports in main.jsx. This lets Vite
+   fingerprint and emit the font files for production instead of preserving
+   package-relative URLs in this stylesheet. */
 @import "tailwindcss";
 @source "../index.html";
 @source "./src/**/*.{js,jsx}";
