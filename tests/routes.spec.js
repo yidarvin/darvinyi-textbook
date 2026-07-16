@@ -94,6 +94,20 @@ for (const chapter of CHAPTERS) {
   });
 }
 
+test("citation markers remain linked after in-app chapter navigation", async ({ page }) => {
+  const errors = capturePageErrors(page);
+
+  await page.goto("/ch/01");
+  await expect(page.locator("article h1")).toBeVisible();
+  await expectLinkedCitationMarkers(page);
+
+  await page.getByRole("button", { name: "Next: Statistical Learning" }).click();
+  await expect(page).toHaveURL(/\/ch\/02$/);
+  await expect(page.locator("article h1")).toBeVisible();
+  await expectLinkedCitationMarkers(page);
+  await expect(errors).toEqual([]);
+});
+
 test("unknown routes render the not-found page without console errors", async ({ page }) => {
   await expectRenderedWithoutErrors(
     page,

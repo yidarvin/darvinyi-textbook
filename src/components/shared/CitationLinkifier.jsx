@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 
 const MARKER = /\[(\d+)\]/g;
 const EXCLUDED_ANCESTORS = [
@@ -76,6 +77,7 @@ function linkifyMarkers(root) {
  */
 export default function CitationLinkifier({ children }) {
   const rootRef = useRef(null);
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const root = rootRef.current;
@@ -94,7 +96,7 @@ export default function CitationLinkifier({ children }) {
     });
     observer.observe(root, { childList: true, subtree: true });
     return () => observer.disconnect();
-  }, []);
+  }, [pathname]);
 
   return <div ref={rootRef}>{children}</div>;
 }
