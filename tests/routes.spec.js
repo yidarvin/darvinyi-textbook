@@ -103,7 +103,7 @@ test("citation markers remain linked after in-app chapter navigation", async ({ 
 
   await page.getByRole("button", { name: "Next: Statistical Learning" }).click();
   await expect(page).toHaveURL(/\/ch\/02$/);
-  await expect(page.locator("article h1")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Statistical Learning", exact: true })).toBeVisible();
   await expectLinkedCitationMarkers(page);
   await expect(errors).toEqual([]);
 });
