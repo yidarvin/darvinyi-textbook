@@ -72,7 +72,7 @@ darvinyi-textbook/
 └── vercel.json
 ```
 
-## Curriculum Summary (25 chapters, 7 parts — V2 target)
+## Curriculum Summary (25 chapters, 7 parts — V2)
 
 | Part | Chapters | Focus |
 |---|---|---|
@@ -93,8 +93,9 @@ The V2 overhaul is complete: all 25 chapters are live in the revised reading ord
 ## Routing
 
 ```jsx
-// App.jsx — each chapter route is React.lazy + Suspense; the route table is
-// generated from src/data/chapters.js rather than hand-written per chapter.
+// App.jsx — each chapter route is explicitly declared with React.lazy +
+// Suspense. chapters.js remains the source of truth for navigation, route
+// paths, titles, and home-page metadata; it does not generate this route table.
 <Routes>
   <Route path="/" element={<Home />} />
   <Route path="/ch/01" element={L(ProbabilityAndInformation)} />

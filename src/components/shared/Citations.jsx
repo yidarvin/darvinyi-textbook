@@ -61,7 +61,10 @@ export default function Citations({ citations = [] }) {
         References
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+      <div
+        data-citation-list
+        style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
+      >
         {citations.map((c) => (
           <div
             key={c.num}

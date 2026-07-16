@@ -4,6 +4,7 @@ import Layout from "./components/layout/Layout";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 import ErrorBoundary from "./components/shared/ErrorBoundary";
+import CitationLinkifier from "./components/shared/CitationLinkifier";
 
 // Lazy-load chapter routes so the initial bundle stays small —
 // each chapter (with all its widgets) becomes its own chunk and only
@@ -101,7 +102,9 @@ function L(Element) {
   return (
     <ErrorBoundary fallback={<ChapterErrorFallback />}>
       <Suspense fallback={<ChapterFallback />}>
-        <Element />
+        <CitationLinkifier>
+          <Element />
+        </CitationLinkifier>
       </Suspense>
     </ErrorBoundary>
   );

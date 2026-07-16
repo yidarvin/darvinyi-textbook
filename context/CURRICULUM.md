@@ -1,4 +1,4 @@
-# Curriculum (V2 target — 25 chapters, 7 parts)
+# Curriculum (V2 — 25 chapters, 7 parts)
 
 This is the authoritative chapter list. The V2 migration from the prior 22-chapter structure is complete: `src/data/chapters.js` and the live routes use this 25-chapter order. `context/V2_PLAN.md` preserves the rationale and the old-to-new mapping for historical reference.
 

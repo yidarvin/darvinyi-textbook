@@ -21,6 +21,46 @@ async function expectRenderedWithoutErrors(page, path, heading, title) {
   await expect(errors).toEqual([]);
 }
 
+async function expectLinkedCitationMarkers(page) {
+  const unresolved = await page.locator("article").evaluate((article) => {
+    const excluded = [
+      "a",
+      "button",
+      "code",
+      "pre",
+      "svg",
+      ".katex",
+      ".widget-card",
+      "[data-citation-list]",
+    ].join(", ");
+    const marker = /\[(\d+)\]/g;
+    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+    const bareMarkers = [];
+
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (node.parentElement?.closest(excluded)) continue;
+      marker.lastIndex = 0;
+      let match;
+      while ((match = marker.exec(node.nodeValue))) {
+        if (article.querySelector(`[id="ref-${match[1]}"]`)) {
+          bareMarkers.push(match[0]);
+        }
+      }
+    }
+    return bareMarkers;
+  });
+
+  const invalidLinks = await page.locator("article").evaluate((article) => (
+    [...article.querySelectorAll("a.citation-marker")]
+      .map((link) => link.getAttribute("href"))
+      .filter((href) => !href || !article.querySelector(href))
+  ));
+
+  await expect(unresolved).toEqual([]);
+  await expect(invalidLinks).toEqual([]);
+}
+
 test("home route renders without console errors", async ({ page }) => {
   await expectRenderedWithoutErrors(page, "/", "h1", "darvinyi-textbook");
 });
@@ -33,6 +73,8 @@ for (const chapter of CHAPTERS) {
       "article h1",
       `Ch ${chapter.num} · ${chapter.title} — darvinyi-textbook`,
     );
+    await expect(page.locator(".widget-card")).toHaveCount(chapter.widgets);
+    await expectLinkedCitationMarkers(page);
   });
 }
 
