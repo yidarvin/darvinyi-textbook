@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "smoke": "playwright test",
-    "check": "npm run build && npm run smoke",
+    "check": "eslint . && npm run build && npm run smoke",
     "lint": "eslint .",
     "preview": "vite preview"
   },

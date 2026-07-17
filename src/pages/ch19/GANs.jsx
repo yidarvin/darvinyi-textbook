@@ -1,4 +1,4 @@
-import { useTocSections } from "../../components/layout/TocRail";
+import { useTocSections } from "../../components/layout/TocContext";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";
 import Citations from "../../components/shared/Citations";

@@ -1,19 +1,10 @@
-import { useState, useEffect, useRef, createContext, useContext } from "react";
-
-// ─── Context so chapter pages can register their headings ────────────────────
-export const TocContext = createContext({ sections: [], setActivePath: () => {} });
-
-// ─── Hook page components use to push their section list into the TOC ────────
-// Usage: useTocSections([{ id: "forward-pass", label: "The Forward Pass" }, ...])
-export function useTocSections(sections) {
-  const { setSections } = useContext(TocContext);
-  useEffect(() => {
-    setSections(sections);
-    return () => setSections([]);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-}
+import { useState, useEffect, useRef, useContext } from "react";
+import { TocContext } from "./TocContext";
 
 // ─── Provider lives inside Layout, stores the active section list ─────────────
+// (A component, so it lives alongside the TocRail component below rather
+// than in TocContext.js — react-refresh/only-export-components flags a
+// single file that mixes component and non-component exports.)
 export function TocProvider({ children }) {
   const [sections, setSections] = useState([]);
   return (
@@ -90,16 +81,23 @@ export default function TocRail() {
   const [activeId, setActiveId] = useState(null);
   const observerRef = useRef(null);
 
-  // Wire up IntersectionObserver whenever section list changes
+  // Default activeId to the first section (or null) whenever the section
+  // list itself changes — adjusted during render rather than in an effect,
+  // since this is a plain reset-on-prop-change, not a subscription.
+  const [lastSections, setLastSections] = useState(sections);
+  if (sections !== lastSections) {
+    setLastSections(sections);
+    setActiveId(sections.length ? sections[0].id : null);
+  }
+
+  // Wire up IntersectionObserver whenever section list changes; it takes
+  // over activeId from there as the reader scrolls.
   useEffect(() => {
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
 
-    if (!sections.length) {
-      setActiveId(null);
-      return;
-    }
+    if (!sections.length) return;
 
     const candidates = sections.map(s => document.getElementById(s.id)).filter(Boolean);
 
@@ -136,9 +134,6 @@ export default function TocRail() {
     );
 
     candidates.forEach(el => observerRef.current.observe(el));
-
-    // Set first section as default active on mount
-    setActiveId(sections[0].id);
 
     return () => {
       if (observerRef.current) observerRef.current.disconnect();

@@ -2,7 +2,8 @@ import { useContext, useEffect, useState } from "react";
 import { useLocation, Outlet } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import Topbar from "./Topbar";
-import TocRail, { TocContext, TocProvider } from "./TocRail";
+import TocRail, { TocProvider } from "./TocRail";
+import { TocContext } from "./TocContext";
 import MobileNav from "./MobileNav";
 import WidgetAccessibility from "../shared/WidgetAccessibility";
 import { useIsMobile } from "../../hooks/useMediaQuery";
@@ -195,11 +196,18 @@ export default function Layout() {
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
-  // Close the drawer whenever navigation changes the route or its target section.
-  // A section result in the open chapter changes only the hash.
-  useEffect(() => {
+  // Close the drawer whenever navigation changes the route or its target
+  // section (a section result in the open chapter changes only the hash).
+  // Adjusted during render rather than in an effect — the recommended
+  // pattern for resetting state when a prop/derived value changes — so it
+  // takes effect in the same commit as the route change instead of one
+  // render later, and doesn't trigger a redundant re-render.
+  const routeKey = `${location.pathname}${location.hash}`;
+  const [lastRouteKey, setLastRouteKey] = useState(routeKey);
+  if (routeKey !== lastRouteKey) {
+    setLastRouteKey(routeKey);
     setDrawerOpen(false);
-  }, [location.pathname, location.hash]);
+  }
 
   // Reset scroll position on navigation — either to the top of the new
   // chapter, or to the section named by a URL hash (deep link / TOC click).
@@ -220,10 +228,10 @@ export default function Layout() {
       : `Page not found — ${SITE_TITLE}`;
   }, [location.pathname]);
 
-  // Close drawer when switching to desktop
-  useEffect(() => {
-    if (!isMobile) setDrawerOpen(false);
-  }, [isMobile]);
+  // The drawer only ever matters on mobile — deriving this instead of
+  // syncing it in an effect means switching to desktop closes it in the
+  // same render, with no separate state to fall out of sync.
+  const drawerOpenOnMobile = drawerOpen && isMobile;
 
   return (
     <TocProvider>
@@ -232,7 +240,7 @@ export default function Layout() {
         {!isMobile && <Sidebar />}
         {isMobile && (
           <MobileSidebarDrawer
-            open={drawerOpen}
+            open={drawerOpenOnMobile}
             onClose={() => setDrawerOpen(false)}
           />
         )}

@@ -5,6 +5,15 @@ export default function MobileNav({ sections }) {
   const [activeId, setActiveId] = useState(sections[0]?.id || "");
   const observerRef = useRef(null);
 
+  // Default activeId to the first section whenever the section list itself
+  // changes — adjusted during render (a plain reset-on-prop-change), not in
+  // an effect; the IntersectionObserver effect below takes over from there.
+  const [lastSections, setLastSections] = useState(sections);
+  if (sections !== lastSections) {
+    setLastSections(sections);
+    setActiveId(sections[0]?.id || "");
+  }
+
   useEffect(() => {
     if (observerRef.current) observerRef.current.disconnect();
     if (!sections.length) return;
@@ -33,7 +42,6 @@ export default function MobileNav({ sections }) {
       { rootMargin: "-80px 0px -60% 0px", threshold: 0 }
     );
     candidates.forEach((el) => observerRef.current.observe(el));
-    setActiveId(sections[0].id);
 
     return () => observerRef.current?.disconnect();
   }, [sections]);

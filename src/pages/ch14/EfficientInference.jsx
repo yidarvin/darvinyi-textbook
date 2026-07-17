@@ -8,7 +8,7 @@
 // material, originally old ch04/new ch05 Training Techniques) predate this
 // pass and are preserved as-is, expanded with new material rather than
 // replaced. Chapter is `live: true` in src/data/chapters.js.
-import { useTocSections } from "../../components/layout/TocRail";
+import { useTocSections } from "../../components/layout/TocContext";
 import { buildCitations } from "../../data/citations";
 import SectionTitle from "../../components/shared/SectionTitle";
 import ChapterLede from "../../components/shared/ChapterLede";

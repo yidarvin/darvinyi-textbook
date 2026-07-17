@@ -26,7 +26,7 @@ Never push unless the user explicitly requests it — all stages are local commi
 
 ## Gate & environment
 
-`npm run check` = `vite build` + Playwright route smoke, and is the required gate after every build/resolve/critique stage. On a fresh checkout, run `npx playwright install chromium` once before the first `npm run check`. For changed widgets, also use the dev server (`npm run dev`, or `/run`) to check desktop and narrow-mobile (375px) behavior, interaction, equation rendering, and browser-console errors.
+`npm run check` = `eslint .` (errors only fail the gate; warnings don't) + `vite build` + Playwright route smoke, and is the required gate after every build/resolve/critique stage. On a fresh checkout, run `npx playwright install chromium` once before the first `npm run check`. For changed widgets, also use the dev server (`npm run dev`, or `/run`) to check desktop and narrow-mobile (375px) behavior, interaction, equation rendering, and browser-console errors.
 
 ## Quality bar
 
