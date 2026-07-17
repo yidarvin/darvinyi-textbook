@@ -75,17 +75,22 @@ const SERIES = [
     labelAt: { year: 2022.3, pct: 80, anchor: 'start' },
   },
   {
-    // GPQA alone from its Nov 2023 release (GPT-4 scored 39% on GPQA
-    // Diamond at launch; Rein et al. 2023/2024). FrontierMath did not exist
-    // until Nov 8, 2024 (Epoch AI) and Humanity's Last Exam not until Jan
-    // 2025 (CAIS/Scale AI) — so the unweighted three-benchmark composite
-    // only becomes meaningful from January 2025 onward, and it drops sharply
-    // right there because FrontierMath and HLE scores start far lower than
-    // GPQA's by then.
+    // GPQA alone from its Nov 2023 release: GPT-4 scored 39% on GPQA
+    // Diamond at launch (Rein et al. 2023/2024); Claude 3.5 Sonnet reached
+    // 59.4% at its June 2024 release (Anthropic, "Introducing Claude 3.5
+    // Sonnet," 2024); o1 hit 77.3% zero-shot in its September 2024 release,
+    // the first public model to clear the ~69.7% PhD-expert baseline OpenAI
+    // measured for that announcement (OpenAI, "Learning to Reason with
+    // LLMs," 2024) — matching the reasoning-model jump already shown on the
+    // MMLU line above. FrontierMath did not exist until Nov 8, 2024 (Epoch
+    // AI) and Humanity's Last Exam not until Jan 2025 (CAIS/Scale AI) — so
+    // the unweighted three-benchmark composite only becomes meaningful from
+    // January 2025 onward, and it drops sharply right there because
+    // FrontierMath and HLE scores start far lower than GPQA's by then.
     name: 'GPQA family',
     color: C.accent,
     points: [
-      [2023.85, 39], [2024.3, 48], [2024.8, 58],
+      [2023.85, 39], [2024.46, 59.4], [2024.8, 77.3],
       [2025.05, 29], [2025.5, 36], [2026, 46],
     ],
     humanBaseline: null,

@@ -460,8 +460,11 @@ export default function DiffusionModels() {
         <InlineMath>{"\\varepsilon"}</InlineMath> or{" "}
         <InlineMath>{"x_0"}</InlineMath> alone. Salimans &amp; Ho (2022) [8]
         introduced this <strong>v-prediction</strong> parameterization;
-        Stable Diffusion 2.x and SDXL both use v-prediction variants in their
-        higher-resolution checkpoints. All three targets — noise, clean
+        Stable Diffusion 2.x's higher-resolution ("-v") checkpoints use it,
+        though the original SDXL was trained with plain{" "}
+        <InlineMath>{"\\varepsilon"}</InlineMath>-prediction — v-prediction
+        variants of SDXL exist only as later third-party uptrains. All three
+        targets — noise, clean
         image, and this rotated combination — are algebraically
         interconvertible given <InlineMath>{"(x_t, t)"}</InlineMath>: a
         network trained on one recovers the others by a change of variables,

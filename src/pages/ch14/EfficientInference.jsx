@@ -476,17 +476,23 @@ export default function EfficientInference() {
       <p style={prose}>
         That premise breaks down for a small number of dimensions. Dettmers et
         al. (2022) [3] found that across nearly every layer of a trained LLM,
-        a handful of activation channels — sometimes fewer than 1% of the
-        total — carry values 10 to 100 times larger than the rest,
-        consistently, across almost every input the model sees; the
-        remaining values cluster in a much narrower range. A
-        single scale <InlineMath>{"s"}</InlineMath> computed from the
-        tensor's maximum absolute value, as in the formula above, has to
-        stretch to cover those outliers, which pushes the grid spacing wide
-        enough that the bulk of ordinary, non-outlier values all collapse onto
-        just a few discrete levels near zero — the resolution that should have
-        gone to representing normal variation gets spent covering values that
-        occur rarely.
+        a handful of <em>activation</em> channels — sometimes fewer than 1% of
+        the total — carry values 10 to 100 times larger than the rest,
+        consistently, across almost every input the model sees. Those
+        activation outliers need a different fix than weight quantization
+        entirely: LLM.int8() isolates them into a separate 16-bit matrix
+        multiplication rather than forcing them onto the same low-bit grid as
+        everything else, since more than 99.9% of the remaining values still
+        quantize cleanly. Weight matrices have a milder version of the same
+        unevenness, without true outliers: individual output channels — a row
+        or column of the matrix — can simply have a larger typical magnitude
+        than their neighbors. A single scale <InlineMath>{"s"}</InlineMath>{" "}
+        computed from the whole tensor's maximum absolute value, as in the
+        formula above, has to stretch to cover whichever channel has the
+        widest range, which pushes every other channel's grid spacing wider
+        than it needs — the resolution that should have gone to representing
+        that channel's own normal variation gets spent covering a range it
+        never uses.
       </p>
 
       <p style={prose}>

@@ -602,11 +602,19 @@ export default function LLMTraining() {
         reward-hacking failure Chapter 12 names directly. RLVR's reward comes
         from a deterministic checker with no learned component in the loop: a
         correct proof is correct no matter how the policy phrases it, so there
-        is no reward surface to hack. That removes the ceiling on how long an
-        RL run can be pushed, and it is exactly that extended optimization —
-        thousands of RL steps against a reward that cannot drift — that
-        produces long chains of thought as a side effect, not a designed-in
-        feature.
+        is no learned reward <em>model</em> for the policy to exploit the way it
+        can exploit PPO's learned reward model — the checker itself can't be
+        fooled into scoring a wrong answer as right. That removes one entire
+        failure mode from long training runs, and it is exactly that extended
+        optimization — thousands of RL steps against a reward that cannot be
+        talked into misjudging correctness — that produces long chains of
+        thought as a side effect, not a designed-in feature. It does not
+        remove every failure mode: a policy can still satisfy the literal
+        correctness check while drifting on properties the checker never
+        looks at, like readability or which language it answers in — precisely
+        the specification-gaming Chapter 12 documents in R1-Zero. Verifiable
+        rewards close off the learned-proxy exploit; they don't guarantee the
+        checker asked for everything you actually wanted.
       </p>
 
       <p style={prose}>

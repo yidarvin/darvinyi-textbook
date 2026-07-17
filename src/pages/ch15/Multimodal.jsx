@@ -345,9 +345,15 @@ export default function Multimodal() {
         a substantial angle — the "modality gap." The gap exists at
         initialization (the two encoders start with random weights in different
         parts of the space) and contrastive training only partially closes it.
-        Surprisingly, <em>closing</em> the gap by simple subtraction actually{" "}
-        <em>hurts</em> downstream performance: the gap seems to encode useful
-        information about which modality an embedding came from. Practical
+        Surprisingly, <em>modifying</em> the gap distance — in either
+        direction — can improve downstream performance rather than uniformly
+        hurting it: the authors found that <em>increasing</em> the gap
+        reduced racial bias in CLIP's zero-shot classification with only a
+        negligible (0.08 percentage-point) accuracy cost, and more broadly
+        that varying the gap distance shifts zero-shot performance across
+        tasks. The gap is not simply an artifact to be zeroed out — it seems
+        to encode useful information about which modality an embedding came
+        from. Practical
         implication: cross-modal retrieval works well because relative distances
         are aligned within each cone-pair, but treating the joint space as a
         single isotropic space (e.g., applying PCA or k-means across modalities)
