@@ -792,6 +792,15 @@ export default function CrewAIvsAutoGPT({ tryThis }) {
         autoOutcome={autoOutcome}
         isRunning={isRunning}
       />
+
+      <div style={{
+        marginTop: '14px', fontStyle: 'italic', color: C.muted,
+        fontSize: '9.5px', fontFamily: "'JetBrains Mono', monospace",
+      }}>
+        Illustrative, not measured: both event logs are pre-scripted timelines
+        representative of how a CrewAI-style handoff and an AutoGPT-style
+        autonomous loop typically play out, not a live run of either framework.
+      </div>
     </WidgetCard>
   );
 }
