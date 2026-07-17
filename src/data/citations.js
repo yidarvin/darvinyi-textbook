@@ -319,8 +319,13 @@ export const CITATIONS = {
 // that chapter. `num` is assigned by position, matching the chapter's own
 // inline [N] markers.
 export function buildCitations(entries) {
-  return entries.map((entry, i) => ({
-    num: i + 1,
-    ...(typeof entry === "string" ? CITATIONS[entry] : entry),
-  }));
+  return entries.map((entry, i) => {
+    if (typeof entry === "string" && !CITATIONS[entry]) {
+      throw new Error(`buildCitations: unknown citation slug "${entry}" (not in src/data/citations.js CITATIONS)`);
+    }
+    return {
+      num: i + 1,
+      ...(typeof entry === "string" ? CITATIONS[entry] : entry),
+    };
+  });
 }
