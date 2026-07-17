@@ -166,7 +166,10 @@ export default function Multimodal() {
         400M image-text pairs scraped from the open web ("WebImageText" / WIT). At
         each training step, a batch of <InlineMath>{"N"}</InlineMath> image-text
         pairs is encoded into two batches of <InlineMath>{"N"}</InlineMath>{" "}
-        embeddings. The loss is <em>symmetric InfoNCE</em>: for each image, treat
+        embeddings. The loss is <em>symmetric InfoNCE</em> — a contrastive
+        objective that turns representation learning into a batch-wise
+        classification problem, picking the one true pairing out of many
+        distractors: for each image, treat
         its matched caption as the positive and the other{" "}
         <InlineMath>{"N-1"}</InlineMath> captions as negatives; do the same with
         images as the negatives for each caption; average the two cross-entropies.

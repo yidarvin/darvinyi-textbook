@@ -87,14 +87,12 @@ export default function StatisticalLearning() {
         Suppose we want a machine to predict an output from an input — a price
         from a house's features, a species from a flower's measurements —
         using only examples it has already seen, not a hand-written rule.
-        Statistical learning formalizes this guess-from-examples process: we
-        specify a hypothesis class and a loss function, then search for the
-        member of that class that best explains the observations, balancing
-        the twin pressures of fitting the data in front of us and
-        generalizing to data we have not seen. Every architecture in the rest
-        of this book — linear, convolutional, recurrent, or attention-based —
-        is one particular choice of hypothesis class wrapped around this same
-        skeleton.
+        Statistical learning is the theory of when that kind of guessing can
+        be trusted: how to tell a model that has genuinely learned a pattern
+        from one that has merely memorized its examples, and how much data
+        separates the two. Every architecture in the rest of this book —
+        linear, convolutional, recurrent, or attention-based — inherits its
+        answer to that question from the ideas in this chapter.
       </ChapterLede>
 
       {/* ── Section 1: The Learning Problem ──────────────────────────────── */}

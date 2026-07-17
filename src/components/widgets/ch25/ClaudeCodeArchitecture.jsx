@@ -67,12 +67,14 @@ const DETAILS = {
     color: '#fb923c', title: 'Permission System',
     body: `Claude Code evaluates every tool call against the active permission mode before executing it. Six modes span fully manual to fully unattended:
 
-The 6 permission modes (least → most autonomous):
+The 6 permission modes (least → most autonomous, with dontAsk set apart —
+it isn't more autonomous, it's non-interactive: unlisted actions are
+silently denied rather than asked about):
 • default (Manual) — reads run freely; edits and commands ask first
 • plan — read-only research and proposal; nothing executes
+• dontAsk — only pre-approved tools run at all; anything else is auto-denied, no prompt (CI use)
 • acceptEdits — file edits and safe filesystem commands auto-approve
 • auto — an ML classifier blocks a denylist of risky actions; everything else runs unprompted
-• dontAsk — only pre-approved tools run at all (CI use)
 • bypassPermissions — no gating (isolated environments only)
 
 Permissions are session-scoped and never restored on resume — trust is re-established each session.`,

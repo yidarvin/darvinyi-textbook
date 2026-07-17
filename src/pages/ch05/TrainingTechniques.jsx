@@ -284,7 +284,9 @@ export default function TrainingTechniques() {
         RMSNorm has been in use since T5 (2019) and Gopher/Chinchilla (2021–22), but
         adoption became close to universal only with the LLaMA-era generation of
         open models (2023 onward): Llama, Mistral, Gemma, Qwen, and DeepSeek all use
-        it, while the GPT-3/4 lineage still uses LayerNorm.
+        it, while GPT-3 (whose published architecture follows GPT-2's) still uses
+        LayerNorm — GPT-4's architecture is undisclosed, so whether it followed suit
+        isn't publicly confirmable.
       </p>
 
       <p style={prose}>

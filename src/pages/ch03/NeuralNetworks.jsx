@@ -162,13 +162,13 @@ export default function NeuralNetworks() {
       </h1>
 
       <ChapterLede>
-        A neural network is a parameterized function — layers of linear
-        transformations interleaved with nonlinearities. The power is not in
-        any single layer but in their composition, which can approximate any
-        continuous function given enough capacity. Every architecture covered
-        later in this book — convolutional, recurrent, attention-based — is
-        this same composition wearing a different connectivity pattern, which
-        is why the forward pass, backpropagation, and activation-function
+        A neural network is a machine for building complicated functions out
+        of many simple, adjustable pieces stacked together. Its real power
+        isn't any one piece — it's that stacking enough of them lets the
+        network approximate almost any function worth learning, discovered
+        from data rather than hand-designed. Every architecture covered later
+        in this book — convolutional, recurrent, attention-based — is this
+        same idea wearing a different connectivity pattern, which is why the
         vocabulary built here never gets re-explained.
       </ChapterLede>
 
@@ -473,7 +473,12 @@ export default function NeuralNetworks() {
         <InlineMath>{"|x|"}</InlineMath>{" "}
         but allow small negative values to leak through near zero. GELU is now
         standard in transformers (BERT, GPT-2, GPT-3); modern LLMs increasingly
-        use SwiGLU [11] (Shazeer, 2020), a gated variant.
+        use SwiGLU [11] (Shazeer, 2020), a gated variant. (Swish/SiLU has three
+        independent origins worth knowing about: Ramachandran, Zoph & Le
+        (2017) [10] found it via architecture search and named it Swish;
+        Elfwing, Uchibe & Doya (2017) had already proposed the identical
+        function as "SiLU"; and it appears as a special case inside
+        Hendrycks & Gimpel's GELU paper [9] a year earlier still.)
       </p>
 
       <p style={prose}>

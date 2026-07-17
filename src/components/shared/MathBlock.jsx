@@ -30,7 +30,7 @@ export default function MathBlock({ children }) {
     let html;
     try {
       html = katex.renderToString(inner, {
-        displayMode: true,
+        displayMode,
         throwOnError: false,
         output: 'html',
       });

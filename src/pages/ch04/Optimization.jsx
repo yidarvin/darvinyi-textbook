@@ -264,20 +264,16 @@ export default function Optimization() {
       </h1>
 
       <ChapterLede>
-        A trained network is defined entirely by the values of its
-        parameters, and training is nothing more than a search for a good
-        set of values. Gradient descent is the search algorithm behind
-        every model in this book — take a step opposite the direction the
-        loss is increasing fastest, repeat millions of times — but this
-        chapter's real subject is everything that turns that one-line idea
-        into something that actually works: which optimizer computes the
-        step, how large the step should be, and how that size should
-        change as training proceeds. Get these choices wrong and a network
-        that could have trained in an afternoon instead diverges, stalls,
-        or quietly settles for a worse solution than its architecture was
-        capable of; get them right, and every later chapter — from
-        convolutional networks through the largest language models — can
-        simply assume a well-behaved training loop and move on.
+        A trained network is nothing but a long list of numbers, and
+        training is the process of nudging those numbers toward values that
+        work. This chapter is about the search itself: not whether a good
+        setting of those numbers exists, but how to actually find one
+        without the search stalling, overshooting, or wandering off
+        entirely. Get this wrong and a network that could have trained in an
+        afternoon instead diverges or quietly settles for far less than its
+        architecture was capable of; get it right, and every later chapter —
+        from convolutional networks through the largest language models —
+        can simply assume a well-behaved training loop and move on.
       </ChapterLede>
 
       {/* ── Section 1: Gradient Descent ──────────────────────────────────── */}
@@ -814,7 +810,7 @@ export default function Optimization() {
         generalize slightly worse than SGD-with-momentum-trained ones
         (Wilson et al. 2017) [25], and the cause is still actively debated.
         Despite this, Adam and AdamW are the universal default for sequence
-        models, where SGD reliably fails to train transformers — the
+        models, where SGD reliably underperforms on transformers — the
         adaptive scaling is essentially required to handle the very
         different gradient magnitudes across the attention mechanism
         (Chapter 9), token embeddings, and bias terms.
