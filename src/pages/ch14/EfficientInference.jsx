@@ -547,14 +547,16 @@ export default function EfficientInference() {
 
       <p style={prose}>
         The widget below quantizes an illustrative weight distribution — a
-        synthetic histogram shaped like real LLM weights (roughly Gaussian,
-        with a thin outlier tail), not weights pulled from an actual model —
-        at whichever bit-width is selected, using the real round-and-rescale
+        synthetic histogram shaped like real LLM weight matrices (roughly
+        Gaussian, with a couple of channels running a larger typical
+        magnitude than the rest, not the sharper activation-style outliers
+        described above), not weights pulled from an actual model — at
+        whichever bit-width is selected, using the real round-and-rescale
         math above, and reports the actual mean-squared reconstruction error
         between the original and dequantized values. Drop the bit-width from 8
         down to 2 and watch the error climb, then turn on per-channel handling
-        and notice how much of that error the outlier tail alone was
-        responsible for.
+        and notice how much of that error those wider-magnitude channels
+        alone were responsible for.
       </p>
 
       <QuantizationExplorer

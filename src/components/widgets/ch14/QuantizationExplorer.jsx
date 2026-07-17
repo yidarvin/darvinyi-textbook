@@ -335,8 +335,9 @@ export default function QuantizationExplorer({ tryThis }) {
       }}>
         Illustrative weight distribution, not values from a real checkpoint: {CHANNELS} channels ×{' '}
         {N_PER_CHANNEL} weights each, roughly Gaussian, with {OUTLIER_CHANNELS.length} channels
-        (marked ★) scaled ~{OUTLIER_MULT}× larger to model the outlier-channel phenomenon reported
-        in real LLM weights.
+        (marked ★) scaled ~{OUTLIER_MULT}× larger to model the milder per-channel magnitude
+        variation real LLM weight matrices show — not the sharper activation outliers Dettmers et
+        al. (2022) found, which are a separate phenomenon this widget doesn't model.
       </div>
 
       {/* Histogram: original vs dequantized */}
