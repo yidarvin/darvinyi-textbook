@@ -686,11 +686,11 @@ export default function ConvNets() {
       <MathBlock>{"$$\\text{squash}(v) = \\frac{\\|v\\|^2}{1 + \\|v\\|^2} \\cdot \\frac{v}{\\|v\\|}$$"}</MathBlock>
 
       <p style={prose}>
-        The widget below runs a pooling head and a two-capsule routing head
-        over the same drawn face, valid and scrambled. Animating it, the
-        CNN's pooled score barely moves (0.91 → 0.89) while the Face
-        capsule's length collapses from 0.81 to 0.07 once the parts are
-        scrambled.
+        The widget below runs a two-capsule routing head over the same drawn
+        face, valid and scrambled, against fixed illustrative CNN pooling
+        scores. Animating it, the CNN's pooled score barely moves (0.91 →
+        0.89) while the Face capsule's length collapses from 0.81 to 0.07
+        once the parts are scrambled.
       </p>
 
       <CnnVsCapsnet

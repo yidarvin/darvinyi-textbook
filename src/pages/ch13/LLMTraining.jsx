@@ -134,7 +134,7 @@ export default function LLMTraining() {
         The stages are extremely uneven in cost. Pretraining is overwhelmingly the
         most compute-expensive — for a frontier-class model, it consumes 95–99% of
         the total training budget and runs for weeks to months on thousands of GPUs.
-        Every subsequent stage is comparatively cheap. Llama 2 [7] is a useful
+        Every subsequent stage is comparatively cheap. Llama 2 70B [7] is a useful
         public reference point: roughly <InlineMath>{"1.7 \\times 10^6"}</InlineMath>{" "}
         GPU-hours on pretraining versus a small fraction of that on instruction
         tuning and RLHF combined. The implication is structural — most of the

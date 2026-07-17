@@ -251,7 +251,13 @@ export default function InitializationExplorer({ tryThis }) {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  const activationFactor = activation === 'relu' ? 0.5 : 0.667;
+  // ReLU: 0.5 models the nonlinearity zeroing out ~half the units, so
+  // He's 2/n compensating factor nets to exactly 1 (preserves variance) --
+  // the real derivation behind He init. tanh: 1.0 models the small-signal
+  // linear regime tanh'(0)=1 that Xavier's own derivation assumes, so
+  // Xavier's 1/n nets to exactly 1 too -- matching the page's "Xavier
+  // preserves variance for tanh" claim instead of visibly decaying it.
+  const activationFactor = activation === 'relu' ? 0.5 : 1.0;
 
   const variances = useMemo(
     () => computeVariances(n, activationFactor),
@@ -288,9 +294,7 @@ export default function InitializationExplorer({ tryThis }) {
 
   const recommendation = activation === 'relu'
     ? 'Use He initialization'
-    : isHealthy(finalVars.xavier)
-      ? 'Use Xavier initialization'
-      : `Xavier keeps deep tanh nets closer to stable than naive init, but variance still decays over depth (currently ${formatVar(finalVars.xavier)} at layer 10) — very deep tanh stacks typically need normalization or residual connections too.`;
+    : 'Use Xavier initialization';
 
   const statRows = [
     { key: 'zero',   label: 'Zero',      lineColor: '#555555' },

@@ -235,11 +235,11 @@ export default function OptimizerRace({ tryThis }) {
       s.trail.push({ x: s.x, y: s.y });
     }
 
-    { // Momentum: v = 0.85*v + lr*grad; Δ = v
+    { // Momentum: v = 0.9*v + lr*grad; Δ = v (matches the page's stated "beta (typically 0.9)")
       const s = state.momentum;
       const [gx, gy] = grad(s.x, s.y);
-      s.vx = 0.85*s.vx + lr*gx;
-      s.vy = 0.85*s.vy + lr*gy;
+      s.vx = 0.9*s.vx + lr*gx;
+      s.vy = 0.9*s.vy + lr*gy;
       s.x = clamp(s.x - s.vx);
       s.y = clamp(s.y - s.vy);
       s.trail.push({ x: s.x, y: s.y });

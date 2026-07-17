@@ -251,7 +251,7 @@ export default function LLMArchitectures() {
 
       <p style={prose}>
         The memory hierarchy makes decode worse than it looks. Plug Llama
-        3&nbsp;70B's real numbers into the KV-size formula above:{" "}
+        3.1&nbsp;70B's real numbers into the KV-size formula above:{" "}
         <InlineMath>{"L = 80"}</InlineMath> layers,{" "}
         <InlineMath>{"h = 8"}</InlineMath> KV groups (GQA — more on this below),{" "}
         <InlineMath>{"d_k = 128"}</InlineMath>,{" "}
@@ -313,8 +313,11 @@ export default function LLMArchitectures() {
         shared head while keeping separate Q projections per head: identical
         computation graphs, dramatically smaller KV cache. Grouped-query attention
         (GQA) is the middle ground — K and V are shared within groups of{" "}
-        <InlineMath>{"h/G"}</InlineMath> heads. Llama 2 and 3, Mistral, and
-        Gemini all adopted GQA: it retains most of MHA's representational capacity
+        <InlineMath>{"h/G"}</InlineMath> heads. Llama 2, Llama 3, and Mistral
+        all publicly confirm GQA in their released configs. (Gemini's own
+        technical report mentions multi-query attention rather than GQA
+        specifically, and the full architecture is undisclosed, so it is
+        left out of that list here.) GQA retains most of MHA's representational capacity
         while cutting KV cache size by a factor of{" "}
         <InlineMath>{"h/G"}</InlineMath>. Quality at inference is nearly
         indistinguishable; memory savings are substantial.
@@ -347,8 +350,9 @@ export default function LLMArchitectures() {
         <InlineMath>{"h/G"}</InlineMath> Q-heads share each K/V projection.
         The original GQA paper showed quality almost matching MHA at the cost of
         MQA. Llama 2 <em>[8]</em> adopted GQA with 8 K/V groups for 64 Q-heads
-        (in its 34B and 70B variants — the 7B and 13B variants use plain MHA);
-        Llama 3, Mistral, and Gemini all followed.
+        in its released 70B model (the 7B and 13B variants use plain MHA; the
+        paper also reports a 34B variant with GQA, but Meta never released
+        those weights); Llama 3 and Mistral followed.
       </p>
 
       <p style={prose}>

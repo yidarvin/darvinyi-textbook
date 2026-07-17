@@ -41,6 +41,8 @@ const DATASETS = [
     labelXOffset: 0,
   },
   {
+    // 1.2M = ImageNet-1K's ~1.28M ILSVRC training images (Russakovsky et al. 2015), commonly
+    // rounded to 1.2M; keep in sync with the ImageNet node in DatasetScaleLogarithmic.jsx.
     name: 'ImageNet',
     year: 2009,
     size: 1200000,
@@ -89,10 +91,12 @@ const DATASETS = [
     labelXOffset: 0,
   },
   {
+    // 410B tokens = the filtered Common Crawl figure GPT-3 trained on (Brown et al. 2020, "Language
+    // Models are Few-Shot Learners," Table 2.2) — the standard citable token count for Common Crawl.
     name: 'Common Crawl',
     year: 2008,
-    size: 100000000000,
-    sizeLabel: '100B+ tokens',
+    size: 410000000000,
+    sizeLabel: '410B tokens',
     domain: 'language',
     task: 'Language model pretraining',
     significance: 'Founded in 2007 as a nonprofit and began archiving the public web in 2008 — the largest freely available text corpus, and the raw substrate nearly every later text corpus in this timeline filters down from. Noisy but vast; careful filtering extracts the usable signal.',

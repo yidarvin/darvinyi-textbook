@@ -32,6 +32,7 @@ const CITATIONS = buildCitations([
   { title: "On the Properties of Neural Machine Translation: Encoder-Decoder Approaches", authors: "Cho, van Merrienboer, Bahdanau, Bengio", venue: "EMNLP Workshop (SSST-8)", year: "2014", tag: "paper" },
   { title: "On the Difficulty of Training Recurrent Neural Networks", authors: "Pascanu, Mikolov, Bengio", venue: "ICML", year: "2013", tag: "seminal" },
   { title: "Learning to Forget: Continual Prediction with LSTM", authors: "Gers, Schmidhuber, Cummins", venue: "Neural Computation", year: "2000", tag: "seminal" },
+  { title: "Efficiently Modeling Long Sequences with Structured State Spaces (S4)", authors: "Gu, Goel, Ré", venue: "ICLR", year: "2021", tag: "paper" },
   { title: "Mamba: Linear-Time Sequence Modeling with Selective State Spaces", authors: "Gu, Dao", venue: "arXiv", year: "2023", tag: "paper" },
   { title: "xLSTM: Extended Long Short-Term Memory", authors: "Beck, Pöppel, Spanring, Auer, Prudnikova, Kopp, Klambauer, Brandstetter, Hochreiter", venue: "NeurIPS", year: "2024", tag: "paper" },
 ]);
@@ -524,10 +525,11 @@ export default function RNNs() {
         and the sequential-computation limit — are exactly what attention was built
         to remove, and Chapter 9 picks up there directly, replacing the fixed
         context vector with a mechanism that lets every output position look at
-        every input position in parallel. State-space models such as S4 and Mamba
-        (Gu & Dao (2023) [9]), RWKV, and xLSTM (Beck et al. (2024) [10]) later revisit
-        recurrence itself, using training tricks that make that sequential computation
-        parallelizable again — Chapter 17 covers this revival in full.
+        every input position in parallel. State-space models such as S4 (Gu, Goel & Ré
+        (2021) [9]), its selective successor Mamba (Gu & Dao (2023) [10]), RWKV, and
+        xLSTM (Beck et al. (2024) [11]) later revisit recurrence itself, using training
+        tricks that make that sequential computation parallelizable again — Chapter 17
+        covers this revival in full.
       </p>
 
       {/* ── Citations ─────────────────────────────────────────────────────── */}

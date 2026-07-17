@@ -276,7 +276,7 @@ export default function FastTextSubwords() {
           lineHeight: 1.5,
         }}
       >
-        fastText represents each word as the average of its character n-gram vectors,
+        fastText represents each word as the sum of its character n-gram vectors,
         sharing structure across morphologically related forms.
       </figcaption>
     </figure>

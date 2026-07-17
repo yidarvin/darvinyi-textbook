@@ -258,9 +258,13 @@ export default function AIAgents() {
         application — an agent can act on the screen the way a person does:
         it takes a screenshot, proposes a pixel coordinate to click or text
         to type, and re-observes the screen after each action. Anthropic's
-        computer-use API (2024) [10] and comparable systems (OpenAI's
-        Operator, Google's Project Mariner) exemplify this "screen as the
-        tool" pattern. The action space is fundamentally different from
+        computer-use API (2024) [10] pioneered this "screen as the tool"
+        pattern; OpenAI and Google shipped comparable systems (OpenAI's
+        Operator, Google's Project Mariner) that were later retired and folded
+        into their respective flagship agent products (ChatGPT Agent and
+        Gemini Agent) as this fast-moving space consolidated — the pattern
+        itself has outlasted both original product names. The action space is
+        fundamentally different from
         structured function calling — a coordinate or a keystroke instead of
         a typed JSON argument — and so are the failure modes: a misread
         screenshot, a button that moved between the screenshot and the click,

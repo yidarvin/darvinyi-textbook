@@ -319,7 +319,7 @@ export default function GradientDescentNavigator({ tryThis }) {
       // update v_t <- beta*v_{t-1} + eta*grad L(theta); theta <- theta - v_t.
       // Gradient is evaluated at the current position (bx, by), not a
       // Nesterov look-ahead point.
-      const beta = 0.85;
+      const beta = 0.9; // matches the page's stated "beta (typically 0.9)"
       vxRef.current = beta*vxRef.current + lr*gx;
       vyRef.current = beta*vyRef.current + lr*gy;
       bxRef.current = bx - vxRef.current;

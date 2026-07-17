@@ -444,14 +444,14 @@ export default function GloVeFastText({ tryThis }) {
                   <>
                     <InlineTag color={C.green} text="✓ In vocabulary" />
                     <div style={{ marginTop: '6px', fontFamily: SANS, fontSize: '10px', color: C.muted, lineHeight: 1.4 }}>
-                      Embedding = weighted average of {totalNgrams} n-gram vectors — adds morphological robustness, even for known words.
+                      Embedding = sum of {totalNgrams} n-gram vectors — adds morphological robustness, even for known words.
                     </div>
                   </>
                 ) : (
                   <>
                     <InlineTag color={C.orange} text="📍 Out-of-vocabulary word" />
                     <div style={{ marginTop: '6px', fontFamily: SANS, fontSize: '10px', color: C.muted }}>
-                      Embedding = average of {totalNgrams} n-gram vectors
+                      Embedding = sum of {totalNgrams} n-gram vectors
                     </div>
 
                     {NR > 0 && (

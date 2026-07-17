@@ -623,13 +623,14 @@ export default function DiffusionModels() {
         Click anywhere on the canvas below to drop a new particle, then press
         play. Notice that the particle drifts along the arrows toward the
         nearest density mode and settles near it — following the score field
-        one step at a time is exactly the Langevin update shown above.
+        one step at a time is the same Langevin dynamics shown above, run
+        with its own tuned step size and noise scale.
       </p>
 
       <ScoreFunction
         tryThis={{
           do: "Click anywhere on the canvas to drop a new particle, then press play.",
-          notice: "The particle drifts along the arrows toward the nearest density mode and settles near it — following the score field is exactly the Langevin update shown above, run one step at a time.",
+          notice: "The particle drifts along the arrows toward the nearest density mode and settles near it — following the score field is the same Langevin update shown above, run one step at a time with its own tuned step size.",
         }}
       />
 

@@ -369,7 +369,7 @@ export default function MultiAgentTopologies() {
         </text>
         <text x={CX[2]} y={P_Y + 366} textAnchor="middle"
               fontFamily={mono} fontSize="9" fill={C.text}>
-          AutoGen · CrewAI
+          AutoGen group chat
         </text>
         <text x={CX[2]} y={P_Y + 380} textAnchor="middle"
               fontFamily={mono} fontSize="9" fill={C.text}>

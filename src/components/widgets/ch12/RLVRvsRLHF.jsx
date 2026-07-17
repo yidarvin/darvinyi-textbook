@@ -532,7 +532,7 @@ export default function RLVRvsRLHF({ tryThis }) {
       <RowWrap label="Scalability">
         <div style={col}>
           <div style={main}>Fundamentally limited by annotator bandwidth.</div>
-          <div style={note}>InstructGPT required ~40K expert comparisons collected over months.</div>
+          <div style={note}>InstructGPT's reward model was trained on tens of thousands of expert-ranked prompts, collected over months.</div>
           <div style={{ marginTop: '6px' }}>
             <ProgressMeter pct={40} color={C.accent} />
           </div>

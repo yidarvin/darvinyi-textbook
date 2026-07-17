@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
 
 const PRESETS = {
-  pulse: [0, 0, 1, 0, 0, 0, 0, 0],
+  pulse: [1, 0, 0, 0, 0, 0, 0, 0],
   rhythm: [1, 0, 0.4, 0, 0, 0.8, 0, 0],
   alternating: [1, -0.8, 1, -0.8, 1, -0.8, 1, -0.8],
 };
@@ -13,7 +13,7 @@ function bars(values, color, label, max) {
 }
 
 export default function SSMDuality({ tryThis }) {
-  const [decay, setDecay] = useState(0.72);
+  const [decay, setDecay] = useState(0.75);
   const [preset, setPreset] = useState('pulse');
   const [view, setView] = useState('both');
   const u = PRESETS[preset];

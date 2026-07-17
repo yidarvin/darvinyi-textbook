@@ -388,16 +388,18 @@ export default function WordEmbeddings() {
         rather than local windows, giving the dot product of two word vectors an
         explicit numerical target instead of Word2Vec's local prediction objective.
         FastText extends the word2vec
-        approach by representing each word as a bag of character n-grams: "playing"
-        is the average of vectors for "play", "layi", "ayin", "ying", and the full
-        word. This allows fastText to generate reasonable embeddings for out-of-vocabulary
+        approach by representing each word as a bag of character n-grams: wrapping
+        "playing" in boundary markers as "&lt;playing&gt;" and taking every length-3
+        substring gives &lt;pl, pla, lay, ayi, yin, ing, ng&gt;, plus the whole marked
+        word itself as one more n-gram; the word's vector sums the embeddings of all
+        of these. This allows fastText to generate reasonable embeddings for out-of-vocabulary
         words and is particularly effective on morphologically rich languages where
         word forms vary heavily.
       </p>
 
       <MathBlock>{`$$\\begin{aligned}
   \\text{GloVe loss:} \\quad &\\sum_{i,j} f(X_{ij})\\bigl(v_i^{\\top} v_j + b_i + b_j - \\log X_{ij}\\bigr)^2 \\\\
-  \\text{fastText:} \\quad &v(\\text{word}) = \\frac{1}{|G_w|} \\sum_{g \\in G_w} z_g
+  \\text{fastText:} \\quad &v(\\text{word}) = \\sum_{g \\in G_w} z_g
 \\end{aligned}$$`}</MathBlock>
 
       <p style={prose}>
@@ -454,8 +456,8 @@ export default function WordEmbeddings() {
         Bojanowski et al. (2017) [4] attacked a different
         limitation: Word2Vec treats "play", "plays", "played", and "playing" as
         four unrelated tokens and learns them independently. fastText represents
-        each word as the average of its character n-gram vectors — "playing"
-        averages together the vectors for &lt;pl, pla, lay, ayi, yin, ing, ng&gt;
+        each word as the sum of its character n-gram vectors — "playing"
+        sums together the vectors for &lt;pl, pla, lay, ayi, yin, ing, ng&gt;
         and the whole-word vector itself. Words with shared morphology share embedding components
         automatically, and <i>out-of-vocabulary</i> words receive sensible
         embeddings — "unfollowable" is built from familiar subword pieces even if

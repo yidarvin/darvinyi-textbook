@@ -3,21 +3,41 @@ import WidgetCard from '../../shared/WidgetCard';
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
+// Sourced to paperswithcode.com/sota/image-classification-on-imagenet single-crop top-1 unless noted;
+// see individual comments for divergences. Every value below is a single-model, single-crop (or
+// single-view) ImageNet-1K validation top-1 accuracy — never a top-5, ensemble, or multi-crop number.
 const IMAGENET_DATA = [
-  { model: 'AlexNet',         year: 2012, score: 63.3, innovation: 'First deep CNN to win ImageNet. ReLU + dropout + GPU training at scale.',        callout: true, calloutDx: 20,  calloutDy: -30, calloutText: 'First deep CNN' },
-  { model: 'VGG-16',          year: 2014, score: 74.4, innovation: 'Depth with uniform 3×3 kernels. Showed deeper = better for vision.' },
-  { model: 'GoogLeNet',       year: 2014, score: 74.8, innovation: 'Inception modules: parallel multi-scale convolutions.' },
-  { model: 'ResNet-152',      year: 2016, score: 78.6, innovation: 'Skip connections. First time >100-layer networks reliably trained.',               callout: true, calloutDx: 10,  calloutDy: -30, calloutText: 'Skip connections' },
-  { model: 'DenseNet-201',    year: 2017, score: 80.2, innovation: 'Dense connections: every layer connected to every subsequent layer.' },
-  { model: 'EfficientNet-B7', year: 2019, score: 84.4, innovation: 'Compound scaling: jointly scale depth, width, and resolution.' },
+  // 57.1%: BVLC/Caffe "bvlc_alexnet" model zoo readme (official replication of Krizhevsky et al.
+  // 2012), single center-crop top-1. The original NeurIPS paper's own Table 2 reports only top-5
+  // for ILSVRC-2012, so this is the standard citable single-crop figure.
+  { model: 'AlexNet',         year: 2012, score: 57.1, innovation: 'First deep CNN to win ImageNet. ReLU + dropout + GPU training at scale.',        callout: true, calloutDx: 20,  calloutDy: -30, calloutText: 'First deep CNN' },
+  // 70.6%: Zagoruyko (2016) single central-crop re-evaluation of the official VGG-16 weights, as
+  // used in Canziani et al. 2016 (arXiv:1605.07678) — lower than the 74.4% the VGG paper itself
+  // reports in Table 3, which uses "dense" (fully-convolutional, whole-image) evaluation, not a crop.
+  { model: 'VGG-16',          year: 2014, score: 70.6, innovation: 'Depth with uniform 3×3 kernels. Showed deeper = better for vision.' },
+  // 68.7%: BVLC/Caffe "bvlc_googlenet" model zoo readme (official replication, credited to Christian
+  // Szegedy), single center-crop top-1. Szegedy et al. 2014 itself reports only top-5 (10.07% single
+  // model/single crop, Table 3) — 74.8% in an earlier version of this chart conflated a different
+  // metric/protocol.
+  { model: 'GoogLeNet',       year: 2014, score: 68.7, innovation: 'Inception modules: parallel multi-scale convolutions.' },
+  // 77.8%: Facebook fb.resnet.torch official repo, "Single-crop (224x224) validation error rate"
+  // table, top-1 error 22.16%. He et al. 2015 itself reports 78.6% under 10-crop testing (Table 3)
+  // and 80.6% under dense/multi-scale evaluation (Table 4) — neither is a single crop.
+  { model: 'ResNet-152',      year: 2016, score: 77.8, innovation: 'Skip connections. First time >100-layer networks reliably trained.',               callout: true, calloutDx: 10,  calloutDy: -30, calloutText: 'Skip connections' },
+  // 77.4%: Huang et al. 2017 (CVPR), Table 3, explicitly labeled single-crop, top-1 error 22.58%.
+  { model: 'DenseNet-201',    year: 2017, score: 77.4, innovation: 'Dense connections: every layer connected to every subsequent layer.' },
+  // 84.3%: Tan & Le 2019 (ICML), paper's own headline single-model figure.
+  { model: 'EfficientNet-B7', year: 2019, score: 84.3, innovation: 'Compound scaling: jointly scale depth, width, and resolution.' },
+  // 90.45%: Zhai et al. 2022 (CVPR), "Scaling Vision Transformers," single-model figure.
   { model: 'ViT-G/14',        year: 2022, score: 90.5, innovation: 'Vision Transformer at scale. Pure attention, no convolutions.',                   callout: true, calloutDx: -10, calloutDy: -30, calloutText: 'Pure attention' },
+  // 90.88%: Dai et al. 2021 (NeurIPS), CoAtNet paper, with JFT-3B pretraining, single-model figure.
   { model: 'CoAtNet-7',       year: 2022, score: 90.9, innovation: 'Hybrid: convolutional early layers + attention later layers.' },
 ];
 
 const GLUE_DATA = [
   { model: 'ELMo',      year: 2018, score: 71.0, innovation: 'Contextual embeddings from bidirectional LSTMs. First contextualized word representations.' },
-  { model: 'BERT-base', year: 2018, score: 80.5, innovation: 'Bidirectional transformer pretraining on masked language modeling. Paradigm shift.',    callout: true, calloutDx: 0,   calloutDy: -30, calloutText: 'Masked LM' },
-  { model: 'XLNet',     year: 2019, score: 85.5, innovation: 'Autoregressive pretraining with permutation-based training objective.' },
+  { model: 'BERT-large', year: 2018, score: 80.5, innovation: 'Bidirectional transformer pretraining on masked language modeling. Paradigm shift.',    callout: true, calloutDx: 0,   calloutDy: -30, calloutText: 'Masked LM' },
+  { model: 'XLNet',     year: 2019, score: 88.4, innovation: 'Autoregressive pretraining with permutation-based training objective.' },
   { model: 'RoBERTa',   year: 2019, score: 88.5, innovation: 'BERT trained better: more data, longer training, dynamic masking.' },
   { model: 'ALBERT',    year: 2020, score: 89.4, innovation: 'Parameter-efficient BERT: factorized embeddings + cross-layer weight sharing.' },
   { model: 'DeBERTa',   year: 2021, score: 91.9, innovation: 'Disentangled attention: position and content encoded separately.' },

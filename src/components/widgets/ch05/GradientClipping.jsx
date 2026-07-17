@@ -475,6 +475,16 @@ export default function GradientClipping({ tryThis }) {
             Reset
           </button>
         </div>
+
+        <div style={{
+          marginTop: '4px',
+          fontFamily: "'JetBrains Mono', monospace", fontSize: '9.5px', color: C.muted,
+          fontStyle: 'italic', lineHeight: 1.5,
+        }}>
+          Illustrative, not measured: the gradient-norm trace is a synthetic
+          sequence with two injected spikes, not a recorded training run —
+          the clipping operation itself (min(norm, threshold)) is exact.
+        </div>
       </div>
     </WidgetCard>
   );

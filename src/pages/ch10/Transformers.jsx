@@ -398,15 +398,17 @@ export default function Transformers() {
 
       <p style={prose}>
         Switch between the four tokens below and watch the bars update;
-        notice that the cumulative-norm line (white) only ever climbs —
-        every block's attention and FFN contribution adds onto the stream,
-        it never overwrites what earlier blocks already wrote.
+        notice that the cumulative-magnitude line (white) only ever climbs —
+        it's a running sum of each block's attention and FFN contribution
+        size, not a true vector norm, but it illustrates the same point: every
+        block adds onto the stream, it never overwrites what earlier blocks
+        already wrote.
       </p>
 
       <ResidualStream
         tryThis={{
           do: "Switch between the four tokens and toggle Normalize on.",
-          notice: "The cumulative stream norm only grows, never shrinks — confirming the additive, never-overwriting structure the equation above describes.",
+          notice: "The cumulative contribution magnitude only grows, never shrinks — confirming the additive, never-overwriting structure the equation above describes.",
         }}
       />
 

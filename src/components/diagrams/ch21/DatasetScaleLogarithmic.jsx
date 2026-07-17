@@ -27,8 +27,11 @@ const yOf = (value) => {
 const DATASETS = [
   { name: 'MNIST',         year: 1998, value: 7e4,    units: 'images',  cat: 'vision',  dx: 6,  dy: 3 },
   { name: 'CIFAR-10',      year: 2009, value: 6e4,    units: 'images',  cat: 'vision',  dx: -6, dy: 14, anchor: 'end' },
-  { name: 'ImageNet',      year: 2009, value: 1.4e6,  units: 'images',  cat: 'vision',  dx: 6,  dy: -4 },
-  { name: 'Common Crawl',  year: 2008, value: 5e10,   units: 'tokens',  cat: 'lm',      dx: 6,  dy: 18 },
+  { name: 'ImageNet',      year: 2009, value: 1.2e6,  units: 'images',  cat: 'vision',  dx: 6,  dy: -4 },
+  // Common Crawl: 410B tokens is the filtered Common Crawl figure GPT-3 trained on (Brown et al.
+  // 2020, Table 2.2) — the standard citable token count, and consistent with it being the raw
+  // superset that the smaller, further-filtered C4 (156B) and The Pile (300B) below it derive from.
+  { name: 'Common Crawl',  year: 2008, value: 4.1e11, units: 'tokens',  cat: 'lm',      dx: 6,  dy: 18 },
   { name: 'C4',            year: 2019, value: 1.56e11, units: 'tokens', cat: 'lm',      dx: -6, dy: -3, anchor: 'end' },
   { name: 'The Pile',      year: 2020, value: 3e11,   units: 'tokens',  cat: 'lm',      dx: 6,  dy: 12 },
   { name: 'LAION-5B',      year: 2022, value: 5.85e9, units: 'pairs',   cat: 'multi',   dx: 6,  dy: 4 },

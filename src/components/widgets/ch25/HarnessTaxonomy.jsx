@@ -40,7 +40,7 @@ const HARNESSES = {
     interaction: "Terminal-based, minimal harness, model-led",
     primaryUse: "Coding assistance with direct shell access",
     strength: "Lightweight abstractions, OS-level sandbox by default",
-    weakness: "No harness-level permission system; approvals depend on the sandbox's escape hatches",
+    weakness: "Approval policy defaults looser than Claude Code's, and a single flag disables both the approval gate and the OS sandbox at once",
     structure: 2, autonomy: 5, reusability: 4, learningCurve: 9,
     quadrant: "Interactive helper",
     labelOffset: [-14, -14],

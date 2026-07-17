@@ -284,7 +284,7 @@ function paintCanvas(ctx, { attn, ffn }, { showAttn, showFFN, showNorm, normaliz
   ctx.textBaseline = 'middle';
   ctx.translate(CW - 8, T_PAD + CHART_H / 2);
   ctx.rotate(-Math.PI / 2);
-  ctx.fillText('cumulative ‖stream‖', 0, 0);
+  ctx.fillText('cumulative contribution magnitude', 0, 0);
   ctx.restore();
 
   // ── X-axis ────────────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ function paintCanvas(ctx, { attn, ffn }, { showAttn, showFFN, showNorm, normaliz
     ctx.fillText(`L${l + 1}`, barCenterX(l), chartBottom + 5);
   }
 
-  // ── Cumulative norm line ──────────────────────────────────────────────────
+  // ── Cumulative magnitude line ────────────────────────────────────────────
   if (showNorm) {
     const norms = computeNorms(attn, ffn);
     const startX = L_PAD - BAR_W / 2;
@@ -334,7 +334,7 @@ function paintCanvas(ctx, { attn, ffn }, { showAttn, showFFN, showNorm, normaliz
   const legendItems = [
     { color: C.accent, label: 'Attention', type: 'square' },
     { color: C.orange, label: 'FFN',       type: 'square' },
-    { color: C.white,  label: 'Cumulative norm', type: 'line' },
+    { color: C.white,  label: 'Cumulative magnitude', type: 'line' },
   ];
   ctx.font = "10px 'Inter', sans-serif";
   const legY = T_PAD + 9;
@@ -471,7 +471,7 @@ export default function ResidualStream({ tryThis }) {
           {[
             { label: 'Attention',       val: showAttn,  set: setShowAttn  },
             { label: 'FFN',             val: showFFN,   set: setShowFFN   },
-            { label: 'Cumulative norm', val: showNorm,  set: setShowNorm  },
+            { label: 'Cumulative magnitude', val: showNorm,  set: setShowNorm  },
           ].map(({ label, val, set }) => (
             <label key={label} style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
               <input
@@ -544,7 +544,7 @@ export default function ResidualStream({ tryThis }) {
           <StatRow label="Total attn"      val={totalAttn.toFixed(2)} />
           <StatRow label="Total FFN"       val={totalFFN.toFixed(2)} />
           <StatRow label="Attn / FFN ratio" val={(totalAttn / totalFFN).toFixed(2)} />
-          <StatRow label="Final stream norm" val={finalNorm.toFixed(3)} />
+          <StatRow label="Final magnitude" val={finalNorm.toFixed(3)} />
           <StatRow
             label="Growth from embed"
             val={`+${growth.toFixed(2)} (${growthPct}%)`}
