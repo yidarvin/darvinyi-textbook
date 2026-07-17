@@ -30,23 +30,95 @@ const HEAD_DESCS = [
   'Content words attend to their semantically related counterparts. Verbs attend to objects, modifiers cluster with the words they modify, and nouns reference their governing verbs. This reflects a soft learned version of dependency parsing — the head has internalized relational sentence structure. Attention entropy is moderate: more diffuse than identity heads, but far from uniform.',
 ];
 
-const WEIGHTS_A = [
-  [[0.42,0.38,0.11,0.05,0.04],[0.31,0.33,0.22,0.09,0.05],[0.08,0.28,0.36,0.21,0.07],[0.05,0.08,0.26,0.38,0.23],[0.04,0.06,0.12,0.36,0.42]],
-  [[0.52,0.18,0.12,0.10,0.08],[0.44,0.28,0.12,0.09,0.07],[0.41,0.20,0.22,0.10,0.07],[0.38,0.19,0.15,0.20,0.08],[0.40,0.17,0.16,0.14,0.13]],
-  [[0.62,0.12,0.10,0.09,0.07],[0.10,0.65,0.12,0.08,0.05],[0.09,0.11,0.61,0.12,0.07],[0.07,0.09,0.12,0.63,0.09],[0.06,0.07,0.10,0.11,0.66]],
-  [[0.35,0.22,0.18,0.14,0.11],[0.08,0.22,0.34,0.14,0.22],[0.07,0.28,0.24,0.12,0.29],[0.10,0.14,0.18,0.32,0.26],[0.08,0.24,0.28,0.18,0.22]],
-];
+// ── math (scaled dot-product attention, same pipeline as QKVInspector) ──────
+function matMul(A, B) {
+  return A.map(row => B[0].map((_, j) => row.reduce((s, v, k) => s + v * B[k][j], 0)));
+}
+function transpose(M) { return M[0].map((_, j) => M.map(r => r[j])); }
+function softmax(arr) {
+  const mx = Math.max(...arr);
+  const ex = arr.map(v => Math.exp(v - mx));
+  const sm = ex.reduce((a, b) => a + b, 0);
+  return ex.map(v => v / sm);
+}
+function softmaxRows(M) { return M.map(softmax); }
+function attention(Q, K, d) {
+  const S = matMul(Q, transpose(K));
+  return softmaxRows(S.map(row => row.map(v => v / Math.sqrt(d))));
+}
+
+// Each of the four heads below gets its own hand-authored Q/K construction —
+// a position-only feature map for the three structural archetypes, a
+// part-of-speech feature map for the semantic one — then the displayed
+// weights are the REAL output of matmul + scale + softmax on those vectors,
+// not authored directly. This is the same "toy input, real computation"
+// approach QKVInspector.jsx and AttentionHeatmap.jsx use; see
+// STYLE_GUIDE.md's widget-fidelity rule. These idealized archetypes are
+// illustrative of patterns reported in BERT-style models (Voita et al. 2019,
+// Clark et al. 2019), not extracted from any specific trained model.
+const D = 4;
+
+// Head 1 — Local: dot(Q_i,K_j) = -(i-j)^2 * TEMP, a real closed-form
+// quadratic-distance kernel (expand -(i-j)^2 = -i^2+2ij-j^2 into two
+// matching feature maps), so nearby positions score highest by construction.
+const LOCAL_TEMP = 0.5;
+function headLocal(n) {
+  const Q = Array.from({ length: n }, (_, i) => [-LOCAL_TEMP, 2 * i * LOCAL_TEMP, -(i * i) * LOCAL_TEMP, 0]);
+  const K = Array.from({ length: n }, (_, j) => [j * j, j, 1, 0]);
+  return attention(Q, K, D);
+}
+
+// Head 2 — Global/anchor: token 0's key carries a large shared-direction
+// component that every query has a fixed component in, so every row routes
+// a large share of its mass to position 0 regardless of query identity —
+// the query-agnostic broadcast pattern real CLS/anchor heads show.
+const ANCHOR_MAG = 4.5, ANCHOR_OTHER = 0.5;
+function headGlobal(n) {
+  const K = Array.from({ length: n }, (_, j) =>
+    j === 0 ? [ANCHOR_MAG, 0, 0.1, 0] : [0, ANCHOR_OTHER * Math.sin(j), 0.15, 0.1 * j]);
+  const Q = Array.from({ length: n }, (_, i) => [0.6, 0.15, 0.15 * i, 0.08]);
+  return attention(Q, K, D);
+}
+
+// Head 3 — Identity: positions on a unit circle, Q=K, so dot(Q_i,K_j) =
+// SCALE^2*cos(2π(i-j)/n), maximized at i=j; the scale sharpens softmax into
+// a near-one-hot diagonal.
+const IDENTITY_SCALE = 2.5;
+function headIdentity(n) {
+  const QK = Array.from({ length: n }, (_, i) => {
+    const th = (2 * Math.PI * i) / n;
+    return [Math.cos(th) * IDENTITY_SCALE, Math.sin(th) * IDENTITY_SCALE, 0, 0];
+  });
+  return attention(QK, QK, D);
+}
+
+// Head 4 — Semantic: each token's query points toward the part-of-speech
+// direction it semantically depends on (verbs and modifiers seek nouns,
+// nouns seek their governing verb) rather than toward its own type, giving
+// genuine cross-type dependency-like peaks instead of a diagonal.
+const SEM_SCALE = 1.5;
+const KDIR = { ART: [1,0,0,0], PRON: [1,0,0,0], NOUN: [0,1,0,0], VERB: [0,0,1,0], ADJ: [0,0,0,1], ADV: [0,0,0,1] };
+const QDIR = { ART: [0,1,0,0], PRON: [0,0,1,0], NOUN: [0,0,1,0], VERB: [0,1,0,0], ADJ: [0,1,0,0], ADV: [0,0,1,0] };
+function headSemantic(types) {
+  const Q = types.map(t => QDIR[t].map(v => v * SEM_SCALE));
+  const K = types.map(t => KDIR[t].map(v => v * SEM_SCALE));
+  return attention(Q, K, D);
+}
+
+function buildHeads(types) {
+  const n = types.length;
+  return [headLocal(n), headGlobal(n), headIdentity(n), headSemantic(types)];
+}
+
 const TOKENS_A = ['The', 'model', 'learns', 'many', 'patterns'];
 const SHORT_A  = ['The', 'mod', 'lea', 'man', 'pat'];
+const TYPES_A  = ['ART', 'NOUN', 'VERB', 'ADJ', 'NOUN'];
+const WEIGHTS_A = buildHeads(TYPES_A);
 
-const WEIGHTS_B = [
-  [[0.45,0.35,0.12,0.05,0.03],[0.32,0.34,0.21,0.09,0.04],[0.07,0.27,0.38,0.22,0.06],[0.04,0.07,0.27,0.39,0.23],[0.03,0.05,0.11,0.38,0.43]],
-  [[0.50,0.20,0.13,0.10,0.07],[0.46,0.26,0.13,0.09,0.06],[0.42,0.18,0.23,0.11,0.06],[0.39,0.17,0.16,0.21,0.07],[0.41,0.16,0.17,0.13,0.13]],
-  [[0.63,0.11,0.10,0.09,0.07],[0.09,0.66,0.12,0.08,0.05],[0.08,0.10,0.62,0.12,0.08],[0.07,0.08,0.11,0.65,0.09],[0.06,0.06,0.09,0.12,0.67]],
-  [[0.36,0.20,0.19,0.13,0.12],[0.09,0.21,0.32,0.14,0.24],[0.06,0.27,0.23,0.11,0.33],[0.10,0.13,0.17,0.33,0.27],[0.07,0.22,0.30,0.16,0.25]],
-];
 const TOKENS_B = ['She', 'quickly', 'reads', 'every', 'book'];
 const SHORT_B  = ['She', 'qui', 'rea', 'eve', 'boo'];
+const TYPES_B  = ['PRON', 'ADV', 'VERB', 'ADJ', 'NOUN'];
+const WEIGHTS_B = buildHeads(TYPES_B);
 
 // ─── Utility ─────────────────────────────────────────────────────────────────
 
@@ -60,9 +132,11 @@ function wColor(w, hex) {
   return `rgb(${Math.round(bg[0]+w*(fg[0]-bg[0]))},${Math.round(bg[1]+w*(fg[1]-bg[1]))},${Math.round(bg[2]+w*(fg[2]-bg[2]))})`;
 }
 
+// Nats (natural log), matching QKVInspector.jsx and AttentionHeatmap.jsx —
+// entropy is reported in the same units across all three ch09 widgets.
 function calcEntropy(weights) {
   const rowH = weights.map(row =>
-    -row.reduce((s,p) => s + (p > 0 ? p * Math.log2(p + 1e-10) : 0), 0)
+    -row.reduce((s,p) => s + (p > 0 ? p * Math.log(p + 1e-10) : 0), 0)
   );
   return rowH.reduce((a,b) => a+b, 0) / weights.length;
 }
@@ -355,7 +429,7 @@ export default function MultiHeadAttention({ tryThis }) {
                 {i < arr.length - 1 && <span style={{ color: C.border }}> ·</span>}
               </span>
             ))}
-            <span style={{ ...mono, fontSize: '9px', color: C.textMuted }}>avg entropy (bits)</span>
+            <span style={{ ...mono, fontSize: '9px', color: C.textMuted }}>avg entropy (nats)</span>
             <span style={{ ...mono, fontSize: '9px', color: C.textMuted, marginLeft: 'auto' }}>
               click a head to expand
             </span>
@@ -403,7 +477,7 @@ export default function MultiHeadAttention({ tryThis }) {
                 </div>
                 <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '10px', display: 'flex', flexDirection: 'column', gap: '7px' }}>
                   <div style={{ ...mono, fontSize: '11px', color: C.textMid }}>
-                    Attention entropy (bits):{' '}
+                    Attention entropy (nats):{' '}
                     <span style={{ color: HEAD_COLORS[expandedHead] }}>
                       {avgEntropies[expandedHead].toFixed(2)}
                     </span>

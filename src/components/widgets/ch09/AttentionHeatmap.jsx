@@ -13,43 +13,71 @@ const C = {
 };
 const mono = { fontFamily: "'JetBrains Mono', monospace" };
 
+// ── math (scaled dot-product attention, same pipeline as QKVInspector) ──────
+function matMul(A, B) {
+  return A.map(row => B[0].map((_, j) => row.reduce((s, v, k) => s + v * B[k][j], 0)));
+}
+function transpose(M) { return M[0].map((_, j) => M.map(r => r[j])); }
+function softmax(arr) {
+  const mx = Math.max(...arr);
+  const ex = arr.map(v => Math.exp(v - mx));
+  const sm = ex.reduce((a, b) => a + b, 0);
+  return ex.map(v => v / sm);
+}
+function softmaxRows(M) { return M.map(softmax); }
+
+// Each token gets a 4-dim query/key vector built from a coarse part-of-speech
+// direction (so same-type tokens naturally resemble each other) plus a small
+// fixed per-position offset (so ties break and the pattern isn't perfectly
+// symmetric) — the same "hand-authored toy Q/K, then real matmul+softmax"
+// approach QKVInspector.jsx uses. These are illustrative embeddings, not
+// weights read off a trained model (no real model inference in-browser —
+// see STYLE_GUIDE.md); the attention weights below ARE genuinely computed
+// from them via S=QKᵀ, scaled by √4, and softmax row-wise.
+const TYPE_VEC = {
+  ART:  [1.0, 0.0, 0.0, 0.0],
+  NOUN: [0.0, 1.0, 0.0, 0.0],
+  VERB: [0.0, 0.0, 1.0, 0.0],
+  PREP: [0.0, 0.0, 0.0, 1.0],
+  PRON: [0.5, 0.0, 0.0, 0.6],
+  ADJ:  [0.3, 0.6, 0.0, 0.0],
+};
+const Q_SCALE = 1.4, K_SCALE = 1.08;
+const OFFSET_Q = [
+  [0.05, 0.10, -0.05, 0.00], [0.10, 0.00, 0.05, -0.05], [-0.05, 0.10, 0.00, 0.05],
+  [0.05, -0.05, 0.10, 0.00], [-0.05, 0.05, 0.10, 0.00], [0.05, -0.10, 0.00, 0.05],
+];
+const OFFSET_K = [
+  [0.00, 0.05, 0.05, -0.05], [0.05, 0.00, 0.00, 0.10], [0.00, 0.05, 0.00, 0.00],
+  [0.10, 0.00, 0.00, 0.00], [0.05, -0.05, 0.00, 0.05], [0.00, 0.10, 0.05, 0.00],
+];
+
+function buildWeights(types) {
+  const Q = types.map((t, i) => TYPE_VEC[t].map((v, j) => v * Q_SCALE + OFFSET_Q[i % 6][j]));
+  const K = types.map((t, i) => TYPE_VEC[t].map((v, j) => v * K_SCALE + OFFSET_K[i % 6][j]));
+  const S_raw = matMul(Q, transpose(K));
+  const S_sc  = S_raw.map(row => row.map(v => v / Math.sqrt(4)));
+  return softmaxRows(S_sc);
+}
+
 const SENTENCES = {
   A: {
     label:   'The cat sat...',
     tokens:  ['The', 'cat', 'sat', 'on', 'the', 'mat'],
-    weights: [
-      [0.40, 0.28, 0.10, 0.06, 0.10, 0.06],
-      [0.09, 0.48, 0.22, 0.05, 0.09, 0.07],
-      [0.06, 0.31, 0.38, 0.10, 0.07, 0.08],
-      [0.05, 0.06, 0.14, 0.47, 0.10, 0.18],
-      [0.32, 0.09, 0.06, 0.05, 0.41, 0.07],
-      [0.06, 0.09, 0.08, 0.20, 0.18, 0.39],
-    ],
+    types:   ['ART', 'NOUN', 'VERB', 'PREP', 'ART', 'NOUN'],
   },
   B: {
     label:   'She loves to...',
     tokens:  ['She', 'loves', 'to', 'eat', 'ice', 'cream'],
-    weights: [
-      [0.42, 0.25, 0.12, 0.08, 0.07, 0.06],
-      [0.38, 0.30, 0.12, 0.09, 0.06, 0.05],
-      [0.10, 0.18, 0.35, 0.24, 0.08, 0.05],
-      [0.07, 0.22, 0.19, 0.29, 0.13, 0.10],
-      [0.05, 0.07, 0.08, 0.18, 0.34, 0.28],
-      [0.04, 0.05, 0.06, 0.12, 0.41, 0.32],
-    ],
+    types:   ['PRON', 'VERB', 'PREP', 'VERB', 'ADJ', 'NOUN'],
   },
   C: {
     label:   'The quick brown...',
     tokens:  ['The', 'quick', 'brown', 'fox', 'jumps'],
-    weights: [
-      [0.45, 0.20, 0.15, 0.12, 0.08],
-      [0.12, 0.28, 0.18, 0.33, 0.09],
-      [0.10, 0.16, 0.27, 0.38, 0.09],
-      [0.08, 0.28, 0.31, 0.24, 0.09],
-      [0.07, 0.10, 0.12, 0.44, 0.27],
-    ],
+    types:   ['ART', 'ADJ', 'ADJ', 'NOUN', 'VERB'],
   },
 };
+Object.values(SENTENCES).forEach(s => { s.weights = buildWeights(s.types); });
 
 const LEFT_MARGIN = 48;
 const TOP_MARGIN  = 32;
@@ -428,7 +456,7 @@ export default function AttentionHeatmap({ tryThis }) {
                     val={`"${tokens[leastIdx]}" (${weights[pinnedRow][leastIdx].toFixed(2)})`} />
               <Stat label="Self-attention"
                     val={selfAttn.toFixed(2)} />
-              <Stat label="Entropy H"
+              <Stat label="Entropy H (nats)"
                     val={ent.toFixed(3)} />
               <div style={{ ...mono, fontSize: '9px', color: C.textMuted, marginTop: '2px' }}>
                 {entHint}
