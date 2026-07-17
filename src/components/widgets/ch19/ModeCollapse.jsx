@@ -67,6 +67,39 @@ function generateAll() {
   return { realByCluster, healthy, collapse, wgan };
 }
 
+// ── Toy FID: the real Fréchet-distance formula applied to (x,y) point
+// clouds instead of Inception-embedding features (there is no real image
+// generator to embed here — see the disclosure caption below). Still a
+// genuine computation: FID = ||μ_r-μ_g||² + Tr(Σ_r+Σ_g-2·sqrtm(Σ_rΣ_g)).
+function meanCov(pts) {
+  const n = pts.length;
+  const mx = pts.reduce((s, p) => s + p[0], 0) / n;
+  const my = pts.reduce((s, p) => s + p[1], 0) / n;
+  let sxx = 0, syy = 0, sxy = 0;
+  pts.forEach(([x, y]) => {
+    sxx += (x - mx) ** 2; syy += (y - my) ** 2; sxy += (x - mx) * (y - my);
+  });
+  return { mean: [mx, my], cov: [[sxx / n, sxy / n], [sxy / n, syy / n]] };
+}
+// Tr(sqrtm(AB)) = sum of sqrt(eigenvalues of AB); for two PD 2×2 matrices
+// those eigenvalues are guaranteed real and non-negative, so the closed-form
+// quadratic on trace/det of the product is exact — no iterative sqrtm needed.
+function traceSqrtProduct(A, B) {
+  const M00 = A[0][0]*B[0][0] + A[0][1]*B[1][0], M01 = A[0][0]*B[0][1] + A[0][1]*B[1][1];
+  const M10 = A[1][0]*B[0][0] + A[1][1]*B[1][0], M11 = A[1][0]*B[0][1] + A[1][1]*B[1][1];
+  const tr = M00 + M11, det = M00 * M11 - M01 * M10;
+  const disc = Math.max(0, tr * tr - 4 * det);
+  const l1 = (tr + Math.sqrt(disc)) / 2, l2 = (tr - Math.sqrt(disc)) / 2;
+  return Math.sqrt(Math.max(0, l1)) + Math.sqrt(Math.max(0, l2));
+}
+function toyFID(realPts, genPts) {
+  const { mean: mr, cov: Sr } = meanCov(realPts);
+  const { mean: mg, cov: Sg } = meanCov(genPts);
+  const meanDiff2 = (mr[0] - mg[0]) ** 2 + (mr[1] - mg[1]) ** 2;
+  const trCov = Sr[0][0] + Sr[1][1] + Sg[0][0] + Sg[1][1];
+  return meanDiff2 + trCov - 2 * traceSqrtProduct(Sr, Sg);
+}
+
 const VW = 480, VH = 380, PAD = 28;
 const DRAW_W = VW - 2 * PAD; // 424
 const DRAW_H = VH - 2 * PAD; // 324
@@ -92,7 +125,6 @@ function computeCoverage(pts) {
 const MODES = ['healthy', 'collapse', 'wgan'];
 const MODE_LABELS  = { healthy: 'Healthy GAN', collapse: 'Mode Collapse', wgan: 'WGAN-GP' };
 const MODE_DISPLAY = { healthy: 'Healthy',     collapse: 'Collapsed',     wgan: 'WGAN-GP' };
-const FID_VAL      = { healthy: '~12',         collapse: '~84',           wgan: '~18' };
 
 function lerp(a, b, t) { return a + (b - a) * t; }
 function easeInOut(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
@@ -207,6 +239,9 @@ export default function ModeCollapse({ tryThis } = {}) {
   const pts = displayPts || dataRef.current.healthy;
   const coverage = computeCoverage(pts);
   const modesCovered = coverage.filter(c => c.n > 0).length;
+  // Real toy FID (see toyFID above), computed live from the currently
+  // displayed point cloud against the pooled real points — not a lookup.
+  const fidVal = toyFID(dataRef.current.realByCluster.flat(), pts);
 
   function getKDEEllipses() {
     if (!pts.length) return [];
@@ -398,11 +433,11 @@ export default function ModeCollapse({ tryThis } = {}) {
           })}
 
           <Divider />
-          <SectionHead>FID (approx)</SectionHead>
+          <SectionHead>FID (toy, 2D)</SectionHead>
           <StatRow
             label="FID"
-            value={FID_VAL[mode]}
-            color={mode === 'collapse' ? C.red : mode === 'wgan' ? '#fbbf24' : C.green}
+            value={fidVal.toFixed(2)}
+            color={fidVal > 1 ? C.red : mode === 'wgan' ? '#fbbf24' : C.green}
           />
 
           <Divider />
@@ -417,6 +452,17 @@ export default function ModeCollapse({ tryThis } = {}) {
         <Toggle label="Show KDE"      on={showKDE}      onChange={setShowKDE} />
         <Toggle label="Show real data" on={showReal}     onChange={setShowReal} />
         <Toggle label="Show coverage"  on={showCoverage} onChange={setShowCoverage} />
+      </div>
+
+      <div style={{
+        marginTop: '10px',
+        fontFamily: mono, fontSize: '9.5px', color: C.textMuted,
+        fontStyle: 'italic', lineHeight: 1.5,
+      }}>
+        Illustrative FID: computed live from the exact Fréchet-distance
+        formula, ‖μ_r−μ_g‖² + Tr(Σ_r+Σ_g−2·sqrtm(Σ_rΣ_g)), applied to these
+        2D (x,y) point clouds rather than 2048-dim Inception features — a
+        real statistic, but a toy stand-in for FID's actual feature space.
       </div>
 
     </WidgetCard>

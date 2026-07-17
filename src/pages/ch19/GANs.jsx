@@ -400,25 +400,30 @@ export default function GANs() {
       <p style={prose}>
         Switch between the three tabs below. Notice that the "Mode Collapse"
         tab's generated points pile onto a single tight cluster while the FID
-        stat roughly sextuples versus the healthy run (~12 to ~84) — a case
-        where the failure is visible in the point cloud well before it would
-        show up as an obviously broken loss curve.
+        stat jumps by roughly three orders of magnitude versus the healthy
+        run (from about 0.01 to about 9) — a case where the failure is
+        visible in the point cloud well before it would show up as an
+        obviously broken loss curve.
       </p>
 
       <ModeCollapse
         tryThis={{
           do: "Cycle through Healthy GAN, Mode Collapse, and WGAN-GP.",
-          notice: "Mode Collapse's points cluster onto roughly one of the three real modes and its FID (~84) is far worse than either Healthy (~12) or WGAN-GP (~18) — WGAN-GP doesn't fully match the healthy run, but it recovers most of the lost mode coverage.",
+          notice: "Mode Collapse's points cluster onto roughly one of the three real modes and its FID (≈9) is far worse than either Healthy (≈0.01) or WGAN-GP (≈0.03) — WGAN-GP doesn't fully match the healthy run, but it recovers most of the lost mode coverage.",
         }}
       />
 
       <p style={prose}>
-        The "FID (approx)" stat in the panel above is the standard way GAN
-        sample quality gets measured. <em>Fréchet Inception Distance</em>{" "}
+        The "FID (toy, 2D)" stat in the panel above is computed live from
+        these (x,y) point clouds using the real Fréchet-distance formula
+        below — it's a hands-on stand-in for the standard way GAN sample
+        quality actually gets measured. <em>Fréchet Inception Distance</em>{" "}
         (Heusel et al. 2017<sup>[7]</sup>, the same paper that introduced TTUR)
         passes both real and generated images through a pretrained Inception
-        network, fits a Gaussian to the resulting feature activations for each
-        set, and measures the distance between those two Gaussians:
+        network, fits a Gaussian to the resulting 2048-dimensional feature
+        activations for each set, and measures the distance between those two
+        Gaussians — the same formula, just over image features instead of
+        this widget's 2D toy coordinates:
       </p>
 
       <MathBlock>{"$$\\text{FID} = \\|\\mu_{\\text{real}} - \\mu_g\\|_2^2 + \\text{Tr}\\!\\left(\\Sigma_{\\text{real}} + \\Sigma_g - 2(\\Sigma_{\\text{real}}\\Sigma_g)^{1/2}\\right)$$"}</MathBlock>
@@ -474,17 +479,23 @@ export default function GANs() {
 
       <p style={prose}>
         Step through the 20 epochs below and watch the discriminator's
-        accuracy stat alongside the fake points. Notice that accuracy trends
-        down, from roughly 92% at epoch 0 toward roughly 51% by epoch 20, as
+        accuracy stat alongside the fake points — at each saved epoch, the
+        discriminator is really retrained by gradient descent against that
+        epoch's fake cloud, so this is a genuine (if noisy) trained accuracy,
+        not a scripted curve. It starts around 78%, ticks up slightly once
+        the discriminator re-converges against the odd shape of the very
+        first noise cloud, then trends down toward roughly 60% by epoch 20 as
         the fake cluster centers drift onto the real ones — the boundary
         isn't getting better at its job, it's running out of real differences
-        to exploit.
+        to exploit. It never quite reaches 50%: even at epoch 20 the fake
+        clusters sit close to, but not exactly on, the real ones, so a
+        well-trained discriminator can still eke out a real edge.
       </p>
 
       <DBEvolution
         tryThis={{
-          do: "Step to epoch 20 and hover a fake point sitting inside the larger, denser real cluster (the one with more points).",
-          notice: "D(x) there is still confidently high — close to 1 — because the discriminator judges location, not origin, and G has learned to land its fakes exactly where that real cluster already is. (Near the smaller cluster the overlap is less exact, so D stays closer to 0.5 — the collapse toward chance is uneven across modes, not uniform.) That's what a falling accuracy stat actually means: not indecision, but confident misclassification.",
+          do: "Step to epoch 20 and hover a fake point near each of the two real clusters.",
+          notice: "D(x) is only slightly above 0.5 for fakes near the larger, denser real cluster, and slightly below 0.5 for fakes near the smaller one — the discriminator has nearly, but not perfectly, lost the ability to tell real from fake, and what edge it retains is uneven across the two modes. That's what a falling-but-not-collapsed accuracy stat actually means here.",
         }}
       />
 
@@ -725,15 +736,17 @@ export default function GANs() {
 
       <p style={prose}>
         Step through the forward cycle below, then press "Break cycle" and
-        step through again. Notice the cycle loss jumps by more than an order
-        of magnitude when the round trip stops reconstructing the original
-        image — that gap is the entire signal ruling out degenerate mappings.
+        step through again. Notice the cycle-consistency state flips from
+        "Consistent" to "Broken" when the round trip stops reconstructing the
+        original image — in a real trained model that gap between a low and
+        high <InlineMath>{"\\lVert F(G(x)) - x \\rVert_1"}</InlineMath> is the
+        entire signal ruling out degenerate mappings.
       </p>
 
       <CycleConsistency
         tryThis={{
           do: "Run the full X → Y → X cycle once normally, then toggle Break cycle and run it again.",
-          notice: "The reconstructed image visibly diverges from the original once the cycle is broken, and the displayed cycle-consistency loss jumps from roughly 0.1 to over 2 — a concrete stand-in for what 'not invertible' costs in the loss.",
+          notice: "The reconstructed animal visibly diverges from the original once the cycle is broken, and the diagram's state flips from 'Consistent' to 'Broken' — a qualitative stand-in for what 'not invertible' costs in the loss (this static illustration has no real image to compute a numeric reconstruction error from).",
         }}
       />
 

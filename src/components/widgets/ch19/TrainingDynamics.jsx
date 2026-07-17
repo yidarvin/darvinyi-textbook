@@ -31,6 +31,11 @@ function mulberry32(seed) {
 }
 
 // ── Precomputed trajectories ───────────────────────────────────────────────
+// These three curves are representative shapes for well-documented GAN
+// failure modes (healthy convergence toward the ln(2) equilibrium,
+// discriminator domination, and non-convergent oscillation) — not a
+// recording of an actual training run. See the disclosure caption rendered
+// below the chart.
 function buildTrajectories() {
   const rng = mulberry32(42);
   const n   = (sigma) => rng() * 2 * sigma - sigma;
@@ -415,6 +420,17 @@ export default function TrainingDynamics({ tryThis } = {}) {
             {diag.note}
           </div>
         </div>
+      </div>
+
+      <div style={{
+        marginTop: '8px',
+        fontFamily: mono, fontSize: '9.5px', color: C.textMuted,
+        fontStyle: 'italic', lineHeight: 1.5,
+      }}>
+        Illustrative, not measured: these are representative curve shapes for
+        three well-documented GAN failure modes, not a recorded training run —
+        only the ln(2) equilibrium value and the D/G loss formulas it anchors
+        to are drawn from the actual minimax objective.
       </div>
 
       {/* ── Controls ───────────────────────────────────────────────────────── */}

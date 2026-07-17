@@ -28,25 +28,6 @@ const CANVAS_PAD = 24;
 const GRID = 40;
 const SAVED_EPOCHS = [0, 4, 8, 12, 16, 20];
 
-// ── Discriminator weights for each saved epoch ─────────────────────────────
-const WEIGHTS = [
-  [0.0, 0.5,  0.3,  0.0,  0.0],
-  [0.1, 0.8,  0.5,  0.1,  0.0],
-  [0.2, 1.1,  0.8,  0.2,  0.1],
-  [0.3, 1.4,  1.0,  0.3,  0.2],
-  [0.4, 1.6,  1.2,  0.35, 0.25],
-  [0.5, 1.7,  1.3,  0.4,  0.3],
-];
-
-// Discriminator accuracy across training. Early on, the generator's output is
-// trivially separable from real data (wide random noise vs. two tight
-// clusters), so D starts confident. As G's distribution converges onto
-// p_data (see ALL_FAKE below — fakes end up centered almost exactly on the
-// real cluster means by epoch 20), a healthy adversarial trajectory pushes D
-// toward chance: accuracy trends DOWN toward 50%, not up. (A discriminator
-// that stayed at 90%+ accuracy the whole time would mean the generator never
-// improved — the opposite of what "G quality: realistic" below claims.)
-const D_ACCURACY     = [92, 81, 71, 63, 55, 51];
 const G_QUALITY_LBLS = [
   'random noise', 'vague structure', 'rough clusters',
   'improving', 'near-real', 'realistic',
@@ -114,6 +95,52 @@ function generateAllFakeEpochs() {
   return epochs;
 }
 
+// ── Discriminator ──────────────────────────────────────────────────────────
+// D(x,y) = sigmoid(w0 + w1*x + w2*y + w3*x² + w4*y²) — a logistic classifier
+// with a quadratic feature map, so its decision boundary can be curved.
+function discriminatorD(x, y, w) {
+  return 1 / (1 + Math.exp(-(w[0] + w[1]*x + w[2]*y + w[3]*x*x + w[4]*y*y)));
+}
+
+function discAccuracy(w, realPts, fakePts) {
+  let correct = 0;
+  realPts.forEach(([x, y]) => { if (discriminatorD(x, y, w) > 0.5) correct++; });
+  fakePts.forEach(([x, y]) => { if (discriminatorD(x, y, w) < 0.5) correct++; });
+  return correct / (realPts.length + fakePts.length);
+}
+
+// One step of full-batch gradient descent on the binary cross-entropy loss
+// (real points labeled 1, fake points labeled 0), with a small L2 penalty
+// for numerical stability against the near-separable early snapshots.
+function discTrainStep(w, realPts, fakePts, lr, l2) {
+  const grad = [0, 0, 0, 0, 0];
+  const n = realPts.length + fakePts.length;
+  const accumulate = (x, y, label) => {
+    const err = discriminatorD(x, y, w) - label;
+    const feats = [1, x, y, x * x, y * y];
+    for (let j = 0; j < 5; j++) grad[j] += err * feats[j];
+  };
+  realPts.forEach(([x, y]) => accumulate(x, y, 1));
+  fakePts.forEach(([x, y]) => accumulate(x, y, 0));
+  return w.map((wj, j) => wj - lr * (grad[j] / n + l2 * wj));
+}
+
+// Real discriminator training: at each of the six saved snapshots, run
+// gradient descent to (near-)convergence against that snapshot's fake-point
+// cloud, carrying weights forward the way an actual alternating D/G training
+// loop would. These are genuine trained optima, not authored numbers —
+// verified to land at the same weights whether warm-started from the prior
+// snapshot or re-initialized at zero, which is what a convex loss (logistic
+// regression's cross-entropy is convex in w for fixed features) guarantees.
+function trainDiscriminatorWeights(realPts, allFake) {
+  const LR = 0.8, L2 = 0.08, STEPS = 300;
+  let w = [0, 0, 0, 0, 0];
+  return allFake.map(fakePts => {
+    for (let s = 0; s < STEPS; s++) w = discTrainStep(w, realPts, fakePts, LR, L2);
+    return [...w];
+  });
+}
+
 // ── Module-level static data (computed once) ───────────────────────────────
 const REAL_PTS = generateRealPoints();
 const ALL_FAKE = generateAllFakeEpochs();
@@ -123,6 +150,12 @@ const REAL_CENTROID = REAL_PTS.reduce(
   (acc, [x, y]) => [acc[0] + x / REAL_PTS.length, acc[1] + y / REAL_PTS.length],
   [0, 0]
 );
+// The generator's output at each snapshot (ALL_FAKE) is an authored stand-in
+// — training a real generator network is out of scope in-browser (no live
+// model inference; see STYLE_GUIDE.md). But WEIGHTS is not authored: it is
+// what real logistic-regression training on REAL_PTS vs. ALL_FAKE actually
+// converges to at each snapshot, via trainDiscriminatorWeights above.
+const WEIGHTS = trainDiscriminatorWeights(REAL_PTS, ALL_FAKE);
 
 // ── Interpolation helpers ──────────────────────────────────────────────────
 function epochSegment(epoch) {
@@ -145,16 +178,6 @@ function lerpFakePts(epoch) {
     pt[0] + (ALL_FAKE[i + 1][j][0] - pt[0]) * t,
     pt[1] + (ALL_FAKE[i + 1][j][1] - pt[1]) * t,
   ]);
-}
-
-function lerpScalar(epoch, arr) {
-  const { i, t } = epochSegment(epoch);
-  return arr[i] + (arr[i + 1] - arr[i]) * t;
-}
-
-// ── Discriminator ──────────────────────────────────────────────────────────
-function discriminatorD(x, y, w) {
-  return 1 / (1 + Math.exp(-(w[0] + w[1]*x + w[2]*y + w[3]*x*x + w[4]*y*y)));
 }
 
 // ── Canvas utilities ───────────────────────────────────────────────────────
@@ -493,7 +516,10 @@ export default function DBEvolution({ tryThis } = {}) {
   const handleMouseLeave = useCallback(() => setHoveredPoint(null), []);
 
   // ── Derived stats for panel + epoch label ──────────────────────────────
-  const dAccPct  = Math.round(lerpScalar(displayEpoch, D_ACCURACY));
+  // Computed live from the currently-displayed (interpolated) discriminator
+  // weights and fake points — the fraction of real points D classifies above
+  // 0.5 plus fake points it classifies below 0.5 — not a scripted number.
+  const dAccPct  = Math.round(discAccuracy(w, REAL_PTS, fakePts) * 100);
   const gQIdx    = Math.min(5, Math.round(displayEpoch / 4));
   const gQuality = G_QUALITY_LBLS[gQIdx];
   const bdyCmplx = displayEpoch < 5 ? 'Linear' : displayEpoch < 12 ? 'Quadratic' : 'Complex curved';

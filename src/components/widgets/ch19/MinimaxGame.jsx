@@ -29,19 +29,16 @@ const xs = Array.from({ length: N_PTS }, (_, i) => X_MIN + (X_MAX - X_MIN) * i /
 const pdf = (x, mu, sigma) =>
   (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-((x - mu) ** 2) / (2 * sigma ** 2));
 
-const sigmoid = z => 1 / (1 + Math.exp(-z));
-
-const getD = (x, ds) => {
-  if (ds >= 20) return 0.5;
-  const a = 1.0 + ds * 2.5 / 20;
-  const b = -1.0 + ds * 2.5 / 20;
-  return sigmoid(a * (x - b));
+// The optimal discriminator for a fixed generator (Goodfellow et al. 2014,
+// Prop. 1): D*(x) = p_data(x) / (p_data(x) + p_G(x)). This is a real density
+// ratio, not a fitted sigmoid — it is recomputed from whatever muG/sigmaG the
+// generator currently has.
+const getD = (x, muG, sigmaG) => {
+  const pData = pdf(x, 1.5, 0.7);
+  const pG    = pdf(x, muG, sigmaG);
+  const denom = pData + pG;
+  return denom > 1e-15 ? pData / denom : 0.5;
 };
-
-const getMuG    = ds => -1.0 + ds * 0.125;
-const getSigmaG  = ds => 1.5 - ds * 0.04;
-const getBoundary = ds => -1.0 + ds * 2.5 / 20;
-const getSharpness = ds => 1.0 + ds * 2.5 / 20;
 
 function computeJS(muG, sigmaG) {
   const dx = (X_MAX - X_MIN) / (N_PTS - 1);
@@ -55,6 +52,42 @@ function computeJS(muG, sigmaG) {
     if (q > 1e-15 && m > 1e-15) kl_qm += q * Math.log(q / m);
   }
   return Math.max(0, 0.5 * (kl_pm + kl_qm) * dx);
+}
+
+// Precomputed generator trajectory: real RMSProp gradient descent on the
+// minimax value C(G) = -log4 + 2*JSD(p_data||p_G) (the closed form the
+// prose derives above), assuming the discriminator sits at its optimum D*
+// at every step. Minimizing C(G) is exactly minimizing computeJS(muG,
+// sigmaG), so each step below is a genuine numerical-gradient update, not
+// an authored curve — it happens to converge smoothly because the toy
+// objective (two 1-D Gaussians) is well-behaved, unlike a real GAN's
+// learned discriminator (see the "never actually reaches D*" caveat above).
+function computeTrajectory() {
+  const N_STEPS = 20, LR = 0.1, DECAY = 0.9, EPS = 1e-6, H = 0.01;
+  let muG = -1.0, sigmaG = 1.5;
+  let vMu = 0, vSigma = 0;
+  const traj = [{ muG, sigmaG }];
+  for (let i = 0; i < N_STEPS; i++) {
+    const gradMu    = (computeJS(muG + H, sigmaG) - computeJS(muG - H, sigmaG)) / (2 * H);
+    const gradSigma = (computeJS(muG, sigmaG + H) - computeJS(muG, sigmaG - H)) / (2 * H);
+    vMu    = DECAY * vMu    + (1 - DECAY) * gradMu * gradMu;
+    vSigma = DECAY * vSigma + (1 - DECAY) * gradSigma * gradSigma;
+    muG    = muG    - LR * gradMu    / (Math.sqrt(vMu)    + EPS);
+    sigmaG = Math.max(0.15, sigmaG - LR * gradSigma / (Math.sqrt(vSigma) + EPS));
+    traj.push({ muG, sigmaG });
+  }
+  return traj;
+}
+const TRAJECTORY = computeTrajectory();
+
+function trajAt(ds) {
+  const clamped = Math.max(0, Math.min(20, ds));
+  const i = Math.floor(clamped), f = clamped - i;
+  const a = TRAJECTORY[i], b = TRAJECTORY[Math.min(i + 1, 20)];
+  return {
+    muG:    a.muG    + (b.muG    - a.muG)    * f,
+    sigmaG: a.sigmaG + (b.sigmaG - a.sigmaG) * f,
+  };
 }
 
 function Toggle({ label, on, onChange }) {
@@ -200,8 +233,7 @@ export default function MinimaxGame({ tryThis } = {}) {
     const cH  = H - PAD.t - PAD.b;
 
     const ds     = displayStep;
-    const muG    = getMuG(ds);
-    const sigmaG = getSigmaG(ds);
+    const { muG, sigmaG } = trajAt(ds);
     const yMax   = Math.max(pdf(1.5, 1.5, 0.7), pdf(muG, muG, sigmaG)) * 1.15;
 
     const xToC = x => PAD.l + ((x - X_MIN) / (X_MAX - X_MIN)) * cW;
@@ -218,7 +250,7 @@ export default function MinimaxGame({ tryThis } = {}) {
       const stripW  = cW / nStrips;
       for (let i = 0; i < nStrips; i++) {
         const xc    = X_MIN + (X_MAX - X_MIN) * (i + 0.5) / nStrips;
-        const d     = getD(xc, ds);
+        const d     = getD(xc, muG, sigmaG);
         const delta = Math.abs(d - 0.5);
         if (delta < 0.001) continue;
         const alpha = delta * 0.3;
@@ -280,7 +312,7 @@ export default function MinimaxGame({ tryThis } = {}) {
       ctx.beginPath();
       for (let i = 0; i < N_PTS; i++) {
         const xc = xToC(xs[i]);
-        const yc = dToC(getD(xs[i], ds));
+        const yc = dToC(getD(xs[i], muG, sigmaG));
         if (i === 0) ctx.moveTo(xc, yc); else ctx.lineTo(xc, yc);
       }
       ctx.stroke();
@@ -289,7 +321,7 @@ export default function MinimaxGame({ tryThis } = {}) {
       ctx.font = `10px ${mono}`;
       ctx.fillStyle = 'rgba(255,255,255,0.85)';
       ctx.textAlign = 'left';
-      ctx.fillText('D(x)', PAD.l + cW + 2, dToC(getD(X_MAX, ds)) + 4);
+      ctx.fillText('D(x)', PAD.l + cW + 2, dToC(getD(X_MAX, muG, sigmaG)) + 4);
     }
 
     // 5. D=0.5 horizontal dashed line
@@ -420,12 +452,9 @@ export default function MinimaxGame({ tryThis } = {}) {
 
   // Computed stats from displayStep
   const ds      = displayStep;
-  const muG     = getMuG(ds);
-  const sigmaG  = getSigmaG(ds);
-  const bnd     = getBoundary(ds);
-  const sharp   = getSharpness(ds);
-  const dAtData = getD(1.5, ds);
-  const dAtG    = getD(muG, ds);
+  const { muG, sigmaG } = trajAt(ds);
+  const dAtData = getD(1.5, muG, sigmaG);
+  const dAtG    = getD(muG, muG, sigmaG);
   const distMu  = Math.abs(muG - 1.5);
   const distSig = Math.abs(sigmaG - 0.7);
   const jsd     = useMemo(() => computeJS(muG, sigmaG), [muG, sigmaG]);
@@ -511,9 +540,7 @@ export default function MinimaxGame({ tryThis } = {}) {
           <StatRow label="|Δσ|" value={distSig.toFixed(2)} color={distSig < 0.05 ? C.green : C.textMid} />
 
           <Divider />
-          <SectionHead>Discriminator</SectionHead>
-          <StatRow label="Bound." value={`x=${bnd.toFixed(2)}`}  color={C.textMid} />
-          <StatRow label="Sharp a" value={sharp.toFixed(2)}       color={C.textMid} />
+          <SectionHead>Discriminator D* = p_data/(p_data+p_G)</SectionHead>
           <StatRow label="D(μ_r)" value={dAtData.toFixed(2)}
             color={Math.abs(dAtData - 0.5) < 0.05 ? C.green : C.textMid} />
           <StatRow label="D(μ_G)" value={dAtG.toFixed(2)}

@@ -256,11 +256,17 @@ export default function CycleConsistency({ tryThis } = {}) {
   const arrGActive = step === 2;
   const arrFActive = step === 4;
 
-  // Loss display
+  // Cycle-consistency state. This diagram is a static illustration — there is
+  // no real image being translated, so there is no real pixel-level
+  // reconstruction error to compute (see the disclosure caption below). λ
+  // only ever appears as the weight on L_cyc in the training objective
+  // (shown in the formula panel); it does not change what an already-fixed
+  // G/F pair outputs on a single forward pass, so it is deliberately NOT
+  // wired to this qualitative indicator.
   const highLoss    = brokenCycle;
-  const lossVal     = brokenCycle ? 2.14 : Math.max(0.04, 0.08 + (10 - lambda) * 0.012);
-  const lossColor   = lossVal > 0.5 ? '#f87171' : '#34d399';
-  const cmpBorder   = lossVal > 0.5 ? '#f87171' : '#34d399';
+  const cycleState  = brokenCycle ? 'Broken' : 'Consistent';
+  const lossColor   = brokenCycle ? '#f87171' : '#34d399';
+  const cmpBorder   = brokenCycle ? '#f87171' : '#34d399';
 
   // Border glow for box 1 when active
   const b1Filter = box1Active ? 'drop-shadow(0 0 6px rgba(45,212,191,0.7))' : 'none';
@@ -365,7 +371,7 @@ export default function CycleConsistency({ tryThis } = {}) {
                   stroke={cmpBorder} strokeWidth="1.5" strokeDasharray="5,3" />
             <text x={CMP_CX} y={CMP_Y + 15} textAnchor="middle"
                   fontFamily={mono} fontSize="9" fontWeight="600" fill={cmpBorder}>
-              Cycle loss
+              Cycle consistency
             </text>
             <text x={CMP_CX} y={CMP_Y + 27} textAnchor="middle"
                   fontFamily={mono} fontSize="8" fill="#666">
@@ -374,7 +380,7 @@ export default function CycleConsistency({ tryThis } = {}) {
             <DiffViz highLoss={highLoss} />
             <text x={CMP_CX} y={CMP_Y + CMP_H - 8} textAnchor="middle"
                   fontFamily={mono} fontSize="11" fill={lossColor}>
-              = {lossVal.toFixed(2)}
+              {cycleState}
             </text>
           </g>
         </svg>
@@ -451,14 +457,14 @@ export default function CycleConsistency({ tryThis } = {}) {
         />
         <div style={{ width: '1px', background: 'var(--border)', flexShrink: 0 }} />
         <StatCell
-          label="Cycle loss"
-          val={compareVis ? lossVal.toFixed(2) : '—'}
-          sub={compareVis ? (lossVal > 0.5 ? 'high — mapping broken' : 'low — content preserved') : lossFormula}
+          label="Cycle state"
+          val={compareVis ? cycleState : '—'}
+          sub={compareVis ? (brokenCycle ? 'mapping broken' : 'content preserved') : lossFormula}
           vc={compareVis ? lossColor : 'var(--text-muted)'}
         />
         <div style={{ width: '1px', background: 'var(--border)', flexShrink: 0 }} />
         <StatCell
-          label="λ weight"
+          label="λ (in L_total)"
           val={String(lambda)}
           sub="paper default 10"
           vc="#fbbf24"
@@ -478,6 +484,20 @@ export default function CycleConsistency({ tryThis } = {}) {
           L_GAN(F, D_X): F fools D_X — adversarial loss in domain X ·{' '}
           L_cyc: cycle consistency in both directions · λ = {lambda} (paper default ≈ 10)
         </div>
+      </div>
+
+      <div style={{
+        marginTop: '8px',
+        fontFamily: mono, fontSize: '9.5px', color: 'var(--text-muted)',
+        fontStyle: 'italic', lineHeight: 1.5,
+      }}>
+        Illustrative, not measured: the horse/zebra pair is a static drawing,
+        not a real image round-trip, so there is no real ‖F(G(x))−x‖₁ to
+        compute — the "Break cycle" toggle just switches between the two
+        qualitative outcomes. The λ slider changes the formula above (it
+        weights L_cyc during training); it doesn't change this already-fixed
+        diagram, since λ affects how a model is trained, not what a fixed G/F
+        pair outputs on one forward pass.
       </div>
 
     </WidgetCard>
