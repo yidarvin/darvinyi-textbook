@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 
 const C = {
   accent:    '#2dd4bf',
@@ -19,16 +20,6 @@ const C = {
 const mono = "'JetBrains Mono', monospace";
 const sans = "'Inter', sans-serif";
 const LN2  = Math.log(2); // 0.6931…
-
-// ── Seeded PRNG ────────────────────────────────────────────────────────────
-function mulberry32(seed) {
-  return function () {
-    seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 // ── Precomputed trajectories ───────────────────────────────────────────────
 // These three curves are representative shapes for well-documented GAN

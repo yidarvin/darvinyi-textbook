@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 
 // ── Colors (house palette — matches ch13/ch14 widgets) ────────────────────────
 const C = {
@@ -19,20 +20,6 @@ const C = {
   codeBg:    '#0a0a0a',
 };
 const mono = "'JetBrains Mono', monospace";
-
-// ── mulberry32 PRNG (matches ch20/ForwardDiffusion.jsx, ch01/DistributionExplorer.jsx) ──
-// Deterministic 32-bit PRNG: same seed always produces the same stream, so a
-// given strategy/parameter combination always draws the same sequence of
-// samples — "resample" and slider changes are reproducible, never Math.random().
-function mulberry32(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s |= 0; s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s >>> 15, 1 | s);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
 
 // Mixes strategy + parameter values into a single 32-bit seed (FNV-1a-style
 // avalanche), matching ch01/DistributionExplorer.jsx's makeSeed convention —

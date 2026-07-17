@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 import { useIsVisible } from '../../../hooks/useIsVisible';
 import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
@@ -32,16 +33,6 @@ const G_QUALITY_LBLS = [
   'random noise', 'vague structure', 'rough clusters',
   'improving', 'near-real', 'realistic',
 ];
-
-// ── Seeded PRNG ────────────────────────────────────────────────────────────
-function mulberry32(seed) {
-  return () => {
-    seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 function sampleNormal2D(rng, muX, muY, sigma) {
   const u1 = rng(), u2 = rng();

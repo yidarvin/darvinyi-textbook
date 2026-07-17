@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 import { useIsVisible } from '../../../hooks/useIsVisible';
 import { usePrefersReducedMotion } from '../../../hooks/useMediaQuery';
 
@@ -37,17 +38,6 @@ function rgba(hex, a) {
   const g = parseInt(hex.slice(3, 5), 16);
   const b = parseInt(hex.slice(5, 7), 16);
   return `rgba(${r},${g},${b},${a})`;
-}
-
-// ── Seeded PRNG (mulberry32 — same convention as ch20/ForwardDiffusion.jsx) ────
-function mulberry32(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s |= 0; s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s >>> 15, 1 | s);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
 }
 
 // ── Simulation parameters ────────────────────────────────────────────────────────

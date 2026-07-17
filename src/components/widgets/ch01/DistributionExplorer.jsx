@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 
 // ─── Colors (house palette — matches ch02/ch20 widgets) ───────────────────────
 const C = {
@@ -18,20 +19,6 @@ const C = {
   text:      '#e8eaed',
 };
 const mono = "'JetBrains Mono', monospace";
-
-// ─── mulberry32 PRNG (matches ch20/ForwardDiffusion.jsx convention) ──────────
-// Deterministic 32-bit PRNG: same seed always produces the same stream, so
-// "resample" and parameter changes are reproducible rather than relying on
-// Math.random().
-function mulberry32(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s |= 0; s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s >>> 15, 1 | s);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
 
 // Box-Muller: two independent uniforms -> one standard-normal draw.
 function randn(rng) {

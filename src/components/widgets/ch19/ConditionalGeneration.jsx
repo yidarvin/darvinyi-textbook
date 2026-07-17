@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 
 // ── Design tokens ──────────────────────────────────────────────────────────────
 const C = {
@@ -9,17 +10,6 @@ const C = {
   accent: '#2dd4bf', accentDim: '#0b2422',
   orange: '#fb923c', green: '#34d399',
 };
-
-// ── Seeded PRNG (mulberry32) ───────────────────────────────────────────────────
-function mulberry32(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s = (s + 0x6D2B79F5) >>> 0;
-    let t = Math.imul(s ^ (s >>> 15), 1 | s);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
 
 // ── SVG dimensions ─────────────────────────────────────────────────────────────
 const VW = 580, VH = 406;

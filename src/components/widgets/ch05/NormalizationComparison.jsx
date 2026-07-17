@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 
 // ── Fixed grid dimensions ─────────────────────────────────────────────────────
 const ROWS = 8, COLS = 8, GAP = 2;
@@ -58,16 +59,6 @@ function makeLayout(containerW) {
   const CELL_H = Math.round(CELL_W * 0.58);
   const CH = PAD_T + ROWS * CELL_H + (ROWS - 1) * GAP + PAD_B;
   return { CELL_W, CELL_H, GAP, PAD_L, PAD_T, PAD_R, PAD_B, CW, CH };
-}
-
-// ── PRNG ──────────────────────────────────────────────────────────────────────
-function mulberry32(seed) {
-  return () => {
-    seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
 }
 
 function generateGrid(seed) {

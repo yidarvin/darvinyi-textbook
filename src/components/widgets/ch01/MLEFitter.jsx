@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const C = {
@@ -19,17 +20,6 @@ const C = {
   accentDim: '#0b2422',
 };
 const mono = { fontFamily: "'JetBrains Mono', monospace" };
-
-// ─── mulberry32 PRNG (same seeding convention as ch20/ForwardDiffusion.jsx) ────
-function mulberry32(seed) {
-  let s = seed >>> 0;
-  return () => {
-    s |= 0; s = s + 0x6D2B79F5 | 0;
-    let t = Math.imul(s ^ s >>> 15, 1 | s);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
 
 function randn(rng) {
   // Box-Muller

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import WidgetCard from '../../shared/WidgetCard';
+import { mulberry32 } from '../../../utils/rng';
 
 // ─── Colors ───────────────────────────────────────────────────────────────────
 const C = {
@@ -28,21 +29,6 @@ function fmtVal(v) {
   return v.toExponential(2);
 }
 
-// ─── Math: real Monte Carlo bias-variance-noise decomposition ────────────────
-// d: polynomial degree 1..20, noiseLevel: 0.1..1.0. Rather than authored
-// closed-form curves, this resamples independent noisy training sets, fits a
-// real least-squares polynomial to each (same Chebyshev-basis machinery as
-// PolynomialFit.jsx), and computes bias²/variance from the resulting
-// distribution of fitted functions — the textbook definition, not an
-// approximation of its shape.
-function mulberry32(seed) {
-  return function () {
-    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
-    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
-    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-    return ((t ^ t >>> 14) >>> 0) / 4294967296;
-  };
-}
 const TRUE_FN = x => Math.sin(2 * Math.PI * x) * 0.5 + 0.5;
 function generateTrainingSet(n, sigma, seed) {
   const rand = mulberry32(seed);
