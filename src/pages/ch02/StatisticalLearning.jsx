@@ -355,17 +355,23 @@ export default function StatisticalLearning() {
       </p>
 
       <p style={prose}>
-        Drag the complexity slider from 1 toward 20 while watching bias² fall
-        and variance rise; then raise the noise level and notice the
-        total-error minimum — the optimal-complexity marker — shift toward
-        simpler models as noise grows.
+        Drag the complexity slider from 1 toward roughly 8 while watching
+        bias² fall and variance rise; push further and the picture changes —
+        with only 20 training points, fitting a degree-15-or-higher
+        polynomial is numerically unstable (the classic Runge's-phenomenon
+        problem: a high-degree fit on sparse, non-Chebyshev-spaced samples
+        oscillates wildly between them), so both bias² and variance explode
+        by many orders of magnitude, which is why the chart's y-axis is
+        log-scaled rather than linear. Then raise the noise level and notice
+        the total-error minimum — the optimal-complexity marker — shift
+        toward simpler models as noise grows.
       </p>
 
       <BiasVariance
         tryThis={{
           do: "Drag complexity from 1 to 20, then raise the noise level.",
           notice:
-            "Bias² falls and variance rises as complexity grows, and the total-error minimum — the optimal-complexity marker — shifts toward simpler models as noise increases.",
+            "Bias² falls and variance rises through moderate complexity, then — past roughly degree 8 — both explode by orders of magnitude as the polynomial fit becomes numerically unstable on just 20 training points (the log-scaled y-axis shows this honestly instead of clipping it). The total-error minimum — the optimal-complexity marker — shifts toward simpler models as noise increases.",
         }}
       />
 

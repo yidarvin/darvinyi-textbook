@@ -31,14 +31,65 @@ const NODE_R = 24;
 
 // ── Attention weights ─────────────────────────────────────────────────────────
 
-const GAT_WEIGHTS = {
-  A: { B: 0.65, D: 0.35 },
-  B: { A: 0.18, C: 0.34, E: 0.29, F: 0.19 },
-  C: { B: 0.42, F: 0.58 },
-  D: { A: 0.38, E: 0.62 },
-  E: { B: 0.27, D: 0.36, F: 0.37 },
-  F: { C: 0.31, B: 0.24, E: 0.45 },
+// GAT: e_ij = LeakyReLU(a^T[Wh_i‖Wh_j]) = LeakyReLU(a_src·Wh_i + a_dst·Wh_j)
+// (Veličković et al. 2018's own additive decomposition — mathematically
+// exact, not a simplification), α_ij = softmax_j(e_ij) over i's neighbors.
+// H, W, and a_src/a_dst are hand-authored illustrative constants (no real
+// GNN training happened in-browser — see STYLE_GUIDE.md), but the weights
+// below ARE genuinely computed from them via that formula, not picked
+// directly — the same "toy input, real computation" pattern QKVInspector.jsx
+// uses. Contrast GCN_WEIGHTS below, whose values are fixed by graph topology
+// alone with no features involved at all.
+const NODE_FEATURES = {
+  A: [0.9, 0.1, -0.3, 0.4],
+  B: [0.2, 0.8, 0.5, -0.2],
+  C: [-0.4, 0.6, 0.9, 0.1],
+  D: [0.7, -0.5, 0.2, 0.6],
+  E: [0.1, 0.3, -0.6, 0.8],
+  F: [-0.3, 0.4, 0.7, -0.5],
 };
+// Scaled 3x from a unit-magnitude base so the resulting attention is
+// clearly peaked rather than near-uniform — real trained GAT attention is
+// often sharply concentrated (Veličković et al. 2018 Fig. 2), which a
+// smaller scale wouldn't visibly demonstrate.
+const GAT_W = [
+  [1.8, 0.3, -0.6, 0.9],
+  [0.6, 2.1, 0.3, -0.3],
+  [-0.3, 0.9, 1.8, 0.6],
+  [0.9, -0.6, 0.6, 1.5],
+];
+const GAT_A_SRC = [0.5, -0.3, 0.4, 0.2];
+const GAT_A_DST = [0.3, 0.4, -0.2, 0.5];
+
+function matVec(M, v) { return M.map(row => row.reduce((s, x, i) => s + x * v[i], 0)); }
+function dotVec(a, b) { return a.reduce((s, x, i) => s + x * b[i], 0); }
+function leakyRelu(x, slope = 0.2) { return x >= 0 ? x : slope * x; }
+function softmaxArr(arr) {
+  const mx = Math.max(...arr);
+  const ex = arr.map(v => Math.exp(v - mx));
+  const sm = ex.reduce((a, b) => a + b, 0);
+  return ex.map(v => v / sm);
+}
+
+function computeGATWeights() {
+  const Wh = {};
+  NODE_IDS.forEach(v => { Wh[v] = matVec(GAT_W, NODE_FEATURES[v]); });
+  const srcProj = {}, dstProj = {};
+  NODE_IDS.forEach(v => {
+    srcProj[v] = dotVec(GAT_A_SRC, Wh[v]);
+    dstProj[v] = dotVec(GAT_A_DST, Wh[v]);
+  });
+  const weights = {};
+  NODE_IDS.forEach(i => {
+    const nbrs = NEIGHBORS[i];
+    const scores = nbrs.map(j => leakyRelu(srcProj[i] + dstProj[j]));
+    const alphas = softmaxArr(scores);
+    weights[i] = {};
+    nbrs.forEach((j, k) => { weights[i][j] = alphas[k]; });
+  });
+  return weights;
+}
+const GAT_WEIGHTS = computeGATWeights();
 
 // GCN's true symmetric-normalization weight for edge (u, v) is
 // 1 / sqrt(d̃_u · d̃_v), where d̃ = degree + 1 (the self-loop from Ã = A + I).
@@ -388,8 +439,8 @@ export default function GraphAttention({ tryThis }) {
             </span>
             <span style={{ ...mono, fontSize: '9px', color: CLR.textMute, textAlign: 'right' }}>
               {mode === 'gat'
-                ? 'GAT learns which neighbors matter most'
-                : 'GCN weights are fixed by degree, not learned'}
+                ? 'GAT: softmax(LeakyReLU(a·[Wh_i‖Wh_j])) from node features'
+                : 'GCN weights are fixed by degree, not features'}
             </span>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

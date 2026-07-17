@@ -16,49 +16,130 @@ const C = {
   textMid:   '#888888',
   textMuted: '#555555',
   text:      '#e8eaed',
-  // Area fill colors (stacked layers)
-  noise:     '#1a2a28',   // darkest — bottom layer
-  bias:      '#1a2060',   // mid — bias² layer (deep blue-indigo)
-  variance:  '#2a1a3a',   // top — variance layer (deep purple)
 };
 
-// ─── Math: analytic approximations ───────────────────────────────────────────
-// d: degree 1..20, noiseLevel: 0.1..1.0
-//
-// Bias² depends only on model capacity vs. the true function — a hypothesis
-// class that is too simple (low d) mismatches the target regardless of how
-// noisy the observations are, so it must NOT depend on noiseLevel.
-function getBias2(d) {
-  return 0.5 * Math.exp(-d / 3);
+// Fixed-point below 1000, scientific notation above — the real Monte Carlo
+// estimate can reach 1e10+ at high degree (Runge's-phenomenon blowup on a
+// sparse polynomial fit), where a fixed-decimal readout is unreadable.
+function fmtVal(v) {
+  if (!isFinite(v)) return '—';
+  if (v === 0) return '0.000';
+  if (Math.abs(v) < 1000) return v.toFixed(3);
+  return v.toExponential(2);
 }
 
-// Variance grows with model capacity (more free parameters to fit to the
-// sample) AND with observation noise (noisier samples wiggle the fit more).
-// A nonzero floor (0.15) keeps the noise term from vanishing at low noise,
-// so the argmin still shifts smoothly across the whole noise range.
-function getVariance(d, noiseLevel) {
-  return (d / 20) * (d / 20) * (0.15 + noiseLevel);
+// ─── Math: real Monte Carlo bias-variance-noise decomposition ────────────────
+// d: polynomial degree 1..20, noiseLevel: 0.1..1.0. Rather than authored
+// closed-form curves, this resamples independent noisy training sets, fits a
+// real least-squares polynomial to each (same Chebyshev-basis machinery as
+// PolynomialFit.jsx), and computes bias²/variance from the resulting
+// distribution of fitted functions — the textbook definition, not an
+// approximation of its shape.
+function mulberry32(seed) {
+  return function () {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+const TRUE_FN = x => Math.sin(2 * Math.PI * x) * 0.5 + 0.5;
+function generateTrainingSet(n, sigma, seed) {
+  const rand = mulberry32(seed);
+  const points = [];
+  for (let i = 0; i < n; i++) {
+    const x = rand();
+    const y = TRUE_FN(x) + (rand() - 0.5) * 2 * sigma;
+    points.push({ x, y });
+  }
+  return points;
+}
+function toCentered(x) { return 2 * x - 1; }
+function chebyshevRow(t, degree) {
+  const row = new Array(degree + 1);
+  row[0] = 1;
+  if (degree >= 1) row[1] = t;
+  for (let d = 2; d <= degree; d++) row[d] = 2 * t * row[d - 1] - row[d - 2];
+  return row;
+}
+function gaussElim(A, b) {
+  const n = b.length;
+  const M = A.map((row, i) => [...row, b[i]]);
+  for (let col = 0; col < n; col++) {
+    let maxRow = col;
+    for (let row = col + 1; row < n; row++) if (Math.abs(M[row][col]) > Math.abs(M[maxRow][col])) maxRow = row;
+    [M[col], M[maxRow]] = [M[maxRow], M[col]];
+    if (Math.abs(M[col][col]) < 1e-14) continue; // singular column
+    for (let row = 0; row < n; row++) {
+      if (row === col) continue;
+      const factor = M[row][col] / M[col][col];
+      for (let k = col; k <= n; k++) M[row][k] -= factor * M[col][k];
+    }
+  }
+  return M.map((row, i) => Math.abs(M[i][i]) < 1e-14 ? 0 : row[n] / M[i][i]);
+}
+function fitPolynomial(xs, ys, degree) {
+  const V = xs.map(x => chebyshevRow(toCentered(x), degree));
+  const n = degree + 1;
+  const VtV = Array.from({ length: n }, () => new Array(n).fill(0));
+  for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) for (let k = 0; k < V.length; k++) VtV[i][j] += V[k][i] * V[k][j];
+  const Vty = new Array(n).fill(0);
+  for (let i = 0; i < n; i++) for (let k = 0; k < V.length; k++) Vty[i] += V[k][i] * ys[k];
+  return gaussElim(VtV, Vty);
+}
+function polyEval(coeffs, x) {
+  const row = chebyshevRow(toCentered(x), coeffs.length - 1);
+  let y = 0;
+  for (let d = 0; d < coeffs.length; d++) y += coeffs[d] * row[d];
+  return y;
 }
 
-// Irreducible error: the only term that is a pure function of noiseLevel.
-function getNoise(noiseLevel) {
-  return noiseLevel;
+const N_TRAIN = 20;   // matches PolynomialFit.jsx's training-set size
+const N_REPEATS = 40; // independent resamples per (degree, noise) estimate
+const N_EVAL = 25;    // points across [0,1] the bias/variance is averaged over
+const EVAL_XS = Array.from({ length: N_EVAL }, (_, i) => i / (N_EVAL - 1));
+
+// Memoize per (degree, noiseLevel) — the slider drags through the same pairs
+// repeatedly, and re-fitting 40 polynomials on every render is wasted work.
+const bvCache = new Map();
+function computeBiasVarianceNoise(d, noiseLevel) {
+  const key = `${d}|${noiseLevel.toFixed(2)}`;
+  if (bvCache.has(key)) return bvCache.get(key);
+
+  const preds = EVAL_XS.map(() => []);
+  for (let b = 0; b < N_REPEATS; b++) {
+    const data = generateTrainingSet(N_TRAIN, noiseLevel, 1000 + b);
+    const coeffs = fitPolynomial(data.map(p => p.x), data.map(p => p.y), d);
+    EVAL_XS.forEach((x, j) => preds[j].push(polyEval(coeffs, x)));
+  }
+  let bias2Sum = 0, varSum = 0;
+  EVAL_XS.forEach((x, j) => {
+    const mean = preds[j].reduce((a, v) => a + v, 0) / N_REPEATS;
+    bias2Sum += (mean - TRUE_FN(x)) ** 2;
+    varSum += preds[j].reduce((a, p) => a + (p - mean) ** 2, 0) / N_REPEATS;
+  });
+  const bias2 = bias2Sum / N_EVAL;
+  const variance = varSum / N_EVAL;
+  // Irreducible error: the data-generating noise is U(-sigma,sigma), whose
+  // variance is (2*sigma)^2/12 = sigma^2/3 — a closed form, not a guess.
+  const noise = (noiseLevel * noiseLevel) / 3;
+  const result = { bias2, variance, noise, total: bias2 + variance + noise };
+  bvCache.set(key, result);
+  return result;
 }
 
-function getTotalError(d, noiseLevel) {
-  return getNoise(noiseLevel) + getBias2(d) + getVariance(d, noiseLevel);
-}
+function getBias2(d, noiseLevel) { return computeBiasVarianceNoise(d, noiseLevel).bias2; }
+function getVariance(d, noiseLevel) { return computeBiasVarianceNoise(d, noiseLevel).variance; }
+function getNoise(noiseLevel) { return (noiseLevel * noiseLevel) / 3; }
+function getTotalError(d, noiseLevel) { return computeBiasVarianceNoise(d, noiseLevel).total; }
 
 // Build arrays over complexity 1..20
 function buildCurves(noiseLevel) {
   const degrees = Array.from({ length: 20 }, (_, i) => i + 1);
-  return degrees.map(d => ({
-    d,
-    noise:    getNoise(noiseLevel),
-    bias2:    getBias2(d),
-    variance: getVariance(d, noiseLevel),
-    total:    getTotalError(d, noiseLevel),
-  }));
+  return degrees.map(d => {
+    const r = computeBiasVarianceNoise(d, noiseLevel);
+    return { d, noise: r.noise, bias2: r.bias2, variance: r.variance, total: r.total };
+  });
 }
 
 function findOptimalComplexity(noiseLevel) {
@@ -89,35 +170,51 @@ function drawChart(canvas, complexity, noiseLevel) {
   const curves = buildCurves(noiseLevel);
   const optD   = findOptimalComplexity(noiseLevel);
 
-  // Y range: max total error + small margin
-  const maxY = Math.max(...curves.map(c => c.total)) * 1.12;
-  const minY = 0;
-  const yRange = maxY - minY || 1;
+  // Log-scale y-axis: real bias²/variance from the Monte Carlo estimate
+  // spans many orders of magnitude at high degree (Runge's-phenomenon
+  // blowup when fitting a degree-15+ polynomial to 20 sparse noisy
+  // points) — a linear axis or stacked area can't represent that
+  // honestly, so this plots three lines (noise, bias², variance) plus
+  // the dashed total on a shared log axis, floored at EPS to avoid
+  // log(0).
+  const EPS = 1e-4;
+  const maxVal = Math.max(...curves.map(c => c.total), EPS) * 1.3;
+  const logMin = Math.log10(EPS);
+  const logMax = Math.log10(maxVal);
+  const logRange = logMax - logMin || 1;
 
   // Map degree 1..20 to x pixels
   const toX = d => PAD.left + ((d - 1) / 19) * plotW;
-  const toY = v => PAD.top + (1 - (v - minY) / yRange) * plotH;
+  const toY = v => PAD.top + (1 - (Math.log10(Math.max(v, EPS)) - logMin) / logRange) * plotH;
 
   // ── Background
   ctx.fillStyle = C.codeBg;
   ctx.fillRect(0, 0, W, H);
 
-  // ── Grid lines
+  // ── Grid lines — a fixed number of evenly-spaced log decades, not one per
+  // decade (the real dynamic range can span 15+ orders of magnitude once
+  // high-degree blowup enters the picture, which would otherwise crowd the
+  // axis with gridlines).
   ctx.strokeStyle = C.border;
   ctx.lineWidth = 1;
-  const yTicks = 4;
-  for (let i = 0; i <= yTicks; i++) {
-    const v = (i / yTicks) * maxY;
+  const N_GRID = 5;
+  const gridDecades = Array.from({ length: N_GRID + 1 }, (_, i) =>
+    Math.round(logMin + (i / N_GRID) * logRange));
+  const seenDecades = new Set();
+  gridDecades.forEach(dec => {
+    if (seenDecades.has(dec)) return;
+    seenDecades.add(dec);
+    const v = 10 ** dec;
     const cy = toY(v);
     ctx.beginPath();
     ctx.moveTo(PAD.left, cy);
     ctx.lineTo(PAD.left + plotW, cy);
     ctx.stroke();
     ctx.fillStyle = C.textMuted;
-    ctx.font = `10px 'JetBrains Mono', monospace`;
+    ctx.font = `9px 'JetBrains Mono', monospace`;
     ctx.textAlign = 'right';
-    ctx.fillText(v.toFixed(2), PAD.left - 6, cy + 3.5);
-  }
+    ctx.fillText(`1e${dec}`, PAD.left - 6, cy + 3.5);
+  });
   const xTicks = [1, 4, 8, 12, 16, 20];
   xTicks.forEach(d => {
     const cx = toX(d);
@@ -141,75 +238,28 @@ function drawChart(canvas, complexity, noiseLevel) {
   ctx.lineTo(PAD.left + plotW, PAD.top + plotH);
   ctx.stroke();
 
-  // ─ Helper: build a path for a stacked area from baseArr to topArr
-  function filledArea(baseVals, topVals) {
+  // ─ Helper: draw one curve as a line
+  function drawLine(vals, color, width, dash) {
     ctx.beginPath();
-    // Forward along top edge
-    topVals.forEach((v, i) => {
-      const d = i + 1;
-      const cx = toX(d);
+    vals.forEach((v, i) => {
+      const cx = toX(i + 1);
       const cy = toY(v);
       if (i === 0) ctx.moveTo(cx, cy);
       else ctx.lineTo(cx, cy);
     });
-    // Backward along base edge
-    for (let i = baseVals.length - 1; i >= 0; i--) {
-      const d = i + 1;
-      ctx.lineTo(toX(d), toY(baseVals[i]));
-    }
-    ctx.closePath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    if (dash) ctx.setLineDash(dash);
+    ctx.stroke();
+    ctx.setLineDash([]);
   }
 
-  // ── Stacked area: noise (bottom)
-  // noise area: from y=0 to y=noise (constant)
-  const noiseBase  = curves.map(() => 0);
-  const noiseTop   = curves.map(c => c.noise);
-  filledArea(noiseBase, noiseTop);
-  ctx.fillStyle = C.noise;
-  ctx.fill();
-  // noise area border
-  ctx.beginPath();
-  noiseTop.forEach((v, i) => {
-    const cx = toX(i + 1);
-    const cy = toY(v);
-    if (i === 0) ctx.moveTo(cx, cy);
-    else ctx.lineTo(cx, cy);
-  });
-  ctx.strokeStyle = 'rgba(45,212,191,0.25)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // ── Stacked area: bias² (middle): from noise to noise + bias²
-  const bias2Base = curves.map(c => c.noise);
-  const bias2Top  = curves.map(c => c.noise + c.bias2);
-  filledArea(bias2Base, bias2Top);
-  ctx.fillStyle = C.bias;
-  ctx.fill();
-  ctx.beginPath();
-  bias2Top.forEach((v, i) => {
-    const cx = toX(i + 1);
-    if (i === 0) ctx.moveTo(cx, toY(v));
-    else ctx.lineTo(cx, toY(v));
-  });
-  ctx.strokeStyle = 'rgba(99,102,241,0.5)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
-
-  // ── Stacked area: variance (top): from noise+bias² to total
-  const varBase = curves.map(c => c.noise + c.bias2);
-  const varTop  = curves.map(c => c.total);
-  filledArea(varBase, varTop);
-  ctx.fillStyle = C.variance;
-  ctx.fill();
-  ctx.beginPath();
-  varTop.forEach((v, i) => {
-    const cx = toX(i + 1);
-    if (i === 0) ctx.moveTo(cx, toY(v));
-    else ctx.lineTo(cx, toY(v));
-  });
-  ctx.strokeStyle = 'rgba(167,139,250,0.5)';
-  ctx.lineWidth = 1;
-  ctx.stroke();
+  // ── Noise (constant — the closed-form irreducible-error floor)
+  drawLine(curves.map(c => c.noise), 'rgba(45,212,191,0.7)', 1.5);
+  // ── Bias² (typically falls as degree grows)
+  drawLine(curves.map(c => c.bias2), 'rgba(99,102,241,0.85)', 1.5);
+  // ── Variance (typically rises, then explodes at high degree)
+  drawLine(curves.map(c => c.variance), 'rgba(167,139,250,0.85)', 1.5);
 
   // ── Dashed total error line
   ctx.beginPath();
@@ -381,7 +431,7 @@ export default function BiasVariance({ tryThis }) {
   const canvasRef = useRef(null);
 
   const optD      = findOptimalComplexity(noiseLevel);
-  const bias2Val  = getBias2(complexity);
+  const bias2Val  = getBias2(complexity, noiseLevel);
   const varVal    = getVariance(complexity, noiseLevel);
   const noiseVal  = getNoise(noiseLevel);
   const totalVal  = getTotalError(complexity, noiseLevel);
@@ -434,17 +484,17 @@ export default function BiasVariance({ tryThis }) {
         }}>
           <StatRow
             label="Bias²"
-            value={bias2Val.toFixed(3)}
+            value={fmtVal(bias2Val)}
             color={bias2Color}
           />
           <StatRow
             label="Variance"
-            value={varVal.toFixed(3)}
+            value={fmtVal(varVal)}
             color={varColor}
           />
           <StatRow
             label="Noise"
-            value={noiseVal.toFixed(3)}
+            value={fmtVal(noiseVal)}
             color={C.textMid}
           />
           <div style={{ borderTop: `1px solid ${C.border}`, paddingTop: '10px', marginTop: '2px' }}>

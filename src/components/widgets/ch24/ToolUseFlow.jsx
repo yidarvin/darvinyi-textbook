@@ -77,6 +77,21 @@ const TOOLS = [
   },
 ];
 
+// Computed live via BigInt (exact big-integer arithmetic, not a canned
+// string) so the "the code interpreter actually executing" hand-off below
+// is literally true of this widget, not just the scenario it depicts.
+function factorial(n) {
+  let result = 1n;
+  for (let i = 2n; i <= BigInt(n); i++) result *= i;
+  return result;
+}
+function factorialDisplay(n) {
+  const digits = factorial(n).toString();
+  const mantissa = `${digits[0]}.${digits.slice(1, 4)}`;
+  const exponent = digits.length - 1;
+  return `${mantissa}…×10^${exponent} (${digits.length}-digit number)`;
+}
+
 const SCENARIOS = {
   A: {
     label: 'Web Search', toolName: 'web_search',
@@ -88,7 +103,7 @@ const SCENARIOS = {
     label: 'Code', toolName: 'code_interpreter',
     query: 'What is 347 factorial?',
     json: '{\n  "code": "import math\\nprint(math.factorial(347))"\n}',
-    result: '2.907…×10^732 (733-digit number)',
+    result: factorialDisplay(347),
   },
   C: {
     label: 'Database', toolName: 'database_query',

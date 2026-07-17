@@ -19,6 +19,10 @@ const C = {
 const mono = "'JetBrains Mono', monospace";
 const sans = "'Inter', sans-serif";
 
+// These reconstruction/KL/quality curves are representative shapes for how
+// a beta-VAE trade-off typically behaves as beta sweeps — not measurements
+// from a trained model (no real model inference in-browser; see
+// STYLE_GUIDE.md). See the disclosure caption rendered below the chart.
 const BASE_RECON = 0.42;
 const BASE_KL    = 2.8;
 const Y_MAX      = 4.5;
@@ -291,7 +295,7 @@ export default function ELBODecomposition({ tryThis }) {
           <div>
             <div style={{ fontFamily: mono, fontSize: 9, color: C.textMuted, marginBottom: 4 }}>Reconstruction loss</div>
             <MiniBar value={r} maxVal={Y_MAX} color={C.red} />
-            <div style={{ fontFamily: mono, fontSize: 10, color: C.red, textAlign: 'right' }}>{r.toFixed(3)} nats</div>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.red, textAlign: 'right' }}>{r.toFixed(3)}</div>
           </div>
 
           <div>
@@ -299,7 +303,7 @@ export default function ELBODecomposition({ tryThis }) {
               beta×KL = {beta.toFixed(1)} × {k.toFixed(3)}
             </div>
             <MiniBar value={wk} maxVal={Y_MAX} color={C.orange} />
-            <div style={{ fontFamily: mono, fontSize: 10, color: C.orange, textAlign: 'right' }}>{wk.toFixed(3)} nats</div>
+            <div style={{ fontFamily: mono, fontSize: 10, color: C.orange, textAlign: 'right' }}>{wk.toFixed(3)}</div>
           </div>
 
           <div>
@@ -383,6 +387,16 @@ export default function ELBODecomposition({ tryThis }) {
             {animating ? '⏸ Pause' : '▶ Animate sweep'}
           </button>
         </div>
+      </div>
+
+      <div style={{
+        marginTop: 10,
+        fontFamily: mono, fontSize: 9.5, color: C.textMuted,
+        fontStyle: 'italic', lineHeight: 1.5,
+      }}>
+        Illustrative, not measured: reconstruction, KL, and latent-space
+        quality are representative curve shapes for how a beta-VAE trade-off
+        typically behaves as beta sweeps, not a recorded training run.
       </div>
 
     </WidgetCard>
