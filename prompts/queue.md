@@ -86,3 +86,11 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 | Q3 | Mobile widget pass at 375px on worst offenders | DONE |
 | Q4 | Tests + CI — Playwright smoke over all routes, GitHub Actions workflow | DONE |
 | Q5 | Final consistency audit — re-run Appendix B global checks, Lighthouse baseline, retire/refresh stale audit docs | DONE |
+
+### Phase R — Critique remediation (from CRITIQUE.md)
+
+| ID | Title | Status |
+|---|---|---|
+| R1 | ch19 GAN widget fidelity — MinimaxGame, DBEvolution, TrainingDynamics, CycleConsistency, ModeCollapse | PENDING |
+| R2 | ch09 attention widget fidelity — AttentionHeatmap, MultiHeadAttention, entropy-unit consistency | PENDING |
+| R3 | Remaining widget fidelity — ch02 BiasVariance, ch16 GAT, ch18 ELBODecomposition, ch24 ToolUseFlow | PENDING |
