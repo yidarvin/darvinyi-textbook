@@ -93,4 +93,4 @@ Also read [`context/STYLE_GUIDE.md`](../context/STYLE_GUIDE.md) (Editorial Stand
 |---|---|---|
 | R1 | ch19 GAN widget fidelity — MinimaxGame, DBEvolution, TrainingDynamics, CycleConsistency, ModeCollapse | DONE |
 | R2 | ch09 attention widget fidelity — AttentionHeatmap, MultiHeadAttention, entropy-unit consistency | DONE |
-| R3 | Remaining widget fidelity — ch02 BiasVariance, ch16 GAT, ch18 ELBODecomposition, ch24 ToolUseFlow | DRAFT |
+| R3 | Remaining widget fidelity — ch02 BiasVariance, ch16 GAT, ch18 ELBODecomposition, ch24 ToolUseFlow | DONE |
